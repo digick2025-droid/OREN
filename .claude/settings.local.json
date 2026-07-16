@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/DIGICK/Downloads/**)",
+      "Bash(head -c 3000 \"/c/Users/DIGICK/Downloads/DIGICK Devis - installation locale.html\")",
+      "Bash(mkdir -p /c/Users/DIGICK/AppData/Local/Temp/claude/C--Users-DIGICK-Documents-CLAUDE-DIGICK-DEVIS/2274401c-a99c-4538-8856-7452b9a30b5f/scratchpad/proto)",
+      "Bash(cp '/c/Users/DIGICK/Downloads/DIGICK Devis - installation locale.html' /c/Users/DIGICK/AppData/Local/Temp/claude/C--Users-DIGICK-Documents-CLAUDE-DIGICK-DEVIS/2274401c-a99c-4538-8856-7452b9a30b5f/scratchpad/proto/index.html)",
+      "Bash(py --version)",
+      "Read(//c/Users/DIGICK/AppData/Local/Temp/claude/C--Users-DIGICK-Documents-CLAUDE-DIGICK-DEVIS/2274401c-a99c-4538-8856-7452b9a30b5f/scratchpad/proto/**)",
+      "Bash(command -v node)",
+      "Bash(command -v npm)",
+      "Bash(command -v npx)",
+      "Bash(python -c \"print\\('python ok'\\)\")",
+      "Bash(awk '/<script type=\"__bundler\\\\/template\">/{flag=1;next}/<\\\\/script>/{if\\(flag\\){flag=0}}flag' '/c/Users/DIGICK/Downloads/DIGICK Devis - installation locale.html')",
+      "Read(//c/Users/DIGICK/AppData/Local/Temp/claude/C--Users-DIGICK-Documents-CLAUDE-DIGICK-DEVIS/2274401c-a99c-4538-8856-7452b9a30b5f/scratchpad/**)",
+      "Bash(perl /c/Users/DIGICK/AppData/Local/Temp/claude/C--Users-DIGICK-Documents-CLAUDE-DIGICK-DEVIS/2274401c-a99c-4538-8856-7452b9a30b5f/scratchpad/unescape.pl)",
+      "Bash(iconv -f utf-8 -t latin1)",
+      "Bash(PATH='/c/Program Files/nodejs:__TRACKED_VAR__' npm run typecheck)",
+      "Bash(/usr/bin/tail -40)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" run typecheck)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" test)",
+      "Bash(/usr/bin/tail -20)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" run lint)",
+      "Bash(/usr/bin/tail -25)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" run build)",
+      "Bash(/usr/bin/tail -45)"
+    ]
+  }
+}
