@@ -32,6 +32,7 @@ let uidCounter = 1;
 export default function ExpressPage() {
   const [step, setStep] = useState<Step>("form");
   const [businessName, setBusinessName] = useState("");
+  const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [lines, setLines] = useState<ExpressLine[]>([
@@ -50,7 +51,7 @@ export default function ExpressPage() {
       {
         type: "devis",
         number: "DEV-EXP",
-        title: "",
+        title: title.trim(),
         issueDate: new Date().toISOString(),
         clientName,
         clientPhone,
@@ -108,7 +109,7 @@ export default function ExpressPage() {
     const message = [
       `Bonjour ${clientName}`.trim() + ",",
       "",
-      `Voici votre devis. Montant : ${formatAmount(totals.total)}.`,
+      `Voici votre devis${title.trim() ? ` — ${title.trim()}` : ""}. Montant : ${formatAmount(totals.total)}.`,
       "",
       businessName,
     ].join("\n");
@@ -128,6 +129,15 @@ export default function ExpressPage() {
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="Nom de votre entreprise"
+              />
+            </div>
+            <div>
+              <Label htmlFor="x-title">Intitulé du devis</Label>
+              <Input
+                id="x-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex : Pose peinture chambre 4 m²"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -370,6 +380,7 @@ export default function ExpressPage() {
                 setLines([
                   { uid: uidCounter++, name: "", quantity: 1, unit_price: 0 },
                 ]);
+                setTitle("");
                 setClientName("");
                 setClientPhone("");
                 setStep("form");
