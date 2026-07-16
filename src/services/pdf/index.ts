@@ -72,19 +72,29 @@ export function toPdfCompany(company: Company): PdfCompany {
 }
 
 /**
- * Ouvre le document dans une fenêtre d'impression (téléchargement A4).
- * Retourne false si le navigateur a bloqué la fenêtre pop-up.
+ * Imprime le document (téléchargement A4 via « Imprimer → PDF »)
+ * dans une iframe cachée : aucune fenêtre pop-up, donc jamais bloqué.
  */
 export function printDocument(html: string): boolean {
-  const win = window.open("", "_blank");
-  if (!win) return false;
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  // Laisse le temps aux polices/styles de se charger avant l'impression
-  setTimeout(() => {
-    win.print();
-  }, 350);
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.srcdoc = html;
+  iframe.onload = () => {
+    // Laisse le temps aux styles de se charger avant l'impression
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      // Nettoyage une fois la boîte de dialogue refermée
+      setTimeout(() => iframe.remove(), 60_000);
+    }, 300);
+  };
+  document.body.appendChild(iframe);
   return true;
 }
 
