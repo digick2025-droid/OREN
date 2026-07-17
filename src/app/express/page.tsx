@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaymentForm } from "@/features/payments/payment-form";
 import { useI18n } from "@/features/i18n/language-context";
-import { computeTotals } from "@/lib/calculations";
+import { computeTotals, parseQuantity } from "@/lib/calculations";
 import { DEFAULT_COMPANY_COLOR } from "@/lib/constants";
 import { formatAmount } from "@/lib/format";
 import { printDocument, renderDocumentHtml } from "@/services/pdf";
@@ -20,7 +20,7 @@ import { buildWhatsAppLink } from "@/services/whatsapp";
 interface ExpressLine {
   uid: number;
   name: string;
-  quantity: number;
+  qty: string;
   unit_price: number;
 }
 
@@ -38,14 +38,33 @@ export default function ExpressPage() {
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [lines, setLines] = useState<ExpressLine[]>([
-    { uid: uidCounter++, name: "", quantity: 1, unit_price: 0 },
+    { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
   ]);
 
-  const totals = useMemo(() => computeTotals(lines), [lines]);
+  const totals = useMemo(
+    () =>
+      computeTotals(
+        lines.map((l) => ({
+          quantity: parseQuantity(l.qty),
+          unit_price: l.unit_price,
+        })),
+      ),
+    [lines],
+  );
 
   const updateLine = (uid: number, patch: Partial<ExpressLine>) =>
     setLines((prev) =>
       prev.map((l) => (l.uid === uid ? { ...l, ...patch } : l)),
+    );
+
+  const stepQty = (uid: number, delta: number) =>
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.uid !== uid) return l;
+        const next = Math.max(parseQuantity(l.qty) + delta, 0);
+        const str = Number.isInteger(next) ? String(next) : next.toFixed(1);
+        return { ...l, qty: str };
+      }),
     );
 
   const buildHtml = () =>
@@ -59,13 +78,16 @@ export default function ExpressPage() {
         clientPhone,
         lines: lines
           .filter((l) => l.name.trim())
-          .map((l) => ({
-            name: l.name,
-            unit: "unité",
-            quantity: l.quantity,
-            unitPrice: l.unit_price,
-            lineTotal: Math.round(l.quantity * l.unit_price),
-          })),
+          .map((l) => {
+            const quantity = parseQuantity(l.qty);
+            return {
+              name: l.name,
+              unit: "unité",
+              quantity,
+              unitPrice: l.unit_price,
+              lineTotal: Math.round(quantity * l.unit_price),
+            };
+          }),
         subtotal: totals.subtotal,
         discount: 0,
         vatRate: 0,
@@ -201,26 +223,25 @@ export default function ExpressPage() {
                         <button
                           type="button"
                           aria-label="−"
-                          onClick={() =>
-                            updateLine(line.uid, {
-                              quantity: Math.max(1, line.quantity - 1),
-                            })
-                          }
+                          onClick={() => stepQty(line.uid, -1)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
                         >
                           <Minus size={14} />
                         </button>
-                        <span className="min-w-8 text-center text-[14px] font-bold text-navy">
-                          {line.quantity}
-                        </span>
+                        <Input
+                          className="h-8 w-16 rounded-lg px-1 text-center text-[14px] font-bold"
+                          inputMode="decimal"
+                          value={line.qty}
+                          onChange={(e) =>
+                            updateLine(line.uid, {
+                              qty: e.target.value.replace(/[^\d.,/]/g, ""),
+                            })
+                          }
+                        />
                         <button
                           type="button"
                           aria-label="+"
-                          onClick={() =>
-                            updateLine(line.uid, {
-                              quantity: line.quantity + 1,
-                            })
-                          }
+                          onClick={() => stepQty(line.uid, 1)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
                         >
                           <Plus size={14} />
@@ -254,13 +275,16 @@ export default function ExpressPage() {
                 onClick={() =>
                   setLines((prev) => [
                     ...prev,
-                    { uid: uidCounter++, name: "", quantity: 1, unit_price: 0 },
+                    { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
                   ])
                 }
                 className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-[#C3C9D5] py-3 text-[13.5px] font-semibold text-[#5A6377] hover:border-navy"
               >
                 + {t.q_add_line}
               </button>
+              <p className="mt-1.5 text-[11.5px] text-[#A6ADBD]">
+                {t.q_qty_hint}
+              </p>
             </div>
 
             <Card className="flex items-center justify-between p-4">
@@ -380,7 +404,7 @@ export default function ExpressPage() {
               type="button"
               onClick={() => {
                 setLines([
-                  { uid: uidCounter++, name: "", quantity: 1, unit_price: 0 },
+                  { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
                 ]);
                 setTitle("");
                 setClientName("");
