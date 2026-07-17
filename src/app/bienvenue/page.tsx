@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CompanyForm } from "@/features/company/company-form";
+import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
+import { getDict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function BienvenuePage() {
@@ -17,16 +20,16 @@ export default async function BienvenuePage() {
     .maybeSingle();
   if (company) redirect("/accueil");
 
+  const cookieStore = await cookies();
+  const t = getDict(parseLang(cookieStore.get(LANG_COOKIE)?.value));
+
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md bg-[#F4F5F7]">
       <div className="px-4 pt-10">
         <h1 className="text-[26px] font-extrabold text-navy">
-          Votre entreprise
+          {t.setup_title}
         </h1>
-        <p className="mt-1.5 text-[14px] text-[#5A6377]">
-          Ces informations apparaîtront automatiquement sur vos devis et
-          factures.
-        </p>
+        <p className="mt-1.5 text-[14px] text-[#5A6377]">{t.setup_sub}</p>
       </div>
       <CompanyForm
         company={null}

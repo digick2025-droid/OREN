@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useI18n } from "@/features/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
-import {
-  COMPANY_COLORS,
-  DEFAULT_COMPANY_COLOR,
-  TAX_REGIME_LABELS,
-} from "@/lib/constants";
+import { COMPANY_COLORS, DEFAULT_COMPANY_COLOR } from "@/lib/constants";
+import { regimeLabel } from "@/lib/i18n/labels";
 import type { Company, CompanyUpdate, TaxRegime } from "@/types/database";
 import { cn } from "@/lib/utils";
 
@@ -38,9 +36,12 @@ interface FormState {
   vat_rate: string;
 }
 
+const TAX_REGIMES: TaxRegime[] = ["reel", "synthetique", "franchise"];
+
 export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>({
     name: company?.name ?? "",
@@ -62,7 +63,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
 
   const save = async () => {
     if (!form.name.trim()) {
-      toast.error("Entrez le nom de l'entreprise");
+      toast.error(t.toast_need_company);
       return;
     }
     setSaving(true);
@@ -89,10 +90,10 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
 
     setSaving(false);
     if (result.error) {
-      toast.error("Enregistrement impossible. Réessayez.");
+      toast.error(t.toast_save_error);
       return;
     }
-    toast.success("Profil enregistré");
+    toast.success(t.toast_saved);
     router.push(company ? "/reglages" : "/accueil");
     router.refresh();
   };
@@ -100,7 +101,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
   return (
     <div className="space-y-5 px-4 pb-8 pt-5">
       <div>
-        <Label htmlFor="name">Nom de l&apos;entreprise</Label>
+        <Label htmlFor="name">{t.f_company}</Label>
         <Input
           id="name"
           value={form.name}
@@ -109,7 +110,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
         />
       </div>
       <div>
-        <Label htmlFor="owner_name">Nom du responsable</Label>
+        <Label htmlFor="owner_name">{t.f_owner}</Label>
         <Input
           id="owner_name"
           value={form.owner_name}
@@ -119,7 +120,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label htmlFor="phone">Téléphone</Label>
+          <Label htmlFor="phone">{t.f_phone}</Label>
           <Input
             id="phone"
             inputMode="tel"
@@ -129,7 +130,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
           />
         </div>
         <div>
-          <Label htmlFor="whatsapp">WhatsApp</Label>
+          <Label htmlFor="whatsapp">{t.f_whatsapp}</Label>
           <Input
             id="whatsapp"
             inputMode="tel"
@@ -140,7 +141,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
         </div>
       </div>
       <div>
-        <Label htmlFor="address">Adresse</Label>
+        <Label htmlFor="address">{t.f_address}</Label>
         <Input
           id="address"
           value={form.address}
@@ -149,7 +150,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
         />
       </div>
       <div>
-        <Label htmlFor="email">Email (optionnel)</Label>
+        <Label htmlFor="email">{t.f_email}</Label>
         <Input
           id="email"
           type="email"
@@ -160,13 +161,13 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
       </div>
 
       <div>
-        <Label>Couleur principale</Label>
+        <Label>{t.f_color}</Label>
         <div className="flex gap-2.5">
           {COMPANY_COLORS.map((color) => (
             <button
               key={color}
               type="button"
-              aria-label={`Couleur ${color}`}
+              aria-label={`${t.f_color} ${color}`}
               onClick={() => setField("color", color)}
               className={cn(
                 "h-9 w-9 rounded-full transition-transform",
@@ -180,17 +181,12 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
       </div>
 
       <div className="rounded-2xl border border-[#E9EBF0] bg-white p-4">
-        <div className="text-[14px] font-bold text-navy">
-          Informations légales (OHADA)
-        </div>
-        <p className="mt-0.5 text-[12px] text-[#8A93A6]">
-          Optionnelles — recommandées pour des factures conformes dans
-          l&apos;espace OHADA.
-        </p>
+        <div className="text-[14px] font-bold text-navy">{t.ohada_legal}</div>
+        <p className="mt-0.5 text-[12px] text-[#8A93A6]">{t.ohada_hint}</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="rccm">N° RCCM</Label>
+            <Label htmlFor="rccm">{t.f_rccm}</Label>
             <Input
               id="rccm"
               value={form.rccm}
@@ -198,7 +194,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
             />
           </div>
           <div>
-            <Label htmlFor="nif">NIF / NCC</Label>
+            <Label htmlFor="nif">{t.f_nif}</Label>
             <Input
               id="nif"
               value={form.nif}
@@ -208,11 +204,9 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
         </div>
 
         <div className="mt-4">
-          <Label>Régime fiscal</Label>
+          <Label>{t.f_regime}</Label>
           <div className="flex gap-2">
-            {(
-              Object.entries(TAX_REGIME_LABELS) as Array<[TaxRegime, string]>
-            ).map(([value, label]) => (
+            {TAX_REGIMES.map((value) => (
               <button
                 key={value}
                 type="button"
@@ -224,16 +218,14 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
                     : "border-[#E2E5EC] bg-white text-[#5A6377]",
                 )}
               >
-                {label}
+                {regimeLabel(t, value)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-[14px] font-semibold text-navy">
-            Assujetti à la TVA
-          </span>
+          <span className="text-[14px] font-semibold text-navy">{t.f_tva}</span>
           <Switch
             checked={form.vat_enabled}
             onCheckedChange={(checked) => setField("vat_enabled", checked)}
@@ -241,7 +233,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
         </div>
         {form.vat_enabled ? (
           <div className="mt-3">
-            <Label htmlFor="vat_rate">Taux de TVA (%)</Label>
+            <Label htmlFor="vat_rate">{t.f_tva_rate}</Label>
             <Input
               id="vat_rate"
               inputMode="numeric"
@@ -252,18 +244,12 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
             />
           </div>
         ) : (
-          <p className="mt-2 text-[12px] text-[#8A93A6]">
-            Non assujetti — mention « TVA non applicable ».
-          </p>
+          <p className="mt-2 text-[12px] text-[#8A93A6]">{t.tva_off_note}</p>
         )}
       </div>
 
-      <Button
-        className="w-full"
-        onClick={() => void save()}
-        disabled={saving}
-      >
-        {saving ? "Enregistrement…" : "Enregistrer"}
+      <Button className="w-full" onClick={() => void save()} disabled={saving}>
+        {saving ? t.saving : t.save}
       </Button>
     </div>
   );

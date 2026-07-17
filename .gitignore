@@ -31,3 +31,7 @@ next-env.d.ts
 
 # tests
 coverage
+
+# Secrets locaux — ne jamais versionner
+code de recuperation TWILIO.txt
+*.recovery.txt

@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Zap, FileText, Send } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageToggle } from "@/components/language-toggle";
+import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
+import { getDict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function LandingPage() {
@@ -11,46 +15,39 @@ export default async function LandingPage() {
   } = await supabase.auth.getUser();
   if (user) redirect("/accueil");
 
+  const cookieStore = await cookies();
+  const t = getDict(parseLang(cookieStore.get(LANG_COOKIE)?.value));
+
   const steps = [
-    {
-      icon: FileText,
-      title: "Ajoutez vos articles",
-      description: "Client, prestations et quantités.",
-    },
-    {
-      icon: Zap,
-      title: "Aperçu professionnel",
-      description: "Un PDF propre, à votre nom.",
-    },
-    {
-      icon: Send,
-      title: "Payez 500 F & envoyez",
-      description: "Téléchargez et partagez sur WhatsApp.",
-    },
+    { title: t.land_s1, description: t.land_s1d },
+    { title: t.land_s2, description: t.land_s2d },
+    { title: t.land_s3, description: t.land_s3d },
   ];
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-navy px-6 pb-10 pt-16 text-white">
-      <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-coral/15 px-3 py-1.5 text-[12px] font-bold text-coral">
-        <Zap size={13} /> DIGICK Express
-      </span>
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-navy px-6 pb-10 pt-10 text-white">
+      <div className="flex items-center justify-between">
+        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-coral/15 px-3 py-1.5 text-[12px] font-bold text-coral">
+          <Zap size={13} /> {t.land_badge}
+        </span>
+        <LanguageToggle dark />
+      </div>
 
       <h1 className="mt-5 text-[30px] font-extrabold leading-tight">
-        Créez un devis professionnel en moins de 2 minutes
+        {t.land_headline}
         <span className="text-coral">.</span>
       </h1>
       <p className="mt-3 text-[15px] leading-relaxed text-white/70">
-        Envoyez-le à votre client sur WhatsApp. Sans compte · sans abonnement ·
-        500 FCFA par devis.
+        {t.land_sub}
       </p>
 
       <Button asChild variant="accent" size="lg" className="mt-7">
-        <Link href="/express">Créer mon devis</Link>
+        <Link href="/express">{t.land_cta}</Link>
       </Button>
 
       <div className="mt-12">
         <h2 className="text-[13px] font-bold uppercase tracking-wider text-white/50">
-          Comment ça marche
+          {t.land_how}
         </h2>
         <div className="mt-4 space-y-4">
           {steps.map((step, index) => (
@@ -70,13 +67,17 @@ export default async function LandingPage() {
       </div>
 
       <div className="mt-auto space-y-3 pt-12">
-        <Button asChild variant="outline" className="w-full border-white/20 bg-transparent text-white hover:bg-white/10">
-          <Link href="/offres">Découvrir DIGICK Pro</Link>
+        <Button
+          asChild
+          variant="outline"
+          className="w-full border-white/20 bg-transparent text-white hover:bg-white/10"
+        >
+          <Link href="/offres">{t.land_pro}</Link>
         </Button>
         <p className="text-center text-[13px] text-white/60">
-          J&apos;ai déjà un compte{" "}
+          {t.land_have}{" "}
           <Link href="/connexion" className="font-bold text-white underline">
-            Se connecter
+            {t.land_login}
           </Link>
         </p>
       </div>

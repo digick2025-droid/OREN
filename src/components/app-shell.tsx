@@ -9,18 +9,25 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { useI18n } from "@/features/i18n/language-context";
+import type { Dict } from "@/lib/i18n/dictionaries";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { href: "/accueil", label: "Accueil", icon: Home },
-  { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/catalogue", label: "Catalogue", icon: Package },
-  { href: "/reglages", label: "Réglages", icon: Settings },
-] as const;
+const NAV_ITEMS: Array<{
+  href: string;
+  labelKey: keyof Dict;
+  icon: typeof Home;
+}> = [
+  { href: "/accueil", labelKey: "nav_home", icon: Home },
+  { href: "/documents", labelKey: "nav_docs", icon: FileText },
+  { href: "/clients", labelKey: "nav_clients", icon: Users },
+  { href: "/catalogue", labelKey: "nav_catalog", icon: Package },
+  { href: "/reglages", labelKey: "nav_settings", icon: Settings },
+];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-[#F4F5F7]">
@@ -41,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon size={21} strokeWidth={active ? 2.4 : 2} />
-                {item.label}
+                {String(t[item.labelKey])}
               </Link>
             );
           })}

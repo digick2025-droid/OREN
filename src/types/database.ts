@@ -144,12 +144,16 @@ export interface DocumentItem {
   deleted_at: string | null;
 }
 
+/** Fonctionnalités activables par offre (configurées en base) */
+export type PlanFeature = "catalog" | "reports";
+
 export interface Plan {
   key: string;
   name: string;
   price_fcfa: number;
   monthly_quota: number | null;
   per_document_price_fcfa: number | null;
+  features: PlanFeature[];
   sort_order: number;
   is_active: boolean;
   created_at: string;
@@ -202,6 +206,7 @@ export interface Usage {
   quota: number | null;
   plan_key: string;
   plan_name: string;
+  features: PlanFeature[];
   period_end: string | null;
 }
 

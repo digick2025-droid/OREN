@@ -4,7 +4,12 @@
  * mentions OHADA, bloc signature.
  */
 
-import type { PdfCompany, PdfDocumentData, PdfTemplate } from "../types";
+import type {
+  PdfCompany,
+  PdfDocumentData,
+  PdfStrings,
+  PdfTemplate,
+} from "../types";
 
 function esc(value: string): string {
   return value
@@ -33,9 +38,9 @@ function frDate(iso: string): string {
 export const classicTemplate: PdfTemplate = {
   id: "classic",
 
-  render(doc: PdfDocumentData, company: PdfCompany): string {
+  render(doc: PdfDocumentData, company: PdfCompany, s: PdfStrings): string {
     const color = company.color || "#131F35";
-    const titleWord = doc.type === "facture" ? "FACTURE" : "DEVIS";
+    const titleWord = doc.type === "facture" ? s.invoice : s.quote;
     const net = doc.subtotal - doc.discount;
 
     const logo = company.logoUrl
@@ -45,7 +50,7 @@ export const classicTemplate: PdfTemplate = {
     const legalBits = [
       company.rccm ? `RCCM ${esc(company.rccm)}` : "",
       company.nif ? `NIF ${esc(company.nif)}` : "",
-      company.taxRegime ? `Régime ${esc(company.taxRegime)}` : "",
+      company.taxRegime ? `${s.regime} ${esc(company.taxRegime)}` : "",
     ]
       .filter(Boolean)
       .join(" · ");
@@ -64,24 +69,24 @@ export const classicTemplate: PdfTemplate = {
 
     const discountRow =
       doc.discount > 0
-        ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>Remise</span><span>− ${fcfa(doc.discount)}</span></div>`
+        ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>${s.discount}</span><span>− ${fcfa(doc.discount)}</span></div>`
         : "";
 
     const vatRows =
       doc.vatRate > 0
-        ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>Montant HT</span><span>${fcfa(net)}</span></div>
-           <div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>TVA ${doc.vatRate}%</span><span>${fcfa(doc.vatAmount)}</span></div>`
+        ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>${s.netAmount}</span><span>${fcfa(net)}</span></div>
+           <div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>${s.vat} ${doc.vatRate}%</span><span>${fcfa(doc.vatAmount)}</span></div>`
         : "";
 
     const vatNa =
       doc.vatRate === 0
-        ? `<div style="font-size:10px;color:#8A93A6;font-style:italic;margin-top:6px">TVA non applicable</div>`
+        ? `<div style="font-size:10px;color:#8A93A6;font-style:italic;margin-top:6px">${s.vatNa}</div>`
         : "";
 
-    const totalLabel = doc.vatRate > 0 ? "Total TTC" : "Total";
+    const totalLabel = doc.vatRate > 0 ? s.totalTtc : s.total;
 
     const conditions = doc.conditions
-      ? `<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em">Conditions</div><div style="font-size:11px;color:#5A6377;margin-top:3px">${esc(doc.conditions)}</div></div>`
+      ? `<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em">${s.conditions}</div><div style="font-size:11px;color:#5A6377;margin-top:3px">${esc(doc.conditions)}</div></div>`
       : "";
 
     const note = doc.note
@@ -90,13 +95,10 @@ export const classicTemplate: PdfTemplate = {
 
     const accord =
       doc.type === "devis"
-        ? `<div style="text-align:center"><div style="font-size:10px;font-weight:700;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Bon pour accord</div><div style="width:150px;border-bottom:1px solid #C3C9D5;height:44px"></div><div style="font-size:9.5px;color:#5A6377;margin-top:4px">Date et signature du client</div></div>`
+        ? `<div style="text-align:center"><div style="font-size:10px;font-weight:700;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${s.approval}</div><div style="width:150px;border-bottom:1px solid #C3C9D5;height:44px"></div><div style="font-size:9.5px;color:#5A6377;margin-top:4px">${s.approvalDate}</div></div>`
         : "";
 
-    const legalNote =
-      doc.type === "devis"
-        ? "Devis valable 30 jours à compter de la date d'émission."
-        : "Tout retard de paiement entraîne des pénalités au taux légal en vigueur (art. OHADA).";
+    const legalNote = doc.type === "devis" ? s.quoteValidity : s.latePenalty;
 
     return `<!doctype html>
 <html lang="fr">
@@ -124,7 +126,7 @@ export const classicTemplate: PdfTemplate = {
     <div style="text-align:right">
       <div style="font-size:24px;font-weight:800;color:${color};letter-spacing:.04em">${titleWord}</div>
       <div style="font-size:11px;color:#8A93A6;font-weight:600">N° ${esc(doc.number)}</div>
-      <div style="font-size:9px;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em;margin-top:8px">Date</div>
+      <div style="font-size:9px;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em;margin-top:8px">${s.date}</div>
       <div style="font-size:12px;font-weight:600;color:#131F35">${frDate(doc.issueDate)}</div>
     </div>
   </div>
@@ -132,7 +134,7 @@ export const classicTemplate: PdfTemplate = {
   ${doc.title ? `<div style="font-size:13px;font-weight:600;color:#131F35;margin-bottom:12px">${esc(doc.title)}</div>` : ""}
 
   <div style="background:#F6F7F9;border-radius:8px;padding:10px 14px;margin-bottom:16px">
-    <div style="font-size:9px;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em">Client</div>
+    <div style="font-size:9px;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em">${s.client}</div>
     <div style="font-size:13px;font-weight:700;color:#131F35">${esc(doc.clientName || "—")}</div>
     ${doc.clientPhone ? `<div style="font-size:11px;color:#5A6377">${esc(doc.clientPhone)}</div>` : ""}
   </div>
@@ -140,10 +142,10 @@ export const classicTemplate: PdfTemplate = {
   <table style="width:100%;border-collapse:collapse">
     <thead>
       <tr style="background:${color};color:#fff">
-        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:left">Désignation</th>
-        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:center">Qté</th>
-        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:right">P.U.</th>
-        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:right">Total</th>
+        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:left">${s.designation}</th>
+        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:center">${s.qty}</th>
+        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:right">${s.unitPrice}</th>
+        <th style="padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;text-align:right">${s.total}</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -151,7 +153,7 @@ export const classicTemplate: PdfTemplate = {
 
   <div style="display:flex;justify-content:flex-end;margin-top:14px">
     <div style="width:240px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>Sous-total</span><span>${fcfa(doc.subtotal)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>${s.subtotal}</span><span>${fcfa(doc.subtotal)}</span></div>
       ${discountRow}
       ${vatRows}
       <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;background:${color};color:#fff;padding:9px 12px;border-radius:6px;margin-top:5px"><span>${totalLabel}</span><span>${fcfa(doc.total)}</span></div>
@@ -170,11 +172,11 @@ export const classicTemplate: PdfTemplate = {
     ${accord}
     <div style="text-align:center">
       <div style="width:150px;border-bottom:1px solid #C3C9D5;height:44px"></div>
-      <div style="font-size:9.5px;color:#5A6377;margin-top:4px">${esc(company.ownerName || company.name)} · Signature</div>
+      <div style="font-size:9.5px;color:#5A6377;margin-top:4px">${esc(company.ownerName || company.name)} · ${s.signature}</div>
     </div>
   </div>
 
-  <div style="text-align:center;font-size:9px;color:#B4BAC7;margin-top:18px">Généré avec DIGICK Devis</div>
+  <div style="text-align:center;font-size:9px;color:#B4BAC7;margin-top:18px">${s.footer}</div>
 </div>
 </body>
 </html>`;

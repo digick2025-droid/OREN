@@ -7,11 +7,13 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/features/i18n/language-context";
 import { useDeleteClient, useSaveClient } from "@/hooks/use-clients";
 import type { Client } from "@/types/database";
 
 export function ClientForm({ client }: { client: Client | null }) {
   const router = useRouter();
+  const { t } = useI18n();
   const saveClient = useSaveClient();
   const deleteClient = useDeleteClient();
   const [name, setName] = useState(client?.name ?? "");
@@ -20,7 +22,7 @@ export function ClientForm({ client }: { client: Client | null }) {
 
   const save = () => {
     if (!name.trim()) {
-      toast.error("Entrez un nom");
+      toast.error(t.toast_need_name);
       return;
     }
     saveClient.mutate(
@@ -34,10 +36,10 @@ export function ClientForm({ client }: { client: Client | null }) {
       },
       {
         onSuccess: () => {
-          toast.success("Client enregistré");
+          toast.success(t.toast_client_saved);
           router.push("/clients");
         },
-        onError: () => toast.error("Enregistrement impossible"),
+        onError: () => toast.error(t.toast_save_error),
       },
     );
   };
@@ -46,22 +48,22 @@ export function ClientForm({ client }: { client: Client | null }) {
     if (!client) return;
     deleteClient.mutate(client.id, {
       onSuccess: () => {
-        toast.success("Supprimé");
+        toast.success(t.toast_deleted);
         router.push("/clients");
       },
-      onError: () => toast.error("Suppression impossible"),
+      onError: () => toast.error(t.toast_delete_error),
     });
   };
 
   return (
     <div>
       <ScreenHeader
-        title={client ? "Modifier le client" : "Nouveau client"}
+        title={client ? t.client_edit : t.client_new}
         backHref="/clients"
       />
       <div className="space-y-5 px-4 pt-5">
         <div>
-          <Label htmlFor="client-name">Nom complet</Label>
+          <Label htmlFor="client-name">{t.f_name}</Label>
           <Input
             id="client-name"
             value={name}
@@ -70,7 +72,7 @@ export function ClientForm({ client }: { client: Client | null }) {
           />
         </div>
         <div>
-          <Label htmlFor="client-phone">Téléphone</Label>
+          <Label htmlFor="client-phone">{t.f_phone}</Label>
           <Input
             id="client-phone"
             inputMode="tel"
@@ -80,7 +82,7 @@ export function ClientForm({ client }: { client: Client | null }) {
           />
         </div>
         <div>
-          <Label htmlFor="client-address">Adresse (optionnel)</Label>
+          <Label htmlFor="client-address">{t.f_addr}</Label>
           <Input
             id="client-address"
             value={address}
@@ -94,7 +96,7 @@ export function ClientForm({ client }: { client: Client | null }) {
           onClick={save}
           disabled={saveClient.isPending}
         >
-          {saveClient.isPending ? "Enregistrement…" : "Enregistrer"}
+          {saveClient.isPending ? t.saving : t.save}
         </Button>
 
         {client && (
@@ -104,7 +106,7 @@ export function ClientForm({ client }: { client: Client | null }) {
             onClick={remove}
             disabled={deleteClient.isPending}
           >
-            Supprimer
+            {t.delete}
           </Button>
         )}
       </div>

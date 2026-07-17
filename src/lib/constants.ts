@@ -1,7 +1,6 @@
-import type { CatalogItemType, DocumentStatus, TaxRegime } from "@/types/database";
+import type { DocumentStatus } from "@/types/database";
 
 export const APP_NAME = "DIGICK Devis";
-export const APP_TAGLINE = "Le partenaire de croissance des PME";
 
 /** Couleurs de statut (référence prototype) */
 export const STATUS_STYLES: Record<DocumentStatus, { bg: string; color: string }> = {
@@ -12,14 +11,6 @@ export const STATUS_STYLES: Record<DocumentStatus, { bg: string; color: string }
   paye: { bg: "#E4F5EE", color: "#1E9E6A" },
 };
 
-export const STATUS_LABELS: Record<DocumentStatus, string> = {
-  brouillon: "Brouillon",
-  envoye: "Envoyé",
-  accepte: "Accepté",
-  refuse: "Refusé",
-  paye: "Payé",
-};
-
 export const DOCUMENT_STATUSES: DocumentStatus[] = [
   "brouillon",
   "envoye",
@@ -27,17 +18,6 @@ export const DOCUMENT_STATUSES: DocumentStatus[] = [
   "refuse",
   "paye",
 ];
-
-export const ITEM_TYPE_LABELS: Record<CatalogItemType, string> = {
-  produit: "Produit",
-  prestation: "Prestation",
-};
-
-export const TAX_REGIME_LABELS: Record<TaxRegime, string> = {
-  reel: "Réel",
-  synthetique: "Synthétique",
-  franchise: "Franchise",
-};
 
 export const UNITS = ["unité", "mètre", "m²", "forfait", "heure", "jour", "litre"] as const;
 
@@ -52,12 +32,3 @@ export const COMPANY_COLORS = [
 ] as const;
 
 export const DEFAULT_COMPANY_COLOR = "#131F35";
-
-/** Suggestions de conditions de travail */
-export const CONDITION_PRESETS = [
-  "Acompte de 70 %",
-  "Livraison sous 7 jours",
-  "Paiement à la livraison",
-  "Devis valable 30 jours",
-  "Garantie 6 mois",
-] as const;

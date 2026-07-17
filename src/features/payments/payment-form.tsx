@@ -7,20 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/features/i18n/language-context";
 import { formatAmount } from "@/lib/format";
 import { isValidPhone } from "@/lib/phone";
 import type { PaymentMethod } from "@/types/database";
 import { cn } from "@/lib/utils";
-
-const METHODS: Array<{
-  key: PaymentMethod;
-  label: string;
-  available: boolean;
-}> = [
-  { key: "orange_money", label: "Orange Money", available: true },
-  { key: "mtn_momo", label: "MTN MoMo", available: true },
-  { key: "card", label: "Carte bancaire", available: false },
-];
 
 export interface PaymentFormProps {
   amount: number;
@@ -38,20 +29,31 @@ export function PaymentForm({
   onPay,
   onSuccess,
 }: PaymentFormProps) {
+  const { t } = useI18n();
   const [method, setMethod] = useState<PaymentMethod>("orange_money");
   const [phone, setPhone] = useState("");
   const [processing, setProcessing] = useState(false);
 
+  const methods: Array<{
+    key: PaymentMethod;
+    label: string;
+    available: boolean;
+  }> = [
+    { key: "orange_money", label: "Orange Money", available: true },
+    { key: "mtn_momo", label: "MTN MoMo", available: true },
+    { key: "card", label: t.pay_card, available: false },
+  ];
+
   const pay = async () => {
     if (method !== "card" && !isValidPhone(phone)) {
-      toast.error("Entrez un numéro Mobile Money valide");
+      toast.error(t.pay_need_phone);
       return;
     }
     setProcessing(true);
     const result = await onPay({ method, phone });
     setProcessing(false);
     if (!result.ok) {
-      toast.error("Le paiement a échoué. Réessayez.");
+      toast.error(t.pay_failed);
       return;
     }
     onSuccess();
@@ -61,7 +63,7 @@ export function PaymentForm({
     <div className="space-y-4">
       <Card className="p-4 text-center">
         <div className="text-[12px] font-semibold uppercase tracking-wider text-[#8A93A6]">
-          Montant à payer
+          {t.pay_amount}
         </div>
         <div className="mt-1 text-[26px] font-extrabold text-navy">
           {formatAmount(amount)}
@@ -69,9 +71,9 @@ export function PaymentForm({
       </Card>
 
       <div>
-        <Label>Opérateur Mobile Money</Label>
+        <Label>{t.pay_method}</Label>
         <div className="space-y-2">
-          {METHODS.map((m) => (
+          {methods.map((m) => (
             <button
               key={m.key}
               type="button"
@@ -93,7 +95,7 @@ export function PaymentForm({
               {m.label}
               {!m.available && (
                 <span className="ml-auto rounded-full bg-[#FFF7E8] px-2 py-0.5 text-[10.5px] font-bold text-warning">
-                  Bientôt
+                  {t.pay_soon}
                 </span>
               )}
             </button>
@@ -103,7 +105,7 @@ export function PaymentForm({
 
       {method !== "card" && (
         <div>
-          <Label htmlFor="pay-phone">Numéro Mobile Money</Label>
+          <Label htmlFor="pay-phone">{t.pay_phone}</Label>
           <Input
             id="pay-phone"
             inputMode="tel"
@@ -119,11 +121,9 @@ export function PaymentForm({
           <Loader2 size={19} className="animate-spin text-navy" />
           <div>
             <div className="text-[14px] font-bold text-navy">
-              Validez le paiement sur votre téléphone…
+              {t.pay_processing}
             </div>
-            <div className="text-[12px] text-[#8A93A6]">
-              Traitement en cours…
-            </div>
+            <div className="text-[12px] text-[#8A93A6]">{t.pay_wait}</div>
           </div>
         </Card>
       ) : (
@@ -133,13 +133,13 @@ export function PaymentForm({
           className="w-full"
           onClick={() => void pay()}
         >
-          {buttonLabel ?? "Payer"}
+          {buttonLabel ?? t.pay_confirm}
         </Button>
       )}
 
       <p className="flex items-center justify-center gap-1.5 text-center text-[11.5px] text-[#8A93A6]">
         <ShieldCheck size={13} />
-        Paiement sécurisé via CamerPay · résiliable à tout moment
+        {t.pay_secure}
       </p>
     </div>
   );

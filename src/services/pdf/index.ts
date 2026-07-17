@@ -6,10 +6,12 @@
  */
 
 import type { Company, DocumentItem, DocumentRow } from "@/types/database";
+import { PDF_STRINGS } from "./strings";
 import { classicTemplate } from "./templates/classic";
 import type {
   PdfCompany,
   PdfDocumentData,
+  PdfLang,
   PdfTemplate,
   PdfTemplateId,
 } from "./types";
@@ -21,9 +23,10 @@ const TEMPLATES: Record<PdfTemplateId, PdfTemplate> = {
 export function renderDocumentHtml(
   doc: PdfDocumentData,
   company: PdfCompany,
+  lang: PdfLang = "fr",
   templateId: PdfTemplateId = "classic",
 ): string {
-  return TEMPLATES[templateId].render(doc, company);
+  return TEMPLATES[templateId].render(doc, company, PDF_STRINGS[lang]);
 }
 
 /** Adapte les lignes Supabase vers les données du moteur PDF. */
@@ -98,4 +101,9 @@ export function printDocument(html: string): boolean {
   return true;
 }
 
-export type { PdfCompany, PdfDocumentData, PdfTemplateId } from "./types";
+export type {
+  PdfCompany,
+  PdfDocumentData,
+  PdfLang,
+  PdfTemplateId,
+} from "./types";

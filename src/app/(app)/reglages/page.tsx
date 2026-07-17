@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronRight, CreditCard, LogOut } from "lucide-react";
+import { Building2, ChevronRight, CreditCard, Globe, LogOut } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
+import { LanguageToggle } from "@/components/language-toggle";
 import { useCompany } from "@/features/company/company-context";
+import { useI18n } from "@/features/i18n/language-context";
+import { createClient } from "@/lib/supabase/client";
 import { useUsage } from "@/hooks/use-usage";
 
 export default function ReglagesPage() {
   const router = useRouter();
   const company = useCompany();
+  const { t } = useI18n();
   const { data: usage } = useUsage();
   const supabase = createClient();
 
@@ -23,7 +26,7 @@ export default function ReglagesPage() {
 
   return (
     <div>
-      <ScreenHeader title="Réglages" />
+      <ScreenHeader title={t.set_title} />
       <div className="space-y-4 px-4 pt-4">
         <Card>
           <Link
@@ -41,7 +44,7 @@ export default function ReglagesPage() {
                 {company.name}
               </div>
               <div className="flex items-center gap-1 text-[12.5px] text-[#5A6377]">
-                <Building2 size={12} /> Profil entreprise
+                <Building2 size={12} /> {t.company_profile}
               </div>
             </div>
             <ChevronRight size={18} className="text-[#A6ADBD]" />
@@ -57,7 +60,7 @@ export default function ReglagesPage() {
               <CreditCard size={19} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-bold text-navy">Abonnement</div>
+              <div className="text-[15px] font-bold text-navy">{t.set_sub}</div>
               <div className="text-[12.5px] text-[#5A6377]">
                 {usage ? usage.plan_name : "…"}
               </div>
@@ -66,16 +69,26 @@ export default function ReglagesPage() {
           </Link>
         </Card>
 
+        <Card className="flex items-center gap-3 px-4 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEF0F4] text-navy">
+            <Globe size={19} />
+          </div>
+          <div className="min-w-0 flex-1 text-[15px] font-bold text-navy">
+            {t.set_lang}
+          </div>
+          <LanguageToggle />
+        </Card>
+
         <button
           type="button"
           onClick={() => void signOut()}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#E9EBF0] bg-white px-4 py-4 text-[14px] font-semibold text-danger"
         >
-          <LogOut size={17} /> Se déconnecter
+          <LogOut size={17} /> {t.set_logout}
         </button>
 
         <p className="pt-2 text-center text-[11.5px] text-[#A6ADBD]">
-          DIGICK Devis · MVP 1.0
+          {t.app_version}
         </p>
       </div>
     </div>

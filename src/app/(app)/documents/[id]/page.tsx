@@ -8,13 +8,11 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  DOCUMENT_STATUSES,
-  STATUS_LABELS,
-  STATUS_STYLES,
-} from "@/lib/constants";
-import { formatAmount, formatDate } from "@/lib/format";
 import { useCompany } from "@/features/company/company-context";
+import { useI18n } from "@/features/i18n/language-context";
+import { DOCUMENT_STATUSES, STATUS_STYLES } from "@/lib/constants";
+import { formatAmount, formatDate } from "@/lib/format";
+import { statusLabel, typeLabel } from "@/lib/i18n/labels";
 import {
   isQuotaError,
   useConvertToInvoice,
@@ -38,6 +36,7 @@ export default function DocumentDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const company = useCompany();
+  const { t, lang } = useI18n();
   const { data, isLoading } = useDocument(id);
   const updateStatus = useUpdateDocumentStatus();
   const convertToInvoice = useConvertToInvoice();
@@ -46,7 +45,7 @@ export default function DocumentDetailPage({
   if (isLoading || !data) {
     return (
       <div>
-        <ScreenHeader title="Document" backHref="/documents" />
+        <ScreenHeader title={t.docs_title} backHref="/documents" />
       </div>
     );
   }
@@ -55,14 +54,18 @@ export default function DocumentDetailPage({
   const isQuote = doc.type === "devis";
 
   const openPdf = () => {
-    const html = renderDocumentHtml(toPdfData(doc, items), toPdfCompany(company));
+    const html = renderDocumentHtml(
+      toPdfData(doc, items),
+      toPdfCompany(company),
+      lang,
+    );
     if (!printDocument(html)) {
-      toast.error("Autorisez les fenêtres pop-up pour télécharger");
+      toast.error(t.pdf_popup);
     }
   };
 
   const shareWhatsApp = () => {
-    window.open(buildDocumentShareLink(doc, company.name), "_blank");
+    window.open(buildDocumentShareLink(doc, company.name, lang), "_blank");
     if (doc.status === "brouillon") {
       updateStatus.mutate({ id: doc.id, status: "envoye" });
     }
@@ -71,16 +74,16 @@ export default function DocumentDetailPage({
   const convert = () => {
     convertToInvoice.mutate(doc.id, {
       onSuccess: (invoice) => {
-        toast.success(`Facture créée · ${invoice.number}`);
+        toast.success(`${t.toast_facture_created} · ${invoice.number}`);
         router.push(`/documents/${invoice.id}`);
       },
       onError: (error) => {
         if (isQuotaError(error)) {
-          toast.error("Limite mensuelle atteinte");
+          toast.error(t.toast_limit);
           router.push("/offres");
           return;
         }
-        toast.error("Conversion impossible");
+        toast.error(t.toast_convert_error);
       },
     });
   };
@@ -88,10 +91,10 @@ export default function DocumentDetailPage({
   const remove = () => {
     deleteDocument.mutate(doc.id, {
       onSuccess: () => {
-        toast.success("Supprimé");
+        toast.success(t.toast_deleted);
         router.push("/documents");
       },
-      onError: () => toast.error("Suppression impossible"),
+      onError: () => toast.error(t.toast_delete_error),
     });
   };
 
@@ -104,11 +107,10 @@ export default function DocumentDetailPage({
           <div className="flex items-start justify-between">
             <div>
               <div className="text-[12px] font-semibold text-[#8A93A6]">
-                {isQuote ? "Devis" : "Facture"} ·{" "}
-                {formatDate(doc.created_at)}
+                {typeLabel(t, doc.type)} · {formatDate(doc.created_at)}
               </div>
               <div className="mt-0.5 text-[17px] font-extrabold text-navy">
-                {doc.title || doc.client_name || "Sans titre"}
+                {doc.title || doc.client_name || t.untitled}
               </div>
               <div className="text-[13px] text-[#5A6377]">
                 {doc.client_name || "—"}
@@ -123,7 +125,7 @@ export default function DocumentDetailPage({
 
         <section>
           <div className="mb-2 text-[13px] font-semibold text-[#5A6377]">
-            Statut
+            {t.doc_status}
           </div>
           <div className="flex flex-wrap gap-2">
             {DOCUMENT_STATUSES.map((status) => {
@@ -133,16 +135,14 @@ export default function DocumentDetailPage({
                 <button
                   key={status}
                   type="button"
-                  onClick={() =>
-                    updateStatus.mutate({ id: doc.id, status })
-                  }
+                  onClick={() => updateStatus.mutate({ id: doc.id, status })}
                 >
                   <Badge
                     bg={active ? style.color : style.bg}
                     color={active ? "#fff" : style.color}
                     className="px-3 py-1.5 text-[12px]"
                   >
-                    {STATUS_LABELS[status]}
+                    {statusLabel(t, status)}
                   </Badge>
                 </button>
               );
@@ -152,7 +152,7 @@ export default function DocumentDetailPage({
 
         <section>
           <div className="mb-2 text-[13px] font-semibold text-[#5A6377]">
-            Éléments
+            {t.doc_items}
           </div>
           <Card className="divide-y divide-[#F0F1F5]">
             {items.map((item) => (
@@ -176,12 +176,12 @@ export default function DocumentDetailPage({
             ))}
             <div className="space-y-1 px-4 py-3">
               <div className="flex justify-between text-[13px] text-[#5A6377]">
-                <span>Sous-total</span>
+                <span>{t.subtotal}</span>
                 <span>{formatAmount(doc.subtotal)}</span>
               </div>
               {doc.discount > 0 && (
                 <div className="flex justify-between text-[13px] text-[#5A6377]">
-                  <span>Remise</span>
+                  <span>{t.discount}</span>
                   <span>− {formatAmount(doc.discount)}</span>
                 </div>
               )}
@@ -192,7 +192,7 @@ export default function DocumentDetailPage({
                 </div>
               )}
               <div className="flex justify-between pt-1 text-[15px] font-extrabold text-navy">
-                <span>Total</span>
+                <span>{t.total}</span>
                 <span>{formatAmount(doc.total)}</span>
               </div>
             </div>
@@ -203,13 +203,15 @@ export default function DocumentDetailPage({
           <Card className="space-y-2 p-4 text-[13px] text-[#5A6377]">
             {doc.conditions && (
               <div>
-                <span className="font-bold text-navy">Conditions : </span>
+                <span className="font-bold text-navy">
+                  {t.doc_conditions} :{" "}
+                </span>
                 {doc.conditions}
               </div>
             )}
             {doc.note && (
               <div>
-                <span className="font-bold text-navy">Note : </span>
+                <span className="font-bold text-navy">{t.doc_note} : </span>
                 {doc.note}
               </div>
             )}
@@ -218,10 +220,10 @@ export default function DocumentDetailPage({
 
         <section className="space-y-3">
           <Button className="w-full" onClick={openPdf}>
-            <Eye size={17} /> Aperçu PDF
+            <Eye size={17} /> {t.doc_preview}
           </Button>
           <Button variant="whatsapp" className="w-full" onClick={shareWhatsApp}>
-            <Send size={17} /> Envoyer sur WhatsApp
+            <Send size={17} /> {t.wa_send}
           </Button>
           {isQuote && (
             <Button
@@ -230,7 +232,7 @@ export default function DocumentDetailPage({
               onClick={convert}
               disabled={convertToInvoice.isPending}
             >
-              <FileText size={17} /> Convertir en facture
+              <FileText size={17} /> {t.doc_convert}
             </Button>
           )}
           <Button
@@ -238,7 +240,7 @@ export default function DocumentDetailPage({
             className="w-full"
             onClick={() => router.push(`/nouveau?type=${doc.type}`)}
           >
-            <Copy size={17} /> Dupliquer
+            <Copy size={17} /> {t.doc_duplicate}
           </Button>
           <Button
             variant="destructive"
@@ -246,7 +248,7 @@ export default function DocumentDetailPage({
             onClick={remove}
             disabled={deleteDocument.isPending}
           >
-            <Trash2 size={17} /> Supprimer le document
+            <Trash2 size={17} /> {t.doc_delete}
           </Button>
         </section>
       </div>

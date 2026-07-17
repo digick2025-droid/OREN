@@ -4,7 +4,14 @@ import { NextResponse, type NextRequest } from "next/server";
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /** Routes accessibles sans session */
-const PUBLIC_PATHS = ["/", "/connexion", "/express", "/offres", "/api/payments"];
+const PUBLIC_PATHS = [
+  "/",
+  "/connexion",
+  "/express",
+  "/offres",
+  "/api/payments",
+  "/manifest.webmanifest",
+];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some(
@@ -13,6 +20,12 @@ function isPublic(pathname: string): boolean {
 }
 
 export async function updateSession(request: NextRequest) {
+  // Routes publiques : aucun appel réseau vers Supabase — réponse immédiate.
+  // La session est rafraîchie sur les routes protégées uniquement.
+  if (isPublic(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -40,7 +53,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && !isPublic(request.nextUrl.pathname)) {
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/connexion";
     return NextResponse.redirect(url);

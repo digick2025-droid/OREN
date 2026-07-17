@@ -1,60 +1,57 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Check } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
+import { getDict, type Dict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
 import { formatAmountShort } from "@/lib/format";
 import type { Plan } from "@/types/database";
 
-/** Contenu marketing des offres (le prix et les quotas viennent de la base) */
-const PLAN_CONTENT: Record<
-  string,
-  { tag: string; audience: string; features: string[] }
-> = {
-  express: {
-    tag: "Payez à l'usage, sans compte",
-    audience: "Usage occasionnel",
-    features: [
-      "1 devis à la fois",
-      "Aperçu PDF professionnel",
-      "Envoi WhatsApp",
-      "Sans inscription",
-    ],
-  },
-  pro: {
-    tag: "L'essentiel pour facturer vite",
-    audience: "Artisans indépendants",
-    features: [
-      "Profil entreprise",
-      "Devis & factures",
-      "Gestion des clients",
-      "25 documents / mois",
-      "Partage WhatsApp",
-    ],
-  },
-  business: {
-    tag: "Pour aller plus loin",
-    audience: "Entreprises qui grandissent",
-    features: [
-      "Tout DIGICK Pro",
-      "Documents illimités",
-      "Catalogue & modèles",
-      "Rapports simples",
-    ],
-  },
-};
-
-function planPrice(plan: Plan): string {
-  if (plan.per_document_price_fcfa) {
-    return `${formatAmountShort(plan.per_document_price_fcfa)} F / devis`;
+/** Contenu marketing des offres (prix et quotas viennent de la base) */
+function planContent(t: Dict, key: string): {
+  tag: string;
+  audience: string;
+  features: readonly string[];
+} {
+  switch (key) {
+    case "express":
+      return {
+        tag: t.off_express_tag,
+        audience: t.off_express_aud,
+        features: t.off_express_feat,
+      };
+    case "pro":
+      return {
+        tag: t.off_pro_tag,
+        audience: t.off_pro_aud,
+        features: t.off_pro_feat,
+      };
+    case "business":
+      return {
+        tag: t.off_business_tag,
+        audience: t.off_business_aud,
+        features: t.off_business_feat,
+      };
+    default:
+      return { tag: "", audience: "", features: [] };
   }
-  if (plan.price_fcfa === 0) return "Gratuit";
-  return `${formatAmountShort(plan.price_fcfa)} F / mois`;
+}
+
+function planPrice(t: Dict, plan: Plan): string {
+  if (plan.per_document_price_fcfa) {
+    return `${formatAmountShort(plan.per_document_price_fcfa)} F / ${t.per_quote}`;
+  }
+  if (plan.price_fcfa === 0) return t.price_free;
+  return `${formatAmountShort(plan.price_fcfa)} F / ${t.per_month}`;
 }
 
 export default async function OffresPage() {
   const supabase = await createClient();
+  const cookieStore = await cookies();
+  const t = getDict(parseLang(cookieStore.get(LANG_COOKIE)?.value));
 
   const [{ data: plansData }, authResult] = await Promise.all([
     supabase
@@ -90,30 +87,19 @@ export default async function OffresPage() {
 
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md bg-[#F4F5F7] pb-10">
-      <ScreenHeader
-        title="Nos offres"
-        backHref={user ? "/abonnement" : "/"}
-      />
-      <p className="px-4 pt-4 text-[14px] text-[#5A6377]">
-        Choisissez ce qui vous convient. Sans engagement.
-      </p>
+      <ScreenHeader title={t.off_title} backHref={user ? "/abonnement" : "/"} />
+      <p className="px-4 pt-4 text-[14px] text-[#5A6377]">{t.off_sub}</p>
 
       <div className="mt-4 space-y-4 px-4">
         {plans.map((plan) => {
-          const content = PLAN_CONTENT[plan.key] ?? {
-            tag: "",
-            audience: "",
-            features: [],
-          };
+          const content = planContent(t, plan.key);
           const isCurrent = currentPlanKey === plan.key;
           const highlight = plan.key === "pro";
 
           return (
             <Card
               key={plan.key}
-              className={
-                highlight ? "border-2 border-coral p-5" : "p-5"
-              }
+              className={highlight ? "border-2 border-coral p-5" : "p-5"}
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -125,7 +111,7 @@ export default async function OffresPage() {
                   </div>
                 </div>
                 <div className="text-right text-[15px] font-extrabold text-navy">
-                  {planPrice(plan)}
+                  {planPrice(t, plan)}
                 </div>
               </div>
 
@@ -144,7 +130,7 @@ export default async function OffresPage() {
               <div className="mt-5">
                 {isCurrent ? (
                   <div className="rounded-xl bg-[#EEF0F4] py-3 text-center text-[13.5px] font-bold text-[#5A6377]">
-                    Offre actuelle
+                    {t.off_current}
                   </div>
                 ) : (
                   <Button
@@ -161,7 +147,7 @@ export default async function OffresPage() {
                             : "/connexion"
                       }
                     >
-                      Choisir cette offre
+                      {t.off_choose}
                     </Link>
                   </Button>
                 )}

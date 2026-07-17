@@ -45,8 +45,36 @@ export interface PdfDocumentData {
 
 export type PdfTemplateId = "classic";
 
+export type PdfLang = "fr" | "en";
+
+/** Libellés du document — le moteur reste indépendant de l'app */
+export interface PdfStrings {
+  quote: string;
+  invoice: string;
+  date: string;
+  client: string;
+  designation: string;
+  qty: string;
+  unitPrice: string;
+  total: string;
+  totalTtc: string;
+  subtotal: string;
+  discount: string;
+  netAmount: string;
+  vat: string;
+  vatNa: string;
+  conditions: string;
+  signature: string;
+  approval: string;
+  approvalDate: string;
+  quoteValidity: string;
+  latePenalty: string;
+  regime: string;
+  footer: string;
+}
+
 export interface PdfTemplate {
   id: PdfTemplateId;
   /** Rend le document complet en HTML A4 autonome (styles inline) */
-  render(doc: PdfDocumentData, company: PdfCompany): string;
+  render(doc: PdfDocumentData, company: PdfCompany, strings: PdfStrings): string;
 }

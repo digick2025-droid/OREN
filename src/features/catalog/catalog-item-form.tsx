@@ -7,7 +7,9 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ITEM_TYPE_LABELS, UNITS } from "@/lib/constants";
+import { useI18n } from "@/features/i18n/language-context";
+import { UNITS } from "@/lib/constants";
+import { itemTypeLabel } from "@/lib/i18n/labels";
 import {
   useDeleteCatalogItem,
   useSaveCatalogItem,
@@ -15,8 +17,11 @@ import {
 import type { CatalogItem, CatalogItemType } from "@/types/database";
 import { cn } from "@/lib/utils";
 
+const ITEM_TYPES: CatalogItemType[] = ["produit", "prestation"];
+
 export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
   const router = useRouter();
+  const { t } = useI18n();
   const saveItem = useSaveCatalogItem();
   const deleteItem = useDeleteCatalogItem();
   const [name, setName] = useState(item?.name ?? "");
@@ -26,12 +31,12 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
 
   const save = () => {
     if (!name.trim()) {
-      toast.error("Entrez un nom");
+      toast.error(t.toast_need_name);
       return;
     }
     const unitPrice = parseInt(price, 10);
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-      toast.error("Entrez un prix unitaire valide");
+      toast.error(t.toast_need_price);
       return;
     }
     saveItem.mutate(
@@ -41,10 +46,10 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
       },
       {
         onSuccess: () => {
-          toast.success("Article enregistré");
+          toast.success(t.toast_article_saved);
           router.push("/catalogue");
         },
-        onError: () => toast.error("Enregistrement impossible"),
+        onError: () => toast.error(t.toast_save_error),
       },
     );
   };
@@ -53,38 +58,33 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
     if (!item) return;
     deleteItem.mutate(item.id, {
       onSuccess: () => {
-        toast.success("Supprimé");
+        toast.success(t.toast_deleted);
         router.push("/catalogue");
       },
-      onError: () => toast.error("Suppression impossible"),
+      onError: () => toast.error(t.toast_delete_error),
     });
   };
 
   return (
     <div>
       <ScreenHeader
-        title={item ? "Modifier l'article" : "Nouvel article"}
+        title={item ? t.art_edit : t.art_new}
         backHref="/catalogue"
       />
       <div className="space-y-5 px-4 pt-5">
         <div>
-          <Label htmlFor="item-name">Nom de l&apos;article</Label>
+          <Label htmlFor="item-name">{t.f_artname}</Label>
           <Input
             id="item-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Pose prise électrique"
           />
         </div>
 
         <div>
-          <Label>Type</Label>
+          <Label>{t.f_type}</Label>
           <div className="flex gap-2">
-            {(
-              Object.entries(ITEM_TYPE_LABELS) as Array<
-                [CatalogItemType, string]
-              >
-            ).map(([value, label]) => (
+            {ITEM_TYPES.map((value) => (
               <button
                 key={value}
                 type="button"
@@ -96,7 +96,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
                     : "border-[#E2E5EC] bg-white text-[#5A6377]",
                 )}
               >
-                {label}
+                {itemTypeLabel(t, value)}
               </button>
             ))}
           </div>
@@ -104,7 +104,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="item-price">Prix unitaire (FCFA)</Label>
+            <Label htmlFor="item-price">{t.f_price}</Label>
             <Input
               id="item-price"
               inputMode="numeric"
@@ -114,7 +114,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
             />
           </div>
           <div>
-            <Label htmlFor="item-unit">Unité</Label>
+            <Label htmlFor="item-unit">{t.f_unit}</Label>
             <select
               id="item-unit"
               value={unit}
@@ -131,7 +131,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
         </div>
 
         <Button className="w-full" onClick={save} disabled={saveItem.isPending}>
-          {saveItem.isPending ? "Enregistrement…" : "Enregistrer"}
+          {saveItem.isPending ? t.saving : t.save}
         </Button>
 
         {item && (
@@ -141,7 +141,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
             onClick={remove}
             disabled={deleteItem.isPending}
           >
-            Supprimer
+            {t.delete}
           </Button>
         )}
       </div>

@@ -10,13 +10,14 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { computeTotals } from "@/lib/calculations";
-import { CONDITION_PRESETS } from "@/lib/constants";
-import { formatAmount } from "@/lib/format";
 import { useCompany } from "@/features/company/company-context";
+import { useI18n } from "@/features/i18n/language-context";
+import { computeTotals } from "@/lib/calculations";
+import { formatAmount } from "@/lib/format";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useClients, useSaveClient } from "@/hooks/use-clients";
 import { isQuotaError, useCreateDocument } from "@/hooks/use-documents";
+import { usePlanFeature } from "@/hooks/use-usage";
 import type { DocumentType } from "@/types/database";
 import { cn } from "@/lib/utils";
 
@@ -33,10 +34,12 @@ let uidCounter = 1;
 export function DocumentBuilder({ type }: { type: DocumentType }) {
   const router = useRouter();
   const company = useCompany();
+  const { t } = useI18n();
   const { data: clients } = useClients();
   const { data: catalog } = useCatalog();
   const saveClient = useSaveClient();
   const createDocument = useCreateDocument();
+  const catalogAccess = usePlanFeature("catalog");
 
   const [clientId, setClientId] = useState<string | null>(null);
   const [showNewClient, setShowNewClient] = useState(false);
@@ -50,7 +53,6 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
   const [conditions, setConditions] = useState("");
 
   const isInvoice = type === "facture";
-  const label = isInvoice ? "facture" : "devis";
 
   const totals = useMemo(
     () =>
@@ -92,7 +94,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
 
   const addInlineClient = () => {
     if (!newClientName.trim()) {
-      toast.error("Entrez un nom");
+      toast.error(t.toast_need_name);
       return;
     }
     saveClient.mutate(
@@ -108,16 +110,16 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
           setShowNewClient(false);
           setNewClientName("");
           setNewClientPhone("");
-          toast.success("Client enregistré");
+          toast.success(t.toast_client_saved);
         },
-        onError: () => toast.error("Enregistrement impossible"),
+        onError: () => toast.error(t.toast_save_error),
       },
     );
   };
 
   const generate = () => {
     if (lines.length === 0) {
-      toast.error("Ajoutez au moins un élément");
+      toast.error(t.toast_need_items);
       return;
     }
     createDocument.mutate(
@@ -137,16 +139,18 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
       },
       {
         onSuccess: (doc) => {
-          toast.success(isInvoice ? "Facture créée" : "Devis créé");
+          toast.success(
+            isInvoice ? t.toast_facture_created : t.toast_devis_created,
+          );
           router.push(`/documents/${doc.id}`);
         },
         onError: (error) => {
           if (isQuotaError(error)) {
-            toast.error("Limite mensuelle atteinte");
+            toast.error(t.toast_limit);
             router.push("/offres");
             return;
           }
-          toast.error("Création impossible. Réessayez.");
+          toast.error(t.toast_create_error);
         },
       },
     );
@@ -155,7 +159,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
   return (
     <div>
       <ScreenHeader
-        title={isInvoice ? "Nouvelle facture" : "Nouveau devis"}
+        title={isInvoice ? t.new_invoice : t.new_quote}
         backHref="/accueil"
       />
 
@@ -163,26 +167,26 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
         {/* ----- Client ----- */}
         <section>
           <div className="flex items-center justify-between">
-            <Label className="mb-0">Client</Label>
+            <Label className="mb-0">{t.q_client_label}</Label>
             <button
               type="button"
               onClick={() => setShowNewClient((v) => !v)}
               className="flex items-center gap-1 text-[13px] font-semibold text-coral"
             >
               {showNewClient ? <X size={14} /> : <UserPlus size={14} />}
-              {showNewClient ? "Annuler" : "Nouveau client"}
+              {showNewClient ? t.cancel : t.q_newclient}
             </button>
           </div>
 
           {showNewClient ? (
             <Card className="mt-2 space-y-3 p-4">
               <Input
-                placeholder="Nom complet"
+                placeholder={t.f_name}
                 value={newClientName}
                 onChange={(e) => setNewClientName(e.target.value)}
               />
               <Input
-                placeholder="Téléphone"
+                placeholder={t.f_phone}
                 inputMode="tel"
                 value={newClientPhone}
                 onChange={(e) => setNewClientPhone(e.target.value)}
@@ -193,7 +197,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                 onClick={addInlineClient}
                 disabled={saveClient.isPending}
               >
-                Enregistrer et sélectionner
+                {t.q_use_client}
               </Button>
             </Card>
           ) : (
@@ -219,9 +223,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                 </button>
               ))}
               {(clients ?? []).length === 0 && (
-                <p className="text-[13px] text-[#8A93A6]">
-                  Aucun client — créez-en un.
-                </p>
+                <p className="text-[13px] text-[#8A93A6]">{t.q_no_clients}</p>
               )}
             </div>
           )}
@@ -229,21 +231,23 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
 
         {/* ----- Articles ----- */}
         <section>
-          <Label>Éléments</Label>
-          <div className="relative">
-            <Search
-              size={17}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A6ADBD]"
-            />
-            <Input
-              className="pl-11"
-              placeholder="Ex : câble, main d'œuvre…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <Label>{t.q_items_label}</Label>
+          {catalogAccess.enabled && (
+            <div className="relative">
+              <Search
+                size={17}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A6ADBD]"
+              />
+              <Input
+                className="pl-11"
+                placeholder={t.q_search_ph}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          )}
 
-          {searchResults.length > 0 && (
+          {catalogAccess.enabled && searchResults.length > 0 && (
             <Card className="mt-2 divide-y divide-[#F0F1F5] overflow-hidden">
               {searchResults.map((item) => (
                 <button
@@ -270,32 +274,35 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
             </Card>
           )}
 
-          {search.trim() === "" && favorites.length > 0 && lines.length === 0 && (
-            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-              {favorites.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() =>
-                    addLine({
-                      name: item.name,
-                      unit: item.unit,
-                      quantity: 1,
-                      unit_price: item.unit_price,
-                    })
-                  }
-                  className="shrink-0 rounded-full border-[1.5px] border-[#E2E5EC] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#5A6377]"
-                >
-                  + {item.name}
-                </button>
-              ))}
-            </div>
-          )}
+          {catalogAccess.enabled &&
+            search.trim() === "" &&
+            favorites.length > 0 &&
+            lines.length === 0 && (
+              <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                {favorites.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() =>
+                      addLine({
+                        name: item.name,
+                        unit: item.unit,
+                        quantity: 1,
+                        unit_price: item.unit_price,
+                      })
+                    }
+                    className="shrink-0 rounded-full border-[1.5px] border-[#E2E5EC] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#5A6377]"
+                  >
+                    + {item.name}
+                  </button>
+                ))}
+              </div>
+            )}
 
           <div className="mt-3 space-y-3">
             {lines.length === 0 ? (
               <Card className="p-5 text-center text-[13.5px] text-[#8A93A6]">
-                Recherchez un article pour l&apos;ajouter au {label}
+                {isInvoice ? t.q_no_items_facture : t.q_no_items_devis}
               </Card>
             ) : (
               lines.map((line) => (
@@ -304,14 +311,14 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                     <Input
                       className="h-9 rounded-lg border-transparent px-1 text-[14px] font-semibold focus-visible:border-[#E2E5EC]"
                       value={line.name}
-                      placeholder="Désignation"
+                      placeholder={t.q_free_ph}
                       onChange={(e) =>
                         updateLine(line.uid, { name: e.target.value })
                       }
                     />
                     <button
                       type="button"
-                      aria-label="Supprimer la ligne"
+                      aria-label={t.delete}
                       onClick={() => removeLine(line.uid)}
                       className="mt-1 shrink-0 text-[#A6ADBD] hover:text-danger"
                     >
@@ -322,7 +329,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        aria-label="Diminuer la quantité"
+                        aria-label="−"
                         onClick={() =>
                           updateLine(line.uid, {
                             quantity: Math.max(1, line.quantity - 1),
@@ -337,7 +344,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                       </span>
                       <button
                         type="button"
-                        aria-label="Augmenter la quantité"
+                        aria-label="+"
                         onClick={() =>
                           updateLine(line.uid, { quantity: line.quantity + 1 })
                         }
@@ -354,8 +361,10 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                         onChange={(e) =>
                           updateLine(line.uid, {
                             unit_price:
-                              parseInt(e.target.value.replace(/[^\d]/g, ""), 10) ||
-                              0,
+                              parseInt(
+                                e.target.value.replace(/[^\d]/g, ""),
+                                10,
+                              ) || 0,
                           })
                         }
                       />
@@ -374,23 +383,23 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
             }
             className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-[#C3C9D5] py-3 text-[13.5px] font-semibold text-[#5A6377] hover:border-navy"
           >
-            + Ligne libre
+            + {t.q_freeline}
           </button>
         </section>
 
         {/* ----- Détails ----- */}
         <section className="space-y-4">
           <div>
-            <Label htmlFor="doc-title">Intitulé du document</Label>
+            <Label htmlFor="doc-title">{t.q_title}</Label>
             <Input
               id="doc-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex : Pose peinture chambre 4 m²"
+              placeholder={t.q_title_ph}
             />
           </div>
           <div>
-            <Label htmlFor="doc-discount">Remise (FCFA)</Label>
+            <Label htmlFor="doc-discount">{t.q_discount}</Label>
             <Input
               id="doc-discount"
               inputMode="numeric"
@@ -402,24 +411,24 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
             />
           </div>
           <div>
-            <Label htmlFor="doc-note">Note</Label>
+            <Label htmlFor="doc-note">{t.q_note}</Label>
             <Textarea
               id="doc-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Ex : travaux prévus mardi matin…"
+              placeholder={t.q_note_ph}
             />
           </div>
           <div>
-            <Label htmlFor="doc-conditions">Conditions de travail</Label>
+            <Label htmlFor="doc-conditions">{t.q_conditions}</Label>
             <Textarea
               id="doc-conditions"
               value={conditions}
               onChange={(e) => setConditions(e.target.value)}
-              placeholder="Ex : paiement 50% à la commande"
+              placeholder={t.q_cond_ph}
             />
             <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-              {CONDITION_PRESETS.map((preset) => (
+              {t.cond_presets.map((preset) => (
                 <button
                   key={preset}
                   type="button"
@@ -440,19 +449,19 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
         {/* ----- Totaux ----- */}
         <Card className="space-y-1.5 p-4">
           <div className="flex justify-between text-[13.5px] text-[#5A6377]">
-            <span>Sous-total</span>
+            <span>{t.subtotal}</span>
             <span>{formatAmount(totals.subtotal)}</span>
           </div>
           {totals.discount > 0 && (
             <div className="flex justify-between text-[13.5px] text-[#5A6377]">
-              <span>Remise</span>
+              <span>{t.discount}</span>
               <span>− {formatAmount(totals.discount)}</span>
             </div>
           )}
           {totals.vatRate > 0 && (
             <>
               <div className="flex justify-between text-[13.5px] text-[#5A6377]">
-                <span>Montant HT</span>
+                <span>{t.amount_ht}</span>
                 <span>{formatAmount(totals.net)}</span>
               </div>
               <div className="flex justify-between text-[13.5px] text-[#5A6377]">
@@ -462,7 +471,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
             </>
           )}
           <div className="flex justify-between border-t border-[#F0F1F5] pt-2 text-[16px] font-extrabold text-navy">
-            <span>Total {totals.vatRate > 0 ? "TTC" : "final"}</span>
+            <span>{totals.vatRate > 0 ? t.total_ttc : t.total_final}</span>
             <span>{formatAmount(totals.total)}</span>
           </div>
         </Card>
@@ -475,10 +484,10 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
           disabled={createDocument.isPending}
         >
           {createDocument.isPending
-            ? "Création…"
+            ? t.generating
             : isInvoice
-              ? "Générer la facture"
-              : "Générer le devis"}
+              ? t.q_generate_f
+              : t.q_generate}
         </Button>
       </div>
     </div>

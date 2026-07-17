@@ -4,20 +4,23 @@ import { useState } from "react";
 import { DocumentCard } from "@/components/document-card";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
+import { ListSkeleton } from "@/components/ui/skeleton";
+import { useI18n } from "@/features/i18n/language-context";
 import { useDocuments } from "@/hooks/use-documents";
 import { cn } from "@/lib/utils";
 
 type Filter = "tous" | "devis" | "facture";
 
-const FILTERS: Array<{ key: Filter; label: string }> = [
-  { key: "tous", label: "Tous" },
-  { key: "devis", label: "Devis" },
-  { key: "facture", label: "Factures" },
-];
-
 export default function DocumentsPage() {
+  const { t } = useI18n();
   const { data: documents, isLoading } = useDocuments();
   const [filter, setFilter] = useState<Filter>("tous");
+
+  const filters: Array<{ key: Filter; label: string }> = [
+    { key: "tous", label: t.filter_all },
+    { key: "devis", label: t.filter_devis },
+    { key: "facture", label: t.filter_factures },
+  ];
 
   const filtered = (documents ?? []).filter(
     (doc) => filter === "tous" || doc.type === filter,
@@ -25,10 +28,10 @@ export default function DocumentsPage() {
 
   return (
     <div>
-      <ScreenHeader title="Documents" />
+      <ScreenHeader title={t.docs_title} />
       <div className="px-4 pt-4">
         <div className="flex gap-2">
-          {FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f.key}
               type="button"
@@ -46,9 +49,11 @@ export default function DocumentsPage() {
         </div>
 
         <div className="mt-4 space-y-3">
-          {isLoading ? null : filtered.length === 0 ? (
+          {isLoading ? (
+            <ListSkeleton />
+          ) : filtered.length === 0 ? (
             <Card className="p-6 text-center text-[14px] text-[#8A93A6]">
-              Aucun document
+              {t.docs_empty}
             </Card>
           ) : (
             filtered.map((doc) => <DocumentCard key={doc.id} document={doc} />)

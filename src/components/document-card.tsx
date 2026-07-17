@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { STATUS_LABELS, STATUS_STYLES } from "@/lib/constants";
+import { useI18n } from "@/features/i18n/language-context";
+import { STATUS_STYLES } from "@/lib/constants";
 import { formatAmount, formatDate } from "@/lib/format";
+import { statusLabel, typeLabel } from "@/lib/i18n/labels";
 import type { DocumentRow } from "@/types/database";
 
 export function DocumentCard({ document }: { document: DocumentRow }) {
+  const { t } = useI18n();
   const status = STATUS_STYLES[document.status];
 
   return (
@@ -16,15 +19,14 @@ export function DocumentCard({ document }: { document: DocumentRow }) {
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-[12px] font-semibold text-[#8A93A6]">
-          {document.number} ·{" "}
-          {document.type === "facture" ? "Facture" : "Devis"}
+          {document.number} · {typeLabel(t, document.type)}
         </span>
         <Badge bg={status.bg} color={status.color}>
-          {STATUS_LABELS[document.status]}
+          {statusLabel(t, document.status)}
         </Badge>
       </div>
       <div className="mt-1.5 truncate text-[15px] font-bold text-navy">
-        {document.title || document.client_name || "Sans titre"}
+        {document.title || document.client_name || t.untitled}
       </div>
       <div className="mt-1 flex items-center justify-between text-[13px]">
         <span className="text-[#5A6377]">

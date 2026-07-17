@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
+import { cookies } from "next/headers";
+import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
+import { InstallPrompt } from "@/components/install-prompt";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -13,6 +16,15 @@ export const metadata: Metadata = {
   title: "DIGICK Devis",
   description:
     "Créez un devis professionnel en moins de 2 minutes et envoyez-le sur WhatsApp.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "DIGICK",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -21,13 +33,19 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(LANG_COOKIE)?.value);
+
   return (
-    <html lang="fr">
+    <html lang={lang}>
       <body className={`${poppins.variable} font-sans`}>
-        <Providers>{children}</Providers>
+        <Providers initialLang={lang}>
+          {children}
+          <InstallPrompt />
+        </Providers>
       </body>
     </html>
   );

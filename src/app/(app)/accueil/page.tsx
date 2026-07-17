@@ -6,11 +6,13 @@ import { DocumentCard } from "@/components/document-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCompany } from "@/features/company/company-context";
+import { useI18n } from "@/features/i18n/language-context";
 import { useDocuments } from "@/hooks/use-documents";
 import { useUsage } from "@/hooks/use-usage";
 
 export default function AccueilPage() {
   const company = useCompany();
+  const { t } = useI18n();
   const { data: documents } = useDocuments();
   const { data: usage } = useUsage();
 
@@ -18,7 +20,7 @@ export default function AccueilPage() {
 
   return (
     <div className="px-4 pt-6">
-      <p className="text-[14px] text-[#5A6377]">Bonjour</p>
+      <p className="text-[14px] text-[#5A6377]">{t.home_hello}</p>
       <h1 className="text-[24px] font-extrabold text-navy">
         {company.owner_name || company.name}
       </h1>
@@ -28,7 +30,7 @@ export default function AccueilPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[12px] font-semibold text-[#8A93A6]">
-                Documents ce mois
+                {t.counter_month}
               </div>
               <div className="text-[22px] font-extrabold text-navy">
                 {usage.used}
@@ -51,7 +53,7 @@ export default function AccueilPage() {
             usage.quota > 0 &&
             usage.used >= usage.quota && (
               <p className="mt-2 text-[12.5px] font-semibold text-coral">
-                Limite atteinte — passez à une offre supérieure.
+                {t.counter_limit}
               </p>
             )}
         </Card>
@@ -59,39 +61,37 @@ export default function AccueilPage() {
 
       <Button asChild variant="accent" size="lg" className="mt-5 w-full">
         <Link href="/nouveau?type=devis">
-          <Plus size={19} /> Créer un devis
+          <Plus size={19} /> {t.home_cta}
         </Link>
       </Button>
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Button asChild variant="outline">
           <Link href="/nouveau?type=facture">
-            <FileText size={17} /> Nouvelle facture
+            <FileText size={17} /> {t.home_invoice}
           </Link>
         </Button>
         <Button asChild variant="outline">
           <Link href="/clients/nouveau">
-            <UserPlus size={17} /> Ajouter un client
+            <UserPlus size={17} /> {t.home_addclient}
           </Link>
         </Button>
       </div>
 
       <div className="mt-8 flex items-center justify-between">
-        <h2 className="text-[16px] font-bold text-navy">Derniers documents</h2>
+        <h2 className="text-[16px] font-bold text-navy">{t.home_recent}</h2>
         <Link
           href="/documents"
           className="text-[13px] font-semibold text-[#5A6377]"
         >
-          Tout voir
+          {t.see_all}
         </Link>
       </div>
 
       <div className="mt-3 space-y-3">
         {recent.length === 0 ? (
-          <Card className="p-6 text-center text-[14px] text-[#8A93A6]">
-            Aucun document pour le moment.
-            <br />
-            Créez votre premier devis !
+          <Card className="whitespace-pre-line p-6 text-center text-[14px] text-[#8A93A6]">
+            {t.home_empty}
           </Card>
         ) : (
           recent.map((doc) => <DocumentCard key={doc.id} document={doc} />)

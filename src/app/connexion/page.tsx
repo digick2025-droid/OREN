@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/features/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { isValidPhone, normalizePhoneE164 } from "@/lib/phone";
 
@@ -16,6 +17,7 @@ type Step = "phone" | "otp";
 export default function ConnexionPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -23,7 +25,7 @@ export default function ConnexionPage() {
 
   const sendCode = async () => {
     if (!isValidPhone(phone)) {
-      toast.error("Entrez un numéro valide");
+      toast.error(t.toast_need_phone);
       return;
     }
     setLoading(true);
@@ -32,10 +34,10 @@ export default function ConnexionPage() {
     });
     setLoading(false);
     if (error) {
-      toast.error("Impossible d'envoyer le code. Réessayez.");
+      toast.error(t.otp_send_failed);
       return;
     }
-    toast.success("Code envoyé par SMS");
+    toast.success(t.otp_sent);
     setStep("otp");
   };
 
@@ -49,10 +51,10 @@ export default function ConnexionPage() {
     });
     setLoading(false);
     if (error) {
-      toast.error("Code incorrect, réessayez.");
+      toast.error(t.otp_error);
       return;
     }
-    toast.success("Connexion réussie");
+    toast.success(t.otp_ok);
     router.push("/accueil");
     router.refresh();
   };
@@ -76,13 +78,13 @@ export default function ConnexionPage() {
 
       {step === "phone" ? (
         <div className="mt-8">
-          <h1 className="text-[26px] font-extrabold text-navy">Bienvenue</h1>
-          <p className="mt-1.5 text-[14px] text-[#5A6377]">
-            Entrez votre numéro pour commencer
-          </p>
+          <h1 className="text-[26px] font-extrabold text-navy">
+            {t.login_title}
+          </h1>
+          <p className="mt-1.5 text-[14px] text-[#5A6377]">{t.login_sub}</p>
 
           <div className="mt-8">
-            <Label htmlFor="phone">Numéro de téléphone</Label>
+            <Label htmlFor="phone">{t.login_phone}</Label>
             <Input
               id="phone"
               inputMode="tel"
@@ -92,9 +94,7 @@ export default function ConnexionPage() {
               onChange={(event) => setPhone(event.target.value)}
               onKeyDown={(event) => event.key === "Enter" && void sendCode()}
             />
-            <p className="mt-2 text-[12px] text-[#8A93A6]">
-              Vous recevrez un code de vérification par SMS / WhatsApp.
-            </p>
+            <p className="mt-2 text-[12px] text-[#8A93A6]">{t.login_hint}</p>
           </div>
 
           <Button
@@ -102,14 +102,16 @@ export default function ConnexionPage() {
             onClick={() => void sendCode()}
             disabled={loading}
           >
-            {loading ? "Envoi…" : "Recevoir le code"}
+            {loading ? t.login_sending : t.login_btn}
           </Button>
         </div>
       ) : (
         <div className="mt-8">
-          <h1 className="text-[26px] font-extrabold text-navy">Vérification</h1>
+          <h1 className="text-[26px] font-extrabold text-navy">
+            {t.otp_title}
+          </h1>
           <p className="mt-1.5 text-[14px] text-[#5A6377]">
-            Entrez le code envoyé au{" "}
+            {t.otp_sub}{" "}
             <span className="font-semibold text-navy">
               {normalizePhoneE164(phone)}
             </span>
@@ -135,7 +137,7 @@ export default function ConnexionPage() {
             onClick={() => void verifyCode()}
             disabled={loading || code.length < 4}
           >
-            {loading ? "Vérification…" : "Vérifier"}
+            {loading ? t.otp_verifying : t.otp_verify}
           </Button>
 
           <button
@@ -143,7 +145,7 @@ export default function ConnexionPage() {
             onClick={() => void sendCode()}
             className="mt-4 w-full text-center text-[13px] font-semibold text-[#5A6377] underline"
           >
-            Renvoyer le code
+            {t.otp_resend}
           </button>
         </div>
       )}

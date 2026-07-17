@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCompany } from "@/features/company/company-context";
 import { createClient } from "@/lib/supabase/client";
-import type { Plan, Usage } from "@/types/database";
+import type { Plan, PlanFeature, Usage } from "@/types/database";
 
 export function useUsage() {
   const company = useCompany();
@@ -19,6 +19,21 @@ export function useUsage() {
       return data as Usage;
     },
   });
+}
+
+/**
+ * Vérifie si l'offre active donne accès à une fonctionnalité.
+ * Retourne aussi loading pour éviter d'afficher le verrou avant de savoir.
+ */
+export function usePlanFeature(feature: PlanFeature): {
+  enabled: boolean;
+  loading: boolean;
+} {
+  const { data: usage, isLoading } = useUsage();
+  return {
+    enabled: usage?.features.includes(feature) ?? false,
+    loading: isLoading,
+  };
 }
 
 export function usePlans() {
