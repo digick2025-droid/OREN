@@ -7,6 +7,7 @@
 export interface PdfCompany {
   name: string;
   ownerName: string;
+  slogan: string;
   phone: string;
   whatsapp: string;
   address: string;
@@ -27,7 +28,7 @@ export interface PdfLine {
 }
 
 export interface PdfDocumentData {
-  type: "devis" | "facture";
+  type: "devis" | "facture" | "proforma";
   number: string;
   title: string;
   issueDate: string;
@@ -39,6 +40,7 @@ export interface PdfDocumentData {
   vatRate: number;
   vatAmount: number;
   total: number;
+  advanceAmount: number;
   note: string;
   conditions: string;
 }
@@ -51,6 +53,9 @@ export type PdfLang = "fr" | "en";
 export interface PdfStrings {
   quote: string;
   invoice: string;
+  proforma: string;
+  advance: string;
+  remaining: string;
   date: string;
   client: string;
   designation: string;

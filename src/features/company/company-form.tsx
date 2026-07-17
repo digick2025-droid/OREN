@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
+import { ImagePlus, Loader2, Lock } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -11,6 +15,7 @@ import { useI18n } from "@/features/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { COMPANY_COLORS, DEFAULT_COMPANY_COLOR } from "@/lib/constants";
 import { regimeLabel } from "@/lib/i18n/labels";
+import { usePlanFeature } from "@/hooks/use-usage";
 import type { Company, CompanyUpdate, TaxRegime } from "@/types/database";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +29,7 @@ interface CompanyFormProps {
 interface FormState {
   name: string;
   owner_name: string;
+  slogan: string;
   phone: string;
   whatsapp: string;
   address: string;
@@ -42,10 +48,17 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
   const router = useRouter();
   const supabase = createClient();
   const { t } = useI18n();
+  const brandingAccess = usePlanFeature("logo");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(
+    company?.logo_url ?? null,
+  );
   const [form, setForm] = useState<FormState>({
     name: company?.name ?? "",
     owner_name: company?.owner_name ?? "",
+    slogan: company?.slogan ?? "",
     phone: company?.phone ?? defaultPhone ?? "",
     whatsapp: company?.whatsapp ?? defaultPhone ?? "",
     address: company?.address ?? "",
@@ -61,6 +74,38 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
+  const uploadLogo = async (file: File) => {
+    if (!company) {
+      toast.error(t.logo_save_first);
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() ?? "png";
+    const path = `${company.id}/logo-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("logos")
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      setUploading(false);
+      toast.error(t.toast_save_error);
+      return;
+    }
+    const { data } = supabase.storage.from("logos").getPublicUrl(path);
+    const publicUrl = data.publicUrl;
+    const { error: updateError } = await supabase
+      .from("companies")
+      .update({ logo_url: publicUrl })
+      .eq("id", company.id);
+    setUploading(false);
+    if (updateError) {
+      toast.error(t.toast_save_error);
+      return;
+    }
+    setLogoUrl(publicUrl);
+    toast.success(t.toast_saved);
+    router.refresh();
+  };
+
   const save = async () => {
     if (!form.name.trim()) {
       toast.error(t.toast_need_company);
@@ -70,6 +115,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
     const values: CompanyUpdate = {
       name: form.name.trim(),
       owner_name: form.owner_name.trim() || null,
+      slogan: form.slogan.trim() || null,
       phone: form.phone.trim() || null,
       whatsapp: form.whatsapp.trim() || null,
       address: form.address.trim() || null,
@@ -179,6 +225,96 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
           ))}
         </div>
       </div>
+
+      {/* ----- Image de marque (offre Startup) ----- */}
+      {!brandingAccess.loading &&
+        (brandingAccess.enabled ? (
+          <Card className="p-4">
+            <div className="text-[14px] font-bold text-navy">
+              {t.branding_title}
+            </div>
+            <p className="mt-0.5 text-[12px] text-[#8A93A6]">
+              {t.branding_hint}
+            </p>
+
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E9EBF0] bg-[#F6F7F9]">
+                {logoUrl ? (
+                  <Image
+                    src={logoUrl}
+                    alt="Logo"
+                    width={64}
+                    height={64}
+                    className="h-16 w-16 object-contain"
+                  />
+                ) : (
+                  <ImagePlus size={22} className="text-[#A6ADBD]" />
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void uploadLogo(file);
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || !company}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />{" "}
+                      {t.logo_uploading}
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus size={15} />{" "}
+                      {logoUrl ? t.logo_change : t.logo_upload}
+                    </>
+                  )}
+                </Button>
+                {!company && (
+                  <p className="mt-1.5 text-[11.5px] text-[#A6ADBD]">
+                    {t.logo_save_first}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Label htmlFor="slogan">{t.f_slogan}</Label>
+              <Input
+                id="slogan"
+                value={form.slogan}
+                onChange={(e) => setField("slogan", e.target.value)}
+                placeholder={t.f_slogan_ph}
+              />
+            </div>
+          </Card>
+        ) : (
+          <Card className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF0F4] text-navy">
+              <Lock size={18} />
+            </div>
+            <div className="min-w-0 flex-1 text-[12.5px] text-[#5A6377]">
+              {t.branding_locked}
+            </div>
+            <Link
+              href="/offres"
+              className="shrink-0 text-[12.5px] font-bold text-coral"
+            >
+              {t.branding_upgrade}
+            </Link>
+          </Card>
+        ))}
 
       <div className="rounded-2xl border border-[#E9EBF0] bg-white p-4">
         <div className="text-[14px] font-bold text-navy">{t.ohada_legal}</div>

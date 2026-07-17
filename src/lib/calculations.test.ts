@@ -4,6 +4,8 @@ import {
   computeTotals,
   formatDocumentNumber,
   lineTotal,
+  parseQuantity,
+  remainingToPay,
 } from "./calculations";
 
 describe("lineTotal", () => {
@@ -99,8 +101,70 @@ describe("formatDocumentNumber — numérotation", () => {
     expect(formatDocumentNumber("facture", 12)).toBe("FAC-012");
   });
 
+  it("préfixe PRO- pour une proforma", () => {
+    expect(formatDocumentNumber("proforma", 3)).toBe("PRO-003");
+  });
+
   it("dépasse 3 chiffres sans tronquer", () => {
     expect(formatDocumentNumber("devis", 1234)).toBe("DEV-1234");
+  });
+});
+
+describe("parseQuantity — saisie décimale et fractions", () => {
+  it("accepte un entier", () => {
+    expect(parseQuantity("3")).toBe(3);
+  });
+
+  it("accepte la virgule décimale (surfaces)", () => {
+    expect(parseQuantity("1,2")).toBeCloseTo(1.2);
+    expect(parseQuantity("1,8")).toBeCloseTo(1.8);
+  });
+
+  it("accepte le point décimal", () => {
+    expect(parseQuantity("2.5")).toBeCloseTo(2.5);
+  });
+
+  it("accepte une fraction", () => {
+    expect(parseQuantity("3/2")).toBeCloseTo(1.5);
+  });
+
+  it("ignore les espaces", () => {
+    expect(parseQuantity(" 4,5 ")).toBeCloseTo(4.5);
+  });
+
+  it("retourne 0 pour une saisie vide ou invalide", () => {
+    expect(parseQuantity("")).toBe(0);
+    expect(parseQuantity("abc")).toBe(0);
+    expect(parseQuantity("5/0")).toBe(0);
+  });
+
+  it("ne retourne jamais de valeur négative", () => {
+    expect(parseQuantity("-2")).toBe(0);
+  });
+
+  it("calcule une surface correctement", () => {
+    // 4,2 m × 1,8 m à 3 500 F/m²
+    expect(lineTotal({ quantity: parseQuantity("4,2"), unit_price: 3500 })).toBe(
+      lineTotal({ quantity: 4.2, unit_price: 3500 }),
+    );
+  });
+});
+
+describe("remainingToPay — reste après acompte", () => {
+  it("soustrait l'acompte du total", () => {
+    expect(remainingToPay(50000, 20000)).toBe(30000);
+  });
+
+  it("borne l'acompte au total (pas de reste négatif)", () => {
+    expect(remainingToPay(50000, 60000)).toBe(0);
+  });
+
+  it("acompte nul : reste = total", () => {
+    expect(remainingToPay(50000, 0)).toBe(50000);
+  });
+
+  it("ignore un acompte négatif", () => {
+    expect(remainingToPay(50000, -10000)).toBe(50000);
   });
 });
 

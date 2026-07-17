@@ -42,12 +42,41 @@ export function computeTotals(
   return { subtotal, discount, net, vatRate, vatAmount, total: net + vatAmount };
 }
 
-/** Formate un numéro de document : DEV-001, FAC-012… */
+/**
+ * Parse une quantité saisie librement, tolérante à l'usage local :
+ * - virgule décimale (« 1,5 » → 1.5)
+ * - fraction (« 3/2 » → 1.5) pour surfaces/découpes
+ * - espaces ignorés
+ * Retourne 0 si la saisie est vide ou invalide (jamais négatif).
+ */
+export function parseQuantity(input: string): number {
+  const cleaned = input.trim().replace(/\s+/g, "").replace(",", ".");
+  if (cleaned === "") return 0;
+
+  if (cleaned.includes("/")) {
+    const [num, den] = cleaned.split("/");
+    const n = Number(num);
+    const d = Number(den);
+    if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return 0;
+    return Math.max(n / d, 0);
+  }
+
+  const value = Number(cleaned);
+  return Number.isFinite(value) ? Math.max(value, 0) : 0;
+}
+
+/** Reste à payer après acompte (borné entre 0 et le total). */
+export function remainingToPay(total: number, advance: number): number {
+  return Math.max(total - Math.min(Math.max(advance, 0), total), 0);
+}
+
+/** Formate un numéro de document : DEV-001, FAC-012, PRO-003… */
 export function formatDocumentNumber(
-  type: "devis" | "facture",
+  type: "devis" | "facture" | "proforma",
   counter: number,
 ): string {
-  const prefix = type === "facture" ? "FAC-" : "DEV-";
+  const prefix =
+    type === "facture" ? "FAC-" : type === "proforma" ? "PRO-" : "DEV-";
   return prefix + String(counter).padStart(3, "0");
 }
 

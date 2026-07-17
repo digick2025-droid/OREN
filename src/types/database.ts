@@ -3,7 +3,7 @@
  * Régénérer via `supabase gen types typescript` quand le schéma évolue.
  */
 
-export type DocumentType = "devis" | "facture";
+export type DocumentType = "devis" | "facture" | "proforma";
 export type DocumentStatus =
   | "brouillon"
   | "envoye"
@@ -36,6 +36,7 @@ export interface Company {
   address: string | null;
   email: string | null;
   logo_url: string | null;
+  slogan: string | null;
   color: string;
   rccm: string | null;
   nif: string | null;
@@ -118,6 +119,7 @@ export interface DocumentRow {
   vat_rate: number;
   vat_amount: number;
   total: number;
+  advance_amount: number;
   note: string;
   conditions: string;
   converted_from: string | null;
@@ -145,7 +147,12 @@ export interface DocumentItem {
 }
 
 /** Fonctionnalités activables par offre (configurées en base) */
-export type PlanFeature = "catalog" | "reports";
+export type PlanFeature =
+  | "catalog"
+  | "reports"
+  | "proforma"
+  | "logo"
+  | "advance";
 
 export interface Plan {
   key: string;
@@ -210,6 +217,13 @@ export interface Usage {
   period_end: string | null;
 }
 
+export interface DocumentLineInput {
+  name: string;
+  unit: string;
+  quantity: number;
+  unit_price: number;
+}
+
 /** Charge utile de la RPC create_document */
 export interface CreateDocumentPayload {
   type: DocumentType;
@@ -220,11 +234,23 @@ export interface CreateDocumentPayload {
   note: string;
   conditions: string;
   discount: number;
+  advance_amount?: number;
+  /** 'brouillon' pour un document incomplet enregistré */
+  status?: DocumentStatus;
   converted_from?: string;
-  items: Array<{
-    name: string;
-    unit: string;
-    quantity: number;
-    unit_price: number;
-  }>;
+  items: DocumentLineInput[];
+}
+
+/** Charge utile de la RPC update_document (édition) */
+export interface UpdateDocumentPayload {
+  client_id: string | null;
+  client_name?: string;
+  client_phone?: string;
+  title: string;
+  note: string;
+  conditions: string;
+  discount: number;
+  advance_amount?: number;
+  status?: DocumentStatus;
+  items: DocumentLineInput[];
 }

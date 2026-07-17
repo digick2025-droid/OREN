@@ -4,6 +4,9 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
   fr: {
     quote: "DEVIS",
     invoice: "FACTURE",
+    proforma: "FACTURE PROFORMA",
+    advance: "Acompte reçu",
+    remaining: "Reste à payer",
     date: "Date",
     client: "Client",
     designation: "Désignation",
@@ -29,6 +32,9 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
   en: {
     quote: "QUOTE",
     invoice: "INVOICE",
+    proforma: "PROFORMA INVOICE",
+    advance: "Advance received",
+    remaining: "Remaining to pay",
     date: "Date",
     client: "Client",
     designation: "Description",

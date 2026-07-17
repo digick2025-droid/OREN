@@ -3,7 +3,7 @@
 import { use } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Eye, FileText, Send, Trash2 } from "lucide-react";
+import { Copy, Eye, FileText, Pencil, Send, Trash2 } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,8 @@ export default function DocumentDetailPage({
   }
 
   const { document: doc, items } = data;
-  const isQuote = doc.type === "devis";
+  const isConvertible = doc.type === "devis" || doc.type === "proforma";
+  const remaining = Math.max(doc.total - doc.advance_amount, 0);
 
   const openPdf = () => {
     const html = renderDocumentHtml(
@@ -195,6 +196,18 @@ export default function DocumentDetailPage({
                 <span>{t.total}</span>
                 <span>{formatAmount(doc.total)}</span>
               </div>
+              {doc.advance_amount > 0 && (
+                <>
+                  <div className="flex justify-between text-[13px] text-[#5A6377]">
+                    <span>{t.advance_paid}</span>
+                    <span>− {formatAmount(doc.advance_amount)}</span>
+                  </div>
+                  <div className="flex justify-between text-[14px] font-bold text-coral">
+                    <span>{t.remaining_to_pay}</span>
+                    <span>{formatAmount(remaining)}</span>
+                  </div>
+                </>
+              )}
             </div>
           </Card>
         </section>
@@ -225,7 +238,14 @@ export default function DocumentDetailPage({
           <Button variant="whatsapp" className="w-full" onClick={shareWhatsApp}>
             <Send size={17} /> {t.wa_send}
           </Button>
-          {isQuote && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => router.push(`/documents/${doc.id}/modifier`)}
+          >
+            <Pencil size={17} /> {t.edit_document}
+          </Button>
+          {isConvertible && (
             <Button
               variant="outline"
               className="w-full"

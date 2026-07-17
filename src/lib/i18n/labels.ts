@@ -20,7 +20,12 @@ export function statusLabel(t: Dict, status: DocumentStatus): string {
 }
 
 export function typeLabel(t: Dict, type: DocumentType): string {
-  return type === "facture" ? t.type_facture : t.type_devis;
+  const map: Record<DocumentType, string> = {
+    devis: t.type_devis,
+    facture: t.type_facture,
+    proforma: t.type_proforma,
+  };
+  return map[type];
 }
 
 export function itemTypeLabel(t: Dict, type: CatalogItemType): string {

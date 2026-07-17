@@ -8,6 +8,7 @@ import type {
   DocumentItem,
   DocumentRow,
   DocumentStatus,
+  UpdateDocumentPayload,
 } from "@/types/database";
 
 export function useDocuments() {
@@ -84,6 +85,32 @@ export function useCreateDocument() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["documents", company.id] });
       void queryClient.invalidateQueries({ queryKey: ["usage", company.id] });
+    },
+  });
+}
+
+export function useUpdateDocument() {
+  const company = useCompany();
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      payload: UpdateDocumentPayload;
+    }): Promise<DocumentRow> => {
+      const { data, error } = await supabase.rpc("update_document", {
+        p_document_id: input.id,
+        p_payload: input.payload,
+      });
+      if (error) throw new Error(error.message);
+      return data as DocumentRow;
+    },
+    onSuccess: (doc) => {
+      void queryClient.invalidateQueries({ queryKey: ["documents", company.id] });
+      void queryClient.invalidateQueries({
+        queryKey: ["documents", company.id, doc.id],
+      });
     },
   });
 }

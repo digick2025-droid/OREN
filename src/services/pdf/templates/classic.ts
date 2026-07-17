@@ -40,8 +40,14 @@ export const classicTemplate: PdfTemplate = {
 
   render(doc: PdfDocumentData, company: PdfCompany, s: PdfStrings): string {
     const color = company.color || "#131F35";
-    const titleWord = doc.type === "facture" ? s.invoice : s.quote;
+    const titleWord =
+      doc.type === "facture"
+        ? s.invoice
+        : doc.type === "proforma"
+          ? s.proforma
+          : s.quote;
     const net = doc.subtotal - doc.discount;
+    const remaining = Math.max(doc.total - doc.advanceAmount, 0);
 
     const logo = company.logoUrl
       ? `<img src="${esc(company.logoUrl)}" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:10px" />`
@@ -85,6 +91,12 @@ export const classicTemplate: PdfTemplate = {
 
     const totalLabel = doc.vatRate > 0 ? s.totalTtc : s.total;
 
+    const advanceRows =
+      doc.advanceAmount > 0
+        ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#5A6377;padding:3px 0"><span>${s.advance}</span><span>− ${fcfa(doc.advanceAmount)}</span></div>
+           <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:800;color:${color};padding:5px 0"><span>${s.remaining}</span><span>${fcfa(remaining)}</span></div>`
+        : "";
+
     const conditions = doc.conditions
       ? `<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em">${s.conditions}</div><div style="font-size:11px;color:#5A6377;margin-top:3px">${esc(doc.conditions)}</div></div>`
       : "";
@@ -94,11 +106,11 @@ export const classicTemplate: PdfTemplate = {
       : "";
 
     const accord =
-      doc.type === "devis"
+      doc.type !== "facture"
         ? `<div style="text-align:center"><div style="font-size:10px;font-weight:700;color:#8A93A6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${s.approval}</div><div style="width:150px;border-bottom:1px solid #C3C9D5;height:44px"></div><div style="font-size:9.5px;color:#5A6377;margin-top:4px">${s.approvalDate}</div></div>`
         : "";
 
-    const legalNote = doc.type === "devis" ? s.quoteValidity : s.latePenalty;
+    const legalNote = doc.type === "facture" ? s.latePenalty : s.quoteValidity;
 
     return `<!doctype html>
 <html lang="fr">
@@ -120,7 +132,8 @@ export const classicTemplate: PdfTemplate = {
       ${logo}
       <div>
         <div style="font-size:16px;font-weight:800;color:#131F35">${esc(company.name)}</div>
-        <div style="font-size:10.5px;color:#5A6377;line-height:1.5">${[company.address, company.phone, company.email].filter(Boolean).map(esc).join("<br/>")}</div>
+        ${company.slogan ? `<div style="font-size:10px;font-style:italic;color:${color}">${esc(company.slogan)}</div>` : ""}
+        <div style="font-size:10.5px;color:#5A6377;line-height:1.5;margin-top:2px">${[company.address, company.phone, company.email].filter(Boolean).map(esc).join("<br/>")}</div>
       </div>
     </div>
     <div style="text-align:right">
@@ -157,6 +170,7 @@ export const classicTemplate: PdfTemplate = {
       ${discountRow}
       ${vatRows}
       <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;background:${color};color:#fff;padding:9px 12px;border-radius:6px;margin-top:5px"><span>${totalLabel}</span><span>${fcfa(doc.total)}</span></div>
+      ${advanceRows}
     </div>
   </div>
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, Minus, Plus, Search, Trash2, UserPlus, X } from "lucide-react";
+import { Check, Minus, Plus, Save, Search, Trash2, UserPlus, X } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,26 +12,56 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
-import { computeTotals } from "@/lib/calculations";
+import { computeTotals, parseQuantity, remainingToPay } from "@/lib/calculations";
 import { formatAmount } from "@/lib/format";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useClients, useSaveClient } from "@/hooks/use-clients";
-import { isQuotaError, useCreateDocument } from "@/hooks/use-documents";
+import {
+  isQuotaError,
+  useCreateDocument,
+  useUpdateDocument,
+} from "@/hooks/use-documents";
 import { usePlanFeature } from "@/hooks/use-usage";
-import type { DocumentType } from "@/types/database";
+import type {
+  DocumentItem,
+  DocumentRow,
+  DocumentType,
+} from "@/types/database";
 import { cn } from "@/lib/utils";
 
 interface DraftLine {
   uid: number;
   name: string;
   unit: string;
-  quantity: number;
+  qty: string;
   unit_price: number;
+}
+
+interface SavedDraft {
+  clientId: string | null;
+  lines: DraftLine[];
+  discount: string;
+  advance: string;
+  title: string;
+  note: string;
+  conditions: string;
 }
 
 let uidCounter = 1;
 
-export function DocumentBuilder({ type }: { type: DocumentType }) {
+function draftKey(type: DocumentType): string {
+  return `digick_draft_${type}`;
+}
+
+export function DocumentBuilder({
+  type: createType,
+  document: editDoc,
+  items: editItems,
+}: {
+  type?: DocumentType;
+  document?: DocumentRow;
+  items?: DocumentItem[];
+}) {
   const router = useRouter();
   const company = useCompany();
   const { t } = useI18n();
@@ -39,30 +69,112 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
   const { data: catalog } = useCatalog();
   const saveClient = useSaveClient();
   const createDocument = useCreateDocument();
+  const updateDocument = useUpdateDocument();
   const catalogAccess = usePlanFeature("catalog");
 
-  const [clientId, setClientId] = useState<string | null>(null);
+  const isEdit = Boolean(editDoc);
+  const type: DocumentType = editDoc?.type ?? createType ?? "devis";
+  const isInvoice = type === "facture";
+
+  const [clientId, setClientId] = useState<string | null>(
+    editDoc?.client_id ?? null,
+  );
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
   const [search, setSearch] = useState("");
-  const [lines, setLines] = useState<DraftLine[]>([]);
-  const [discount, setDiscount] = useState("");
-  const [title, setTitle] = useState("");
-  const [note, setNote] = useState("");
-  const [conditions, setConditions] = useState("");
+  const [lines, setLines] = useState<DraftLine[]>(() =>
+    (editItems ?? []).map((item) => ({
+      uid: uidCounter++,
+      name: item.name,
+      unit: item.unit,
+      qty: String(item.quantity),
+      unit_price: item.unit_price,
+    })),
+  );
+  const [discount, setDiscount] = useState(
+    editDoc && editDoc.discount > 0 ? String(editDoc.discount) : "",
+  );
+  const [advance, setAdvance] = useState(
+    editDoc && editDoc.advance_amount > 0 ? String(editDoc.advance_amount) : "",
+  );
+  const [title, setTitle] = useState(editDoc?.title ?? "");
+  const [note, setNote] = useState(editDoc?.note ?? "");
+  const [conditions, setConditions] = useState(editDoc?.conditions ?? "");
+  const [draftRestored, setDraftRestored] = useState(false);
+  const restoredRef = useRef(false);
 
-  const isInvoice = type === "facture";
+  // ---- Autosave local (création uniquement) : reprise + hors-ligne ----
+  useEffect(() => {
+    if (isEdit || restoredRef.current) return;
+    restoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(draftKey(type));
+      if (!raw) return;
+      const saved = JSON.parse(raw) as SavedDraft;
+      if (saved.lines?.length || saved.title) {
+        setClientId(saved.clientId ?? null);
+        setLines(
+          (saved.lines ?? []).map((l) => ({ ...l, uid: uidCounter++ })),
+        );
+        setDiscount(saved.discount ?? "");
+        setAdvance(saved.advance ?? "");
+        setTitle(saved.title ?? "");
+        setNote(saved.note ?? "");
+        setConditions(saved.conditions ?? "");
+        setDraftRestored(true);
+      }
+    } catch {
+      // brouillon illisible : on ignore
+    }
+  }, [isEdit, type]);
+
+  useEffect(() => {
+    if (isEdit) return;
+    const payload: SavedDraft = {
+      clientId,
+      lines,
+      discount,
+      advance,
+      title,
+      note,
+      conditions,
+    };
+    const empty = lines.length === 0 && !title && !note && !conditions;
+    try {
+      if (empty) localStorage.removeItem(draftKey(type));
+      else localStorage.setItem(draftKey(type), JSON.stringify(payload));
+    } catch {
+      // quota storage plein : sans gravité
+    }
+  }, [isEdit, type, clientId, lines, discount, advance, title, note, conditions]);
+
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(draftKey(type));
+    } catch {
+      // ignore
+    }
+  };
 
   const totals = useMemo(
     () =>
-      computeTotals(lines, {
-        discount: parseInt(discount, 10) || 0,
-        vatEnabled: company.vat_enabled,
-        vatRate: company.vat_rate,
-      }),
+      computeTotals(
+        lines.map((l) => ({
+          quantity: parseQuantity(l.qty),
+          unit_price: l.unit_price,
+        })),
+        {
+          discount: parseInt(discount, 10) || 0,
+          vatEnabled: company.vat_enabled,
+          vatRate: company.vat_rate,
+        },
+      ),
     [lines, discount, company.vat_enabled, company.vat_rate],
   );
+
+  const advanceValue = parseInt(advance, 10) || 0;
+  const remaining = remainingToPay(totals.total, advanceValue);
 
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
@@ -85,6 +197,18 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
   const updateLine = (uid: number, patch: Partial<DraftLine>) => {
     setLines((prev) =>
       prev.map((l) => (l.uid === uid ? { ...l, ...patch } : l)),
+    );
+  };
+
+  const stepQty = (uid: number, delta: number) => {
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.uid !== uid) return l;
+        const next = Math.max(parseQuantity(l.qty) + delta, 0);
+        // garde une écriture propre : entier sans décimale, sinon 1 décimale
+        const str = Number.isInteger(next) ? String(next) : next.toFixed(1);
+        return { ...l, qty: str };
+      }),
     );
   };
 
@@ -117,31 +241,56 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
     );
   };
 
-  const generate = () => {
+  const buildItems = () =>
+    lines.map((line) => ({
+      name: line.name || "—",
+      unit: line.unit,
+      quantity: parseQuantity(line.qty),
+      unit_price: line.unit_price,
+    }));
+
+  const createdToast = () =>
+    type === "facture"
+      ? t.toast_facture_created
+      : type === "proforma"
+        ? t.toast_proforma_created
+        : t.toast_devis_created;
+
+  const submit = (asDraft: boolean) => {
     if (lines.length === 0) {
       toast.error(t.toast_need_items);
       return;
     }
+    const base = {
+      client_id: clientId,
+      title: title.trim(),
+      note: note.trim(),
+      conditions: conditions.trim(),
+      discount: parseInt(discount, 10) || 0,
+      advance_amount: isInvoice ? advanceValue : 0,
+      items: buildItems(),
+    };
+
+    if (isEdit && editDoc) {
+      updateDocument.mutate(
+        { id: editDoc.id, payload: base },
+        {
+          onSuccess: (doc) => {
+            toast.success(t.toast_updated);
+            router.push(`/documents/${doc.id}`);
+          },
+          onError: () => toast.error(t.toast_create_error),
+        },
+      );
+      return;
+    }
+
     createDocument.mutate(
-      {
-        type,
-        client_id: clientId,
-        title: title.trim(),
-        note: note.trim(),
-        conditions: conditions.trim(),
-        discount: parseInt(discount, 10) || 0,
-        items: lines.map((line) => ({
-          name: line.name || "—",
-          unit: line.unit,
-          quantity: line.quantity,
-          unit_price: line.unit_price,
-        })),
-      },
+      { type, status: "brouillon", ...base },
       {
         onSuccess: (doc) => {
-          toast.success(
-            isInvoice ? t.toast_facture_created : t.toast_devis_created,
-          );
+          clearDraft();
+          toast.success(asDraft ? t.toast_draft_saved : createdToast());
           router.push(`/documents/${doc.id}`);
         },
         onError: (error) => {
@@ -156,14 +305,45 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
     );
   };
 
+  const pending = createDocument.isPending || updateDocument.isPending;
+
+  const headerTitle = isEdit
+    ? t.edit_document
+    : type === "facture"
+      ? t.new_invoice
+      : type === "proforma"
+        ? t.new_proforma
+        : t.new_quote;
+
+  const primaryLabel = isEdit
+    ? t.save
+    : type === "facture"
+      ? t.q_generate_f
+      : type === "proforma"
+        ? t.q_generate_p
+        : t.q_generate;
+
+  const emptyItemsLabel =
+    type === "facture"
+      ? t.q_no_items_facture
+      : type === "proforma"
+        ? t.q_no_items_proforma
+        : t.q_no_items_devis;
+
   return (
     <div>
       <ScreenHeader
-        title={isInvoice ? t.new_invoice : t.new_quote}
-        backHref="/accueil"
+        title={headerTitle}
+        backHref={isEdit && editDoc ? `/documents/${editDoc.id}` : "/accueil"}
       />
 
       <div className="space-y-6 px-4 pb-10 pt-5">
+        {draftRestored && (
+          <div className="rounded-xl bg-[#FFF7E8] px-3 py-2 text-[12.5px] font-semibold text-[#B25E09]">
+            {t.draft_restored}
+          </div>
+        )}
+
         {/* ----- Client ----- */}
         <section>
           <div className="flex items-center justify-between">
@@ -258,7 +438,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                     addLine({
                       name: item.name,
                       unit: item.unit,
-                      quantity: 1,
+                      qty: "1",
                       unit_price: item.unit_price,
                     })
                   }
@@ -287,7 +467,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                       addLine({
                         name: item.name,
                         unit: item.unit,
-                        quantity: 1,
+                        qty: "1",
                         unit_price: item.unit_price,
                       })
                     }
@@ -302,7 +482,7 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
           <div className="mt-3 space-y-3">
             {lines.length === 0 ? (
               <Card className="p-5 text-center text-[13.5px] text-[#8A93A6]">
-                {isInvoice ? t.q_no_items_facture : t.q_no_items_devis}
+                {emptyItemsLabel}
               </Card>
             ) : (
               lines.map((line) => (
@@ -330,28 +510,32 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                       <button
                         type="button"
                         aria-label="−"
-                        onClick={() =>
-                          updateLine(line.uid, {
-                            quantity: Math.max(1, line.quantity - 1),
-                          })
-                        }
+                        onClick={() => stepQty(line.uid, -1)}
                         className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
                       >
                         <Minus size={14} />
                       </button>
-                      <span className="min-w-10 text-center text-[14px] font-bold text-navy">
-                        {line.quantity} {line.unit}
-                      </span>
+                      <Input
+                        className="h-8 w-16 rounded-lg px-1 text-center text-[14px] font-bold"
+                        inputMode="decimal"
+                        value={line.qty}
+                        onChange={(e) =>
+                          updateLine(line.uid, {
+                            qty: e.target.value.replace(/[^\d.,/]/g, ""),
+                          })
+                        }
+                      />
                       <button
                         type="button"
                         aria-label="+"
-                        onClick={() =>
-                          updateLine(line.uid, { quantity: line.quantity + 1 })
-                        }
+                        onClick={() => stepQty(line.uid, 1)}
                         className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
                       >
                         <Plus size={14} />
                       </button>
+                      <span className="ml-1 text-[12px] text-[#8A93A6]">
+                        {line.unit}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Input
@@ -371,6 +555,11 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
                       <span className="text-[12px] text-[#8A93A6]">FCFA</span>
                     </div>
                   </div>
+                  <div className="mt-1.5 text-right text-[12px] text-[#8A93A6]">
+                    {formatAmount(
+                      Math.round(parseQuantity(line.qty) * line.unit_price),
+                    )}
+                  </div>
                 </Card>
               ))
             )}
@@ -379,12 +568,13 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
           <button
             type="button"
             onClick={() =>
-              addLine({ name: "", unit: "unité", quantity: 1, unit_price: 0 })
+              addLine({ name: "", unit: "unité", qty: "1", unit_price: 0 })
             }
             className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-[#C3C9D5] py-3 text-[13.5px] font-semibold text-[#5A6377] hover:border-navy"
           >
             + {t.q_freeline}
           </button>
+          <p className="mt-1.5 text-[11.5px] text-[#A6ADBD]">{t.q_qty_hint}</p>
         </section>
 
         {/* ----- Détails ----- */}
@@ -410,6 +600,23 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
               placeholder="0"
             />
           </div>
+          {isInvoice && (
+            <div>
+              <Label htmlFor="doc-advance">{t.q_advance}</Label>
+              <Input
+                id="doc-advance"
+                inputMode="numeric"
+                value={advance}
+                onChange={(e) =>
+                  setAdvance(e.target.value.replace(/[^\d]/g, ""))
+                }
+                placeholder="0"
+              />
+              <p className="mt-1 text-[11.5px] text-[#A6ADBD]">
+                {t.q_advance_hint}
+              </p>
+            </div>
+          )}
           <div>
             <Label htmlFor="doc-note">{t.q_note}</Label>
             <Textarea
@@ -474,21 +681,40 @@ export function DocumentBuilder({ type }: { type: DocumentType }) {
             <span>{totals.vatRate > 0 ? t.total_ttc : t.total_final}</span>
             <span>{formatAmount(totals.total)}</span>
           </div>
+          {isInvoice && advanceValue > 0 && (
+            <>
+              <div className="flex justify-between pt-1 text-[13.5px] text-[#5A6377]">
+                <span>{t.advance_paid}</span>
+                <span>− {formatAmount(advanceValue)}</span>
+              </div>
+              <div className="flex justify-between text-[14px] font-bold text-coral">
+                <span>{t.remaining_to_pay}</span>
+                <span>{formatAmount(remaining)}</span>
+              </div>
+            </>
+          )}
         </Card>
 
         <Button
           variant="accent"
           size="lg"
           className="w-full"
-          onClick={generate}
-          disabled={createDocument.isPending}
+          onClick={() => submit(false)}
+          disabled={pending}
         >
-          {createDocument.isPending
-            ? t.generating
-            : isInvoice
-              ? t.q_generate_f
-              : t.q_generate}
+          {pending ? t.generating : primaryLabel}
         </Button>
+
+        {!isEdit && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => submit(true)}
+            disabled={pending}
+          >
+            <Save size={16} /> {t.save_draft}
+          </Button>
+        )}
       </div>
     </div>
   );

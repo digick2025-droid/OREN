@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, Plus, UserPlus } from "lucide-react";
+import { FileSignature, FileText, Plus, UserPlus } from "lucide-react";
 import { DocumentCard } from "@/components/document-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
 import { useDocuments } from "@/hooks/use-documents";
-import { useUsage } from "@/hooks/use-usage";
+import { usePlanFeature, useUsage } from "@/hooks/use-usage";
 
 export default function AccueilPage() {
   const company = useCompany();
   const { t } = useI18n();
   const { data: documents } = useDocuments();
   const { data: usage } = useUsage();
+  const proformaAccess = usePlanFeature("proforma");
 
   const recent = (documents ?? []).slice(0, 3);
 
@@ -71,12 +72,27 @@ export default function AccueilPage() {
             <FileText size={17} /> {t.home_invoice}
           </Link>
         </Button>
-        <Button asChild variant="outline">
+        {proformaAccess.enabled ? (
+          <Button asChild variant="outline">
+            <Link href="/nouveau?type=proforma">
+              <FileSignature size={17} /> {t.home_proforma}
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild variant="outline">
+            <Link href="/clients/nouveau">
+              <UserPlus size={17} /> {t.home_addclient}
+            </Link>
+          </Button>
+        )}
+      </div>
+      {proformaAccess.enabled && (
+        <Button asChild variant="outline" className="mt-3 w-full">
           <Link href="/clients/nouveau">
             <UserPlus size={17} /> {t.home_addclient}
           </Link>
         </Button>
-      </div>
+      )}
 
       <div className="mt-8 flex items-center justify-between">
         <h2 className="text-[16px] font-bold text-navy">{t.home_recent}</h2>

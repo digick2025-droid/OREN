@@ -53,6 +53,7 @@ export function toPdfData(
     vatRate: doc.vat_enabled ? doc.vat_rate : 0,
     vatAmount: doc.vat_amount,
     total: doc.total,
+    advanceAmount: doc.advance_amount,
     note: doc.note,
     conditions: doc.conditions,
   };
@@ -62,6 +63,7 @@ export function toPdfCompany(company: Company): PdfCompany {
   return {
     name: company.name,
     ownerName: company.owner_name ?? "",
+    slogan: company.slogan ?? "",
     phone: company.phone ?? "",
     whatsapp: company.whatsapp ?? "",
     address: company.address ?? "",

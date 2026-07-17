@@ -19,6 +19,7 @@ const quote: DocumentRow = {
   vat_rate: 18,
   vat_amount: 7200,
   total: 47200,
+  advance_amount: 0,
   note: "Travaux mardi",
   conditions: "Paiement 50% à la commande",
   converted_from: null,

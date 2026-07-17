@@ -3,6 +3,8 @@ import { Poppins } from "next/font/google";
 import { cookies } from "next/headers";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { InstallPrompt } from "@/components/install-prompt";
+import { OfflineBanner } from "@/components/offline-banner";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -43,8 +45,10 @@ export default async function RootLayout({
     <html lang={lang}>
       <body className={`${poppins.variable} font-sans`}>
         <Providers initialLang={lang}>
+          <OfflineBanner />
           {children}
           <InstallPrompt />
+          <ServiceWorkerRegister />
         </Providers>
       </body>
     </html>
