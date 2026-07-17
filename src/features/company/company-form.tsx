@@ -87,6 +87,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
       .upload(path, file, { upsert: true });
     if (uploadError) {
       setUploading(false);
+      console.error("[logo] upload storage:", uploadError);
       toast.error(t.toast_save_error);
       return;
     }
@@ -98,6 +99,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
       .eq("id", company.id);
     setUploading(false);
     if (updateError) {
+      console.error("[logo] update companies:", updateError);
       toast.error(t.toast_save_error);
       return;
     }
