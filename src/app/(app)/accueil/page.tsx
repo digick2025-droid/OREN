@@ -21,7 +21,7 @@ export default function AccueilPage() {
 
   return (
     <div className="px-4 pt-6">
-      <p className="text-[14px] text-[#5A6377]">{t.home_hello}</p>
+      <p className="text-[14px] text-[#64748B]">{t.home_hello}</p>
       <h1 className="text-[24px] font-extrabold text-navy">
         {company.owner_name || company.name}
       </h1>
@@ -30,13 +30,13 @@ export default function AccueilPage() {
         <Card className="mt-5 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[12px] font-semibold text-[#8A93A6]">
-                {t.counter_month}
+              <div className="text-[12px] font-semibold text-[#94A3B8]">
+                {usage.quota_lifetime ? t.counter_total : t.counter_month}
               </div>
               <div className="text-[22px] font-extrabold text-navy">
                 {usage.used}
                 {usage.quota !== null && usage.quota > 0 && (
-                  <span className="text-[14px] font-semibold text-[#8A93A6]">
+                  <span className="text-[14px] font-semibold text-[#94A3B8]">
                     {" "}
                     / {usage.quota}
                   </span>
@@ -45,7 +45,7 @@ export default function AccueilPage() {
             </div>
             <Link
               href="/abonnement"
-              className="rounded-full bg-[#EEF0F4] px-3.5 py-1.5 text-[12px] font-bold text-navy"
+              className="rounded-full bg-[#F1F5F9] px-3.5 py-1.5 text-[12px] font-bold text-navy"
             >
               {usage.plan_name}
             </Link>
@@ -98,7 +98,7 @@ export default function AccueilPage() {
         <h2 className="text-[16px] font-bold text-navy">{t.home_recent}</h2>
         <Link
           href="/documents"
-          className="text-[13px] font-semibold text-[#5A6377]"
+          className="text-[13px] font-semibold text-[#64748B]"
         >
           {t.see_all}
         </Link>
@@ -106,7 +106,7 @@ export default function AccueilPage() {
 
       <div className="mt-3 space-y-3">
         {recent.length === 0 ? (
-          <Card className="whitespace-pre-line p-6 text-center text-[14px] text-[#8A93A6]">
+          <Card className="whitespace-pre-line p-6 text-center text-[14px] text-[#94A3B8]">
             {t.home_empty}
           </Card>
         ) : (

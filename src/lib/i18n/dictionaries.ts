@@ -98,6 +98,7 @@ const fr = {
   see_all: "Tout voir",
   home_empty: "Aucun document pour le moment.\nCréez votre premier devis !",
   counter_month: "Documents ce mois",
+  counter_total: "Documents au total",
   counter_limit: "Limite atteinte — passez à une offre supérieure.",
 
   // Documents
@@ -426,6 +427,7 @@ const en: Dict = {
   see_all: "See all",
   home_empty: "No documents yet.\nCreate your first quote!",
   counter_month: "Documents this month",
+  counter_total: "Documents total",
   counter_limit: "Limit reached — upgrade your plan.",
 
   docs_title: "Documents",

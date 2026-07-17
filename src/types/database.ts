@@ -214,6 +214,7 @@ export interface Usage {
   plan_key: string;
   plan_name: string;
   features: PlanFeature[];
+  quota_lifetime: boolean;
   period_end: string | null;
 }
 
