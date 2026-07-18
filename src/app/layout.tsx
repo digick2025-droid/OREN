@@ -16,14 +16,70 @@ const inter = Inter({
   display: "swap",
 });
 
+// URL publique du site — surchargeable via NEXT_PUBLIC_SITE_URL,
+// avec un repli raisonnable pour les environnements sans variable.
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://oren.app").replace(
+  /\/$/,
+  "",
+);
+
+const siteTitle = "OREN — Gérez votre activité, simplement";
+const siteDescription =
+  "Concentrez-vous sur votre métier. OREN s'occupe du reste. Devis et factures professionnels en quelques secondes.";
+
+// Image de partage. À remplacer par un visuel 1200×630 dédié (public/og.png)
+// dès qu'il sera disponible ; on réutilise l'icône 512 pour éviter un 404.
+const ogImage = {
+  url: "/icons/icon-512.png",
+  width: 512,
+  height: 512,
+  alt: "OREN",
+};
+
 export const metadata: Metadata = {
-  title: "OREN — Gérez votre activité, simplement",
-  description:
-    "Concentrez-vous sur votre métier. OREN s'occupe du reste. Devis et factures professionnels en quelques secondes.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: siteTitle,
+    template: "%s · OREN",
+  },
+  description: siteDescription,
+  applicationName: "OREN",
+  keywords: [
+    "devis",
+    "facture",
+    "facturation",
+    "gestion d'activité",
+    "auto-entrepreneur",
+    "artisan",
+    "PME",
+    "OREN",
+  ],
+  authors: [{ name: "OREN" }],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: "/",
+    siteName: "OREN",
+    title: siteTitle,
+    description: siteDescription,
+    images: [ogImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: [ogImage.url],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "OREN",
+    // Splash screen iOS (rel="apple-touch-startup-image"). Visuel dédié par
+    // gabarit à ajouter plus tard ; l'icône 512 sert de repli centré.
+    startupImage: [{ url: "/icons/icon-512.png" }],
   },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],

@@ -12,6 +12,8 @@ const PUBLIC_PATHS = [
   "/design-system",
   "/api/payments",
   "/manifest.webmanifest",
+  "/robots.txt",
+  "/sitemap.xml",
 ];
 
 function isPublic(pathname: string): boolean {
