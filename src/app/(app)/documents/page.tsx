@@ -40,7 +40,7 @@ export default function DocumentsPage() {
               className={cn(
                 "rounded-full px-4 py-2 text-[13px] font-semibold transition-colors",
                 filter === f.key
-                  ? "bg-navy text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-card text-muted-foreground border-[1.5px] border-border",
               )}
             >

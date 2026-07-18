@@ -394,7 +394,7 @@ export function DocumentBuilder({
                   className={cn(
                     "flex shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-3.5 py-2 text-[13px] font-semibold transition-colors",
                     clientId === client.id
-                      ? "border-navy bg-navy text-white"
+                      ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-muted-foreground",
                   )}
                 >

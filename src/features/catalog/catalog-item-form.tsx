@@ -92,7 +92,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
                 className={cn(
                   "flex-1 rounded-xl border-[1.5px] px-3 py-2.5 text-[13px] font-semibold transition-colors",
                   type === value
-                    ? "border-navy bg-navy text-white"
+                    ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-card text-muted-foreground",
                 )}
               >

@@ -28,8 +28,8 @@ export function LanguageToggle({ dark = false }: { dark?: boolean }) {
             "rounded-full px-3 py-1 text-[12px] font-bold transition-colors",
             lang === option.key
               ? dark
-                ? "bg-card text-navy"
-                : "bg-navy text-white"
+                ? "bg-white text-navy"
+                : "bg-primary text-primary-foreground"
               : dark
                 ? "text-white/60"
                 : "text-muted-foreground/70",

@@ -82,7 +82,7 @@ export function PaymentForm({
               className={cn(
                 "flex w-full items-center gap-3 rounded-xl border-[1.5px] px-4 py-3.5 text-[14px] font-semibold transition-colors",
                 method === m.key
-                  ? "border-navy bg-navy text-white"
+                  ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground",
                 !m.available && "opacity-50",
               )}
