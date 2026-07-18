@@ -29,7 +29,7 @@ export default function ClientsPage() {
         {isLoading ? (
           <ListSkeleton />
         ) : (clients ?? []).length === 0 ? (
-          <Card className="p-6 text-center text-[14px] text-[#8A93A6]">
+          <Card className="p-6 text-center text-[14px] text-muted-foreground/70">
             {t.clients_empty}
           </Card>
         ) : (
@@ -37,9 +37,9 @@ export default function ClientsPage() {
             <Link
               key={client.id}
               href={`/clients/${client.id}`}
-              className="flex items-center gap-3 rounded-2xl border border-[#E9EBF0] bg-white p-4 transition-colors hover:border-[#C3C9D5]"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF0F4] text-[15px] font-extrabold text-navy">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-[15px] font-extrabold text-navy">
                 {client.name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -47,7 +47,7 @@ export default function ClientsPage() {
                   {client.name}
                 </div>
                 {client.phone && (
-                  <div className="flex items-center gap-1 text-[12.5px] text-[#5A6377]">
+                  <div className="flex items-center gap-1 text-[12.5px] text-muted-foreground">
                     <Phone size={11} /> {client.phone}
                   </div>
                 )}

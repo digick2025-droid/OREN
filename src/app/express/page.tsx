@@ -3,19 +3,34 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Download, Lock, Minus, Plus, Send, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Download,
+  Lock,
+  Minus,
+  Plus,
+  Send,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { PaymentForm } from "@/features/payments/payment-form";
 import { useI18n } from "@/features/i18n/language-context";
-import { computeTotals, parseQuantity } from "@/lib/calculations";
+import {
+  computeTotals,
+  parseQuantity,
+  remainingToPay,
+} from "@/lib/calculations";
 import { DEFAULT_COMPANY_COLOR } from "@/lib/constants";
 import { formatAmount } from "@/lib/format";
 import { printDocument, renderDocumentHtml } from "@/services/pdf";
 import { buildWhatsAppLink } from "@/services/whatsapp";
+import { cn } from "@/lib/utils";
 
 interface ExpressLine {
   uid: number;
@@ -25,6 +40,7 @@ interface ExpressLine {
 }
 
 type Step = "form" | "preview" | "pay" | "done";
+type DocKind = "devis" | "facture";
 
 const EXPRESS_PRICE = 500;
 
@@ -33,6 +49,7 @@ let uidCounter = 1;
 export default function ExpressPage() {
   const { t, lang } = useI18n();
   const [step, setStep] = useState<Step>("form");
+  const [docKind, setDocKind] = useState<DocKind>("devis");
   const [businessName, setBusinessName] = useState("");
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
@@ -40,6 +57,12 @@ export default function ExpressPage() {
   const [lines, setLines] = useState<ExpressLine[]>([
     { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
   ]);
+  const [showOptions, setShowOptions] = useState(false);
+  const [discount, setDiscount] = useState("");
+  const [advance, setAdvance] = useState("");
+  const [conditions, setConditions] = useState("");
+
+  const isFacture = docKind === "facture";
 
   const totals = useMemo(
     () =>
@@ -48,9 +71,13 @@ export default function ExpressPage() {
           quantity: parseQuantity(l.qty),
           unit_price: l.unit_price,
         })),
+        { discount: parseInt(discount, 10) || 0 },
       ),
-    [lines],
+    [lines, discount],
   );
+
+  const advanceValue = isFacture ? parseInt(advance, 10) || 0 : 0;
+  const remaining = remainingToPay(totals.total, advanceValue);
 
   const updateLine = (uid: number, patch: Partial<ExpressLine>) =>
     setLines((prev) =>
@@ -70,8 +97,8 @@ export default function ExpressPage() {
   const buildHtml = () =>
     renderDocumentHtml(
       {
-        type: "devis",
-        number: "DEV-EXP",
+        type: docKind,
+        number: isFacture ? "FAC-EXP" : "DEV-EXP",
         title: title.trim(),
         issueDate: new Date().toISOString(),
         clientName,
@@ -89,13 +116,13 @@ export default function ExpressPage() {
             };
           }),
         subtotal: totals.subtotal,
-        discount: 0,
+        discount: totals.discount,
         vatRate: 0,
         vatAmount: 0,
         total: totals.total,
-        advanceAmount: 0,
+        advanceAmount: advanceValue,
         note: "",
-        conditions: "",
+        conditions: conditions.trim(),
       },
       {
         name: businessName || "Mon entreprise",
@@ -110,6 +137,7 @@ export default function ExpressPage() {
         rccm: "",
         nif: "",
         taxRegime: "",
+        premiumBranding: false,
       },
       lang,
     );
@@ -132,11 +160,25 @@ export default function ExpressPage() {
     }
   };
 
+  const resetForm = () => {
+    setLines([{ uid: uidCounter++, name: "", qty: "1", unit_price: 0 }]);
+    setTitle("");
+    setClientName("");
+    setClientPhone("");
+    setDiscount("");
+    setAdvance("");
+    setConditions("");
+    setShowOptions(false);
+    setStep("form");
+  };
+
   const shareWhatsApp = () => {
+    const docLabel = isFacture ? t.wa_your_invoice : t.wa_your_quote;
+    const amount = isFacture && advanceValue > 0 ? remaining : totals.total;
     const message = [
       `${t.wa_hello} ${clientName}`.trim() + ",",
       "",
-      `${t.wa_here_is} ${t.wa_your_quote}${title.trim() ? ` — ${title.trim()}` : ""}. ${t.wa_amount} : ${formatAmount(totals.total)}.`,
+      `${t.wa_here_is} ${docLabel}${title.trim() ? ` — ${title.trim()}` : ""}. ${t.wa_amount} : ${formatAmount(amount)}.`,
       "",
       businessName,
     ].join("\n");
@@ -144,11 +186,33 @@ export default function ExpressPage() {
   };
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md bg-[#F4F5F7] pb-10">
+    <div className="mx-auto min-h-dvh w-full max-w-md bg-surface pb-10">
       {step === "form" && (
         <>
-          <ScreenHeader title={t.x_title} backHref="/" />
+          <ScreenHeader
+            title={isFacture ? t.x_title_f : t.x_title}
+            backHref="/"
+          />
           <div className="space-y-5 px-4 pt-5">
+            {/* ----- Type de document ----- */}
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted p-1">
+              {(["devis", "facture"] as const).map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  onClick={() => setDocKind(kind)}
+                  className={cn(
+                    "rounded-lg py-2.5 text-[13.5px] font-bold transition-colors",
+                    docKind === kind
+                      ? "bg-card text-navy shadow-sm"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {kind === "devis" ? t.x_type_devis : t.x_type_facture}
+                </button>
+              ))}
+            </div>
+
             <div>
               <Label htmlFor="x-business">{t.x_business_label}</Label>
               <Input
@@ -159,7 +223,9 @@ export default function ExpressPage() {
               />
             </div>
             <div>
-              <Label htmlFor="x-title">{t.x_doc_title}</Label>
+              <Label htmlFor="x-title">
+                {isFacture ? t.x_doc_title_f : t.x_doc_title}
+              </Label>
               <Input
                 id="x-title"
                 value={title}
@@ -196,7 +262,7 @@ export default function ExpressPage() {
                   <Card key={line.uid} className="p-3.5">
                     <div className="flex items-start justify-between gap-2">
                       <Input
-                        className="h-9 rounded-lg border-transparent px-1 text-[14px] font-semibold focus-visible:border-[#E2E5EC]"
+                        className="h-9 rounded-lg border-transparent px-1 text-[14px] font-semibold focus-visible:border-border"
                         value={line.name}
                         placeholder={t.q_free_ph}
                         onChange={(e) =>
@@ -212,7 +278,7 @@ export default function ExpressPage() {
                               prev.filter((l) => l.uid !== line.uid),
                             )
                           }
-                          className="mt-1 shrink-0 text-[#A6ADBD] hover:text-danger"
+                          className="mt-1 shrink-0 text-muted-foreground/70 hover:text-danger"
                         >
                           <Trash2 size={17} />
                         </button>
@@ -224,7 +290,7 @@ export default function ExpressPage() {
                           type="button"
                           aria-label="−"
                           onClick={() => stepQty(line.uid, -1)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-navy"
                         >
                           <Minus size={14} />
                         </button>
@@ -242,7 +308,7 @@ export default function ExpressPage() {
                           type="button"
                           aria-label="+"
                           onClick={() => stepQty(line.uid, 1)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-navy"
                         >
                           <Plus size={14} />
                         </button>
@@ -262,10 +328,15 @@ export default function ExpressPage() {
                             })
                           }
                         />
-                        <span className="text-[12px] text-[#8A93A6]">
+                        <span className="text-[12px] text-muted-foreground/70">
                           FCFA
                         </span>
                       </div>
+                    </div>
+                    <div className="mt-1.5 text-right text-[12px] text-muted-foreground/70">
+                      {formatAmount(
+                        Math.round(parseQuantity(line.qty) * line.unit_price),
+                      )}
                     </div>
                   </Card>
                 ))}
@@ -278,22 +349,125 @@ export default function ExpressPage() {
                     { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
                   ])
                 }
-                className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-[#C3C9D5] py-3 text-[13.5px] font-semibold text-[#5A6377] hover:border-navy"
+                className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-border py-3 text-[13.5px] font-semibold text-muted-foreground hover:border-navy"
               >
                 + {t.q_add_line}
               </button>
-              <p className="mt-1.5 text-[11.5px] text-[#A6ADBD]">
+              <p className="mt-1.5 text-[11.5px] text-muted-foreground/70">
                 {t.q_qty_hint}
               </p>
             </div>
 
-            <Card className="flex items-center justify-between p-4">
-              <span className="text-[14px] font-semibold text-[#5A6377]">
-                {t.total}
-              </span>
-              <span className="text-[18px] font-extrabold text-navy">
-                {formatAmount(totals.total)}
-              </span>
+            {/* ----- Options (remise, acompte, conditions) ----- */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowOptions((v) => !v)}
+                className="flex w-full items-center justify-between rounded-xl border-[1.5px] border-border bg-card px-4 py-3 text-[13.5px] font-semibold text-muted-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <SlidersHorizontal size={16} className="text-muted-foreground/70" />
+                  {showOptions ? t.x_more_options_hide : t.x_more_options}
+                </span>
+                <ChevronDown
+                  size={18}
+                  className={cn(
+                    "text-muted-foreground/70 transition-transform",
+                    showOptions && "rotate-180",
+                  )}
+                />
+              </button>
+
+              {showOptions && (
+                <div className="mt-3 space-y-4">
+                  <div>
+                    <Label htmlFor="x-discount">{t.q_discount}</Label>
+                    <Input
+                      id="x-discount"
+                      inputMode="numeric"
+                      value={discount}
+                      onChange={(e) =>
+                        setDiscount(e.target.value.replace(/[^\d]/g, ""))
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+
+                  {isFacture && (
+                    <div>
+                      <Label htmlFor="x-advance">{t.q_advance}</Label>
+                      <Input
+                        id="x-advance"
+                        inputMode="numeric"
+                        value={advance}
+                        onChange={(e) =>
+                          setAdvance(e.target.value.replace(/[^\d]/g, ""))
+                        }
+                        placeholder="0"
+                      />
+                      <p className="mt-1 text-[11.5px] text-muted-foreground/70">
+                        {t.q_advance_hint}
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <Label htmlFor="x-conditions">{t.q_conditions}</Label>
+                    <Textarea
+                      id="x-conditions"
+                      value={conditions}
+                      onChange={(e) => setConditions(e.target.value)}
+                      placeholder={t.q_cond_ph}
+                    />
+                    <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                      {t.cond_presets.map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() =>
+                            setConditions((current) =>
+                              current ? `${current}\n${preset}` : preset,
+                            )
+                          }
+                          className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-[12px] font-semibold text-muted-foreground"
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ----- Totaux ----- */}
+            <Card className="space-y-1.5 p-4">
+              <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                <span>{t.subtotal}</span>
+                <span>{formatAmount(totals.subtotal)}</span>
+              </div>
+              {totals.discount > 0 && (
+                <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                  <span>{t.discount}</span>
+                  <span>− {formatAmount(totals.discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-muted pt-2 text-[16px] font-extrabold text-navy">
+                <span>{t.total_final}</span>
+                <span>{formatAmount(totals.total)}</span>
+              </div>
+              {isFacture && advanceValue > 0 && (
+                <>
+                  <div className="flex justify-between pt-1 text-[13.5px] text-muted-foreground">
+                    <span>{t.advance_paid}</span>
+                    <span>− {formatAmount(advanceValue)}</span>
+                  </div>
+                  <div className="flex justify-between text-[14px] font-bold text-coral">
+                    <span>{t.remaining_to_pay}</span>
+                    <span>{formatAmount(remaining)}</span>
+                  </div>
+                </>
+              )}
             </Card>
 
             <Button
@@ -302,7 +476,7 @@ export default function ExpressPage() {
               className="w-full"
               onClick={goPreview}
             >
-              {t.x_preview_cta}
+              {isFacture ? t.x_preview_cta_f : t.x_preview_cta}
             </Button>
           </div>
         </>
@@ -312,7 +486,7 @@ export default function ExpressPage() {
         <>
           <ScreenHeader title={t.x_preview} onBack={() => setStep("form")} />
           <div className="space-y-4 px-4 pt-5">
-            <div className="relative overflow-hidden rounded-2xl border border-[#E9EBF0] bg-white">
+            <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
               <iframe
                 title={t.x_preview}
                 srcDoc={buildHtml()}
@@ -332,10 +506,11 @@ export default function ExpressPage() {
               className="w-full"
               onClick={() => setStep("pay")}
             >
-              {t.xpdf_pay} {formatAmount(EXPRESS_PRICE)}
+              {isFacture ? t.xpdf_pay_f : t.xpdf_pay}{" "}
+              {formatAmount(EXPRESS_PRICE)}
             </Button>
 
-            <p className="text-center text-[12.5px] text-[#8A93A6]">
+            <p className="text-center text-[12.5px] text-muted-foreground/70">
               {t.xpdf_or}{" "}
               <Link href="/connexion" className="font-bold text-navy underline">
                 {t.xpdf_create}
@@ -373,9 +548,9 @@ export default function ExpressPage() {
 
       {step === "done" && (
         <>
-          <ScreenHeader title={t.xdl_title} />
+          <ScreenHeader title={isFacture ? t.xdl_title_f : t.xdl_title} />
           <div className="space-y-4 px-4 pt-5">
-            <p className="text-[14px] text-[#5A6377]">{t.xdl_sub}</p>
+            <p className="text-[14px] text-muted-foreground">{t.xdl_sub}</p>
             <Button size="lg" className="w-full" onClick={download}>
               <Download size={18} /> {t.xdl_download}
             </Button>
@@ -392,7 +567,7 @@ export default function ExpressPage() {
               <div className="text-[15px] font-extrabold text-navy">
                 {t.xdl_acc_title}
               </div>
-              <p className="mt-1.5 text-[13px] text-[#5A6377]">
+              <p className="mt-1.5 text-[13px] text-muted-foreground">
                 {t.xdl_acc_sub}
               </p>
               <Button asChild variant="accent" className="mt-4 w-full">
@@ -402,18 +577,10 @@ export default function ExpressPage() {
 
             <button
               type="button"
-              onClick={() => {
-                setLines([
-                  { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
-                ]);
-                setTitle("");
-                setClientName("");
-                setClientPhone("");
-                setStep("form");
-              }}
-              className="w-full text-center text-[13px] font-semibold text-[#5A6377] underline"
+              onClick={resetForm}
+              className="w-full text-center text-[13px] font-semibold text-muted-foreground underline"
             >
-              {t.xdl_another}
+              {isFacture ? t.xdl_another_f : t.xdl_another}
             </button>
           </div>
         </>

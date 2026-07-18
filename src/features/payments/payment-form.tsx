@@ -62,7 +62,7 @@ export function PaymentForm({
   return (
     <div className="space-y-4">
       <Card className="p-4 text-center">
-        <div className="text-[12px] font-semibold uppercase tracking-wider text-[#8A93A6]">
+        <div className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           {t.pay_amount}
         </div>
         <div className="mt-1 text-[26px] font-extrabold text-navy">
@@ -83,7 +83,7 @@ export function PaymentForm({
                 "flex w-full items-center gap-3 rounded-xl border-[1.5px] px-4 py-3.5 text-[14px] font-semibold transition-colors",
                 method === m.key
                   ? "border-navy bg-navy text-white"
-                  : "border-[#E2E5EC] bg-white text-[#5A6377]",
+                  : "border-border bg-card text-muted-foreground",
                 !m.available && "opacity-50",
               )}
             >
@@ -94,7 +94,7 @@ export function PaymentForm({
               )}
               {m.label}
               {!m.available && (
-                <span className="ml-auto rounded-full bg-[#FFF7E8] px-2 py-0.5 text-[10.5px] font-bold text-warning">
+                <span className="ml-auto rounded-full bg-warning-surface px-2 py-0.5 text-[10.5px] font-bold text-warning">
                   {t.pay_soon}
                 </span>
               )}
@@ -123,7 +123,7 @@ export function PaymentForm({
             <div className="text-[14px] font-bold text-navy">
               {t.pay_processing}
             </div>
-            <div className="text-[12px] text-[#8A93A6]">{t.pay_wait}</div>
+            <div className="text-[12px] text-muted-foreground/70">{t.pay_wait}</div>
           </div>
         </Card>
       ) : (
@@ -137,7 +137,7 @@ export function PaymentForm({
         </Button>
       )}
 
-      <p className="flex items-center justify-center gap-1.5 text-center text-[11.5px] text-[#8A93A6]">
+      <p className="flex items-center justify-center gap-1.5 text-center text-[11.5px] text-muted-foreground/70">
         <ShieldCheck size={13} />
         {t.pay_secure}
       </p>

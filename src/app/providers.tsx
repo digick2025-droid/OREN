@@ -9,15 +9,19 @@ import {
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { LanguageProvider } from "@/features/i18n/language-context";
+import { ThemeProvider } from "@/features/theme/theme-context";
 import type { Lang } from "@/lib/i18n/config";
+import type { Theme } from "@/lib/theme/config";
 
 const CACHE_KEY = "digick_rq_cache";
 
 export function Providers({
   initialLang,
+  initialTheme,
   children,
 }: {
   initialLang: Lang;
+  initialTheme: Theme;
   children: React.ReactNode;
 }) {
   const [queryClient] = useState(
@@ -66,10 +70,12 @@ export function Providers({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider initialLang={initialLang}>
-        {children}
-        <Toaster position="bottom-center" richColors />
-      </LanguageProvider>
+      <ThemeProvider initialTheme={initialTheme}>
+        <LanguageProvider initialLang={initialLang}>
+          {children}
+          <Toaster position="bottom-center" richColors theme={initialTheme} />
+        </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

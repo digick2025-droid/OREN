@@ -86,9 +86,9 @@ export default async function OffresPage() {
   }
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md bg-[#F4F5F7] pb-10">
+    <div className="mx-auto min-h-dvh w-full max-w-md bg-surface pb-10">
       <ScreenHeader title={t.off_title} backHref={user ? "/abonnement" : "/"} />
-      <p className="px-4 pt-4 text-[14px] text-[#5A6377]">{t.off_sub}</p>
+      <p className="px-4 pt-4 text-[14px] text-muted-foreground">{t.off_sub}</p>
 
       <div className="mt-4 space-y-4 px-4">
         {plans.map((plan) => {
@@ -106,7 +106,7 @@ export default async function OffresPage() {
                   <div className="text-[16px] font-extrabold text-navy">
                     {plan.name}
                   </div>
-                  <div className="text-[12.5px] text-[#8A93A6]">
+                  <div className="text-[12.5px] text-muted-foreground/70">
                     {content.tag}
                   </div>
                 </div>
@@ -119,7 +119,7 @@ export default async function OffresPage() {
                 {content.features.map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-center gap-2 text-[13.5px] text-[#5A6377]"
+                    className="flex items-center gap-2 text-[13.5px] text-muted-foreground"
                   >
                     <Check size={15} className="shrink-0 text-success" />
                     {feature}
@@ -129,7 +129,7 @@ export default async function OffresPage() {
 
               <div className="mt-5">
                 {isCurrent ? (
-                  <div className="rounded-xl bg-[#EEF0F4] py-3 text-center text-[13.5px] font-bold text-[#5A6377]">
+                  <div className="rounded-xl bg-muted py-3 text-center text-[13.5px] font-bold text-muted-foreground">
                     {t.off_current}
                   </div>
                 ) : (
@@ -152,7 +152,7 @@ export default async function OffresPage() {
                   </Button>
                 )}
               </div>
-              <p className="mt-2 text-center text-[11.5px] text-[#A6ADBD]">
+              <p className="mt-2 text-center text-[11.5px] text-muted-foreground/70">
                 {content.audience}
               </p>
             </Card>

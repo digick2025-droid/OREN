@@ -3,24 +3,32 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+/* OREN · Button — 48px, radius 14, micro-scale au clic, focus corail subtil. */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-field text-sm font-semibold transition-[color,background-color,transform,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[.985] [&_svg]:size-[18px] [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-navy text-white hover:bg-navy/90 active:scale-[.99]",
-        accent: "bg-coral text-white hover:bg-coral/90 active:scale-[.99]",
-        outline:
-          "border-[1.5px] border-[#E2E5EC] bg-white text-navy hover:bg-[#F6F7F9]",
-        ghost: "text-navy hover:bg-[#EEF0F4]",
-        destructive: "bg-danger/10 text-danger hover:bg-danger/15",
-        whatsapp: "bg-whatsapp text-white hover:bg-whatsapp/90",
+        // CTA principal OREN — corail
+        primary: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-xs",
+        accent: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-xs",
+        // Solide navy
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs",
+        // Secondaire — fond clair, contour discret
+        outline: "border border-border bg-card text-foreground hover:bg-muted",
+        secondary: "border border-border bg-card text-foreground hover:bg-muted",
+        // Ghost — texte seul
+        ghost: "text-foreground hover:bg-muted",
+        // Danger
+        destructive: "bg-error text-white hover:bg-error/90 shadow-xs",
+        danger: "bg-error/10 text-error hover:bg-error/15",
+        whatsapp: "bg-whatsapp text-white hover:bg-whatsapp/90 shadow-xs",
       },
       size: {
-        default: "h-[52px] px-5",
-        sm: "h-9 rounded-xl px-3 text-[13px]",
-        lg: "h-14 px-6 text-base",
-        icon: "h-10 w-10 rounded-xl",
+        default: "h-12 px-5", // 48px
+        sm: "h-9 rounded-md px-3.5 text-[13px]",
+        lg: "h-[52px] px-6 text-base",
+        icon: "h-11 w-11",
       },
     },
     defaultVariants: {

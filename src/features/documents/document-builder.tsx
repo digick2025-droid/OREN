@@ -339,7 +339,7 @@ export function DocumentBuilder({
 
       <div className="space-y-6 px-4 pb-10 pt-5">
         {draftRestored && (
-          <div className="rounded-xl bg-[#FFF7E8] px-3 py-2 text-[12.5px] font-semibold text-[#B25E09]">
+          <div className="rounded-xl bg-warning-surface px-3 py-2 text-[12.5px] font-semibold text-warning-foreground">
             {t.draft_restored}
           </div>
         )}
@@ -395,7 +395,7 @@ export function DocumentBuilder({
                     "flex shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-3.5 py-2 text-[13px] font-semibold transition-colors",
                     clientId === client.id
                       ? "border-navy bg-navy text-white"
-                      : "border-[#E2E5EC] bg-white text-[#5A6377]",
+                      : "border-border bg-card text-muted-foreground",
                   )}
                 >
                   {clientId === client.id && <Check size={13} />}
@@ -403,7 +403,7 @@ export function DocumentBuilder({
                 </button>
               ))}
               {(clients ?? []).length === 0 && (
-                <p className="text-[13px] text-[#8A93A6]">{t.q_no_clients}</p>
+                <p className="text-[13px] text-muted-foreground/70">{t.q_no_clients}</p>
               )}
             </div>
           )}
@@ -416,7 +416,7 @@ export function DocumentBuilder({
             <div className="relative">
               <Search
                 size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A6ADBD]"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/70"
               />
               <Input
                 className="pl-11"
@@ -428,12 +428,12 @@ export function DocumentBuilder({
           )}
 
           {catalogAccess.enabled && searchResults.length > 0 && (
-            <Card className="mt-2 divide-y divide-[#F0F1F5] overflow-hidden">
+            <Card className="mt-2 divide-y divide-border overflow-hidden">
               {searchResults.map((item) => (
                 <button
                   key={item.id}
                   type="button"
-                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-[#F6F7F9]"
+                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-surface"
                   onClick={() =>
                     addLine({
                       name: item.name,
@@ -446,7 +446,7 @@ export function DocumentBuilder({
                   <span className="text-[14px] font-semibold text-navy">
                     {item.name}
                   </span>
-                  <span className="text-[13px] text-[#5A6377]">
+                  <span className="text-[13px] text-muted-foreground">
                     {formatAmount(item.unit_price)} / {item.unit}
                   </span>
                 </button>
@@ -471,7 +471,7 @@ export function DocumentBuilder({
                         unit_price: item.unit_price,
                       })
                     }
-                    className="shrink-0 rounded-full border-[1.5px] border-[#E2E5EC] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#5A6377]"
+                    className="shrink-0 rounded-full border-[1.5px] border-border bg-card px-3.5 py-2 text-[13px] font-semibold text-muted-foreground"
                   >
                     + {item.name}
                   </button>
@@ -481,7 +481,7 @@ export function DocumentBuilder({
 
           <div className="mt-3 space-y-3">
             {lines.length === 0 ? (
-              <Card className="p-5 text-center text-[13.5px] text-[#8A93A6]">
+              <Card className="p-5 text-center text-[13.5px] text-muted-foreground/70">
                 {emptyItemsLabel}
               </Card>
             ) : (
@@ -489,7 +489,7 @@ export function DocumentBuilder({
                 <Card key={line.uid} className="p-3.5">
                   <div className="flex items-start justify-between gap-2">
                     <Input
-                      className="h-9 rounded-lg border-transparent px-1 text-[14px] font-semibold focus-visible:border-[#E2E5EC]"
+                      className="h-9 rounded-lg border-transparent px-1 text-[14px] font-semibold focus-visible:border-border"
                       value={line.name}
                       placeholder={t.q_free_ph}
                       onChange={(e) =>
@@ -500,7 +500,7 @@ export function DocumentBuilder({
                       type="button"
                       aria-label={t.delete}
                       onClick={() => removeLine(line.uid)}
-                      className="mt-1 shrink-0 text-[#A6ADBD] hover:text-danger"
+                      className="mt-1 shrink-0 text-muted-foreground/70 hover:text-danger"
                     >
                       <Trash2 size={17} />
                     </button>
@@ -511,7 +511,7 @@ export function DocumentBuilder({
                         type="button"
                         aria-label="−"
                         onClick={() => stepQty(line.uid, -1)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-navy"
                       >
                         <Minus size={14} />
                       </button>
@@ -529,11 +529,11 @@ export function DocumentBuilder({
                         type="button"
                         aria-label="+"
                         onClick={() => stepQty(line.uid, 1)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF0F4] text-navy"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-navy"
                       >
                         <Plus size={14} />
                       </button>
-                      <span className="ml-1 text-[12px] text-[#8A93A6]">
+                      <span className="ml-1 text-[12px] text-muted-foreground/70">
                         {line.unit}
                       </span>
                     </div>
@@ -552,10 +552,10 @@ export function DocumentBuilder({
                           })
                         }
                       />
-                      <span className="text-[12px] text-[#8A93A6]">FCFA</span>
+                      <span className="text-[12px] text-muted-foreground/70">FCFA</span>
                     </div>
                   </div>
-                  <div className="mt-1.5 text-right text-[12px] text-[#8A93A6]">
+                  <div className="mt-1.5 text-right text-[12px] text-muted-foreground/70">
                     {formatAmount(
                       Math.round(parseQuantity(line.qty) * line.unit_price),
                     )}
@@ -570,11 +570,11 @@ export function DocumentBuilder({
             onClick={() =>
               addLine({ name: "", unit: "unité", qty: "1", unit_price: 0 })
             }
-            className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-[#C3C9D5] py-3 text-[13.5px] font-semibold text-[#5A6377] hover:border-navy"
+            className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-border py-3 text-[13.5px] font-semibold text-muted-foreground hover:border-navy"
           >
             + {t.q_freeline}
           </button>
-          <p className="mt-1.5 text-[11.5px] text-[#A6ADBD]">{t.q_qty_hint}</p>
+          <p className="mt-1.5 text-[11.5px] text-muted-foreground/70">{t.q_qty_hint}</p>
         </section>
 
         {/* ----- Détails ----- */}
@@ -612,7 +612,7 @@ export function DocumentBuilder({
                 }
                 placeholder="0"
               />
-              <p className="mt-1 text-[11.5px] text-[#A6ADBD]">
+              <p className="mt-1 text-[11.5px] text-muted-foreground/70">
                 {t.q_advance_hint}
               </p>
             </div>
@@ -644,7 +644,7 @@ export function DocumentBuilder({
                       current ? `${current}\n${preset}` : preset,
                     )
                   }
-                  className="shrink-0 rounded-full bg-[#EEF0F4] px-3 py-1.5 text-[12px] font-semibold text-[#5A6377]"
+                  className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-[12px] font-semibold text-muted-foreground"
                 >
                   {preset}
                 </button>
@@ -655,35 +655,35 @@ export function DocumentBuilder({
 
         {/* ----- Totaux ----- */}
         <Card className="space-y-1.5 p-4">
-          <div className="flex justify-between text-[13.5px] text-[#5A6377]">
+          <div className="flex justify-between text-[13.5px] text-muted-foreground">
             <span>{t.subtotal}</span>
             <span>{formatAmount(totals.subtotal)}</span>
           </div>
           {totals.discount > 0 && (
-            <div className="flex justify-between text-[13.5px] text-[#5A6377]">
+            <div className="flex justify-between text-[13.5px] text-muted-foreground">
               <span>{t.discount}</span>
               <span>− {formatAmount(totals.discount)}</span>
             </div>
           )}
           {totals.vatRate > 0 && (
             <>
-              <div className="flex justify-between text-[13.5px] text-[#5A6377]">
+              <div className="flex justify-between text-[13.5px] text-muted-foreground">
                 <span>{t.amount_ht}</span>
                 <span>{formatAmount(totals.net)}</span>
               </div>
-              <div className="flex justify-between text-[13.5px] text-[#5A6377]">
+              <div className="flex justify-between text-[13.5px] text-muted-foreground">
                 <span>TVA {totals.vatRate}%</span>
                 <span>{formatAmount(totals.vatAmount)}</span>
               </div>
             </>
           )}
-          <div className="flex justify-between border-t border-[#F0F1F5] pt-2 text-[16px] font-extrabold text-navy">
+          <div className="flex justify-between border-t border-muted pt-2 text-[16px] font-extrabold text-navy">
             <span>{totals.vatRate > 0 ? t.total_ttc : t.total_final}</span>
             <span>{formatAmount(totals.total)}</span>
           </div>
           {isInvoice && advanceValue > 0 && (
             <>
-              <div className="flex justify-between pt-1 text-[13.5px] text-[#5A6377]">
+              <div className="flex justify-between pt-1 text-[13.5px] text-muted-foreground">
                 <span>{t.advance_paid}</span>
                 <span>− {formatAmount(advanceValue)}</span>
               </div>

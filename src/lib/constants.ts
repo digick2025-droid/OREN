@@ -1,14 +1,25 @@
 import type { DocumentStatus } from "@/types/database";
 
-export const APP_NAME = "DIGICK Devis";
+export const APP_NAME = "OREN";
 
-/** Couleurs de statut (référence prototype) */
-export const STATUS_STYLES: Record<DocumentStatus, { bg: string; color: string }> = {
-  brouillon: { bg: "#EEF0F4", color: "#5A6377" },
-  envoye: { bg: "#E8EFFD", color: "#2E6BE6" },
-  accepte: { bg: "#E4F5EE", color: "#1E9E6A" },
-  refuse: { bg: "#FBE9E9", color: "#D64545" },
-  paye: { bg: "#E4F5EE", color: "#1E9E6A" },
+export type StatusVariant = "neutral" | "info" | "success" | "error" | "warning";
+
+/** Statut → variante Badge (pilule teintée, dark-aware). */
+export const STATUS_VARIANT: Record<DocumentStatus, StatusVariant> = {
+  brouillon: "neutral",
+  envoye: "info",
+  accepte: "success",
+  refuse: "error",
+  paye: "success",
+};
+
+/** Statut → pilule pleine (état sélectionné du sélecteur de statut). */
+export const STATUS_SOLID: Record<DocumentStatus, string> = {
+  brouillon: "bg-muted-foreground text-white",
+  envoye: "bg-info text-white",
+  accepte: "bg-success text-white",
+  refuse: "bg-error text-white",
+  paye: "bg-success text-white",
 };
 
 export const DOCUMENT_STATUSES: DocumentStatus[] = [
@@ -23,12 +34,12 @@ export const UNITS = ["unité", "mètre", "m²", "forfait", "heure", "jour", "li
 
 /** Couleurs proposées pour la personnalisation entreprise */
 export const COMPANY_COLORS = [
-  "#131F35",
-  "#FF5A50",
-  "#1E9E6A",
-  "#2E6BE6",
-  "#7A4FD3",
-  "#B25E09",
+  "#0F172A",
+  "#FF6B57",
+  "#16A34A",
+  "#3B82F6",
+  "#7C3AED",
+  "#B45309",
 ] as const;
 
-export const DEFAULT_COMPANY_COLOR = "#131F35";
+export const DEFAULT_COMPANY_COLOR = "#0F172A";

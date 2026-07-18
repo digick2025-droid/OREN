@@ -24,12 +24,12 @@ export default async function BienvenuePage() {
   const t = getDict(parseLang(cookieStore.get(LANG_COOKIE)?.value));
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md bg-[#F4F5F7]">
+    <div className="mx-auto min-h-dvh w-full max-w-md bg-surface">
       <div className="px-4 pt-10">
         <h1 className="text-[26px] font-extrabold text-navy">
           {t.setup_title}
         </h1>
-        <p className="mt-1.5 text-[14px] text-[#5A6377]">{t.setup_sub}</p>
+        <p className="mt-1.5 text-[14px] text-muted-foreground">{t.setup_sub}</p>
       </div>
       <CompanyForm
         company={null}

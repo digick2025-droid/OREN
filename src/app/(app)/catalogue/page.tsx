@@ -31,13 +31,13 @@ export default function CataloguePage() {
         <ScreenHeader title={t.catalog_title} />
         <div className="px-4 pt-8">
           <Card className="p-6 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EEF0F4] text-navy">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-navy">
               <Lock size={22} />
             </div>
             <h2 className="mt-4 text-[17px] font-extrabold text-navy">
               {t.catalog_locked_title}
             </h2>
-            <p className="mt-2 text-[13.5px] text-[#5A6377]">
+            <p className="mt-2 text-[13.5px] text-muted-foreground">
               {t.catalog_locked_sub}
             </p>
             <Button asChild variant="accent" className="mt-5 w-full">
@@ -65,7 +65,7 @@ export default function CataloguePage() {
         <div className="relative">
           <Search
             size={17}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A6ADBD]"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/70"
           />
           <Input
             className="pl-11"
@@ -79,7 +79,7 @@ export default function CataloguePage() {
           {isLoading ? (
             <ListSkeleton />
           ) : filtered.length === 0 ? (
-            <Card className="p-6 text-center text-[14px] text-[#8A93A6]">
+            <Card className="p-6 text-center text-[14px] text-muted-foreground/70">
               {t.catalog_empty}
             </Card>
           ) : (
@@ -87,7 +87,7 @@ export default function CataloguePage() {
               <Link
                 key={item.id}
                 href={`/catalogue/${item.id}`}
-                className="flex items-center gap-3 rounded-2xl border border-[#E9EBF0] bg-white p-4 transition-colors hover:border-[#C3C9D5]"
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
@@ -98,14 +98,11 @@ export default function CataloguePage() {
                       {item.name}
                     </span>
                   </div>
-                  <div className="mt-0.5 text-[12.5px] text-[#5A6377]">
+                  <div className="mt-0.5 text-[12.5px] text-muted-foreground">
                     {formatAmount(item.unit_price)} / {item.unit}
                   </div>
                 </div>
-                <Badge
-                  bg={item.type === "produit" ? "#E8EFFD" : "#E4F5EE"}
-                  color={item.type === "produit" ? "#2E6BE6" : "#1E9E6A"}
-                >
+                <Badge variant={item.type === "produit" ? "info" : "success"}>
                   {itemTypeLabel(t, item.type)}
                 </Badge>
               </Link>

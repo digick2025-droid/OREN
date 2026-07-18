@@ -75,7 +75,7 @@ export function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-20 left-1/2 z-50 w-[calc(100%-24px)] max-w-md -translate-x-1/2 rounded-2xl border border-[#E9EBF0] bg-white p-4 shadow-[0_8px_30px_rgba(19,31,53,0.18)]">
+    <div className="fixed bottom-20 left-1/2 z-50 w-[calc(100%-24px)] max-w-md -translate-x-1/2 rounded-2xl border border-border bg-card p-4 shadow-[0_8px_30px_rgba(19,31,53,0.18)]">
       <div className="flex items-start gap-3">
         <Image
           src="/icons/icon-192.png"
@@ -88,7 +88,7 @@ export function InstallPrompt() {
           <div className="text-[14.5px] font-bold text-navy">
             {t.pwa_title}
           </div>
-          <p className="mt-0.5 text-[12.5px] leading-snug text-[#5A6377]">
+          <p className="mt-0.5 text-[12.5px] leading-snug text-muted-foreground">
             {showIosHint && !installEvent ? t.pwa_ios_hint : t.pwa_sub}
           </p>
         </div>
@@ -96,7 +96,7 @@ export function InstallPrompt() {
           type="button"
           aria-label={t.pwa_later}
           onClick={dismiss}
-          className="shrink-0 rounded-lg p-1 text-[#A6ADBD] hover:bg-[#EEF0F4]"
+          className="shrink-0 rounded-lg p-1 text-muted-foreground/70 hover:bg-muted"
         >
           <X size={17} />
         </button>

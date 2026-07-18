@@ -2,14 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "DIGICK Devis",
-    short_name: "DIGICK",
+    name: "OREN — Gérez votre activité",
+    short_name: "OREN",
     description:
-      "Créez un devis professionnel en moins de 2 minutes et envoyez-le sur WhatsApp.",
+      "Concentrez-vous sur votre métier. OREN s'occupe du reste. Devis et factures pros en quelques secondes.",
     start_url: "/",
     display: "standalone",
-    background_color: "#131F35",
-    theme_color: "#131F35",
+    background_color: "#FFFFFF",
+    theme_color: "#0F172A",
     lang: "fr",
     icons: [
       {

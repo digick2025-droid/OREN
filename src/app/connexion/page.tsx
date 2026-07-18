@@ -60,7 +60,7 @@ export default function ConnexionPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 pt-6">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-card px-6 pt-6">
       <Link
         href={step === "phone" ? "/" : "#"}
         onClick={(event) => {
@@ -70,7 +70,7 @@ export default function ConnexionPage() {
             setCode("");
           }
         }}
-        className="-ml-1 w-fit rounded-xl p-1.5 text-navy hover:bg-[#EEF0F4]"
+        className="-ml-1 w-fit rounded-xl p-1.5 text-navy hover:bg-muted"
         aria-label="Retour"
       >
         <ArrowLeft size={22} />
@@ -81,7 +81,7 @@ export default function ConnexionPage() {
           <h1 className="text-[26px] font-extrabold text-navy">
             {t.login_title}
           </h1>
-          <p className="mt-1.5 text-[14px] text-[#5A6377]">{t.login_sub}</p>
+          <p className="mt-1.5 text-[14px] text-muted-foreground">{t.login_sub}</p>
 
           <div className="mt-8">
             <Label htmlFor="phone">{t.login_phone}</Label>
@@ -94,7 +94,7 @@ export default function ConnexionPage() {
               onChange={(event) => setPhone(event.target.value)}
               onKeyDown={(event) => event.key === "Enter" && void sendCode()}
             />
-            <p className="mt-2 text-[12px] text-[#8A93A6]">{t.login_hint}</p>
+            <p className="mt-2 text-[12px] text-muted-foreground/70">{t.login_hint}</p>
           </div>
 
           <Button
@@ -110,7 +110,7 @@ export default function ConnexionPage() {
           <h1 className="text-[26px] font-extrabold text-navy">
             {t.otp_title}
           </h1>
-          <p className="mt-1.5 text-[14px] text-[#5A6377]">
+          <p className="mt-1.5 text-[14px] text-muted-foreground">
             {t.otp_sub}{" "}
             <span className="font-semibold text-navy">
               {normalizePhoneE164(phone)}
@@ -143,7 +143,7 @@ export default function ConnexionPage() {
           <button
             type="button"
             onClick={() => void sendCode()}
-            className="mt-4 w-full text-center text-[13px] font-semibold text-[#5A6377] underline"
+            className="mt-4 w-full text-center text-[13px] font-semibold text-muted-foreground underline"
           >
             {t.otp_resend}
           </button>

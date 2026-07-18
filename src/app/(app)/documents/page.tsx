@@ -40,7 +40,7 @@ export default function DocumentsPage() {
                 "rounded-full px-4 py-2 text-[13px] font-semibold transition-colors",
                 filter === f.key
                   ? "bg-navy text-white"
-                  : "bg-white text-[#5A6377] border-[1.5px] border-[#E2E5EC]",
+                  : "bg-card text-muted-foreground border-[1.5px] border-border",
               )}
             >
               {f.label}
@@ -52,7 +52,7 @@ export default function DocumentsPage() {
           {isLoading ? (
             <ListSkeleton />
           ) : filtered.length === 0 ? (
-            <Card className="p-6 text-center text-[14px] text-[#8A93A6]">
+            <Card className="p-6 text-center text-[14px] text-muted-foreground/70">
               {t.docs_empty}
             </Card>
           ) : (

@@ -16,7 +16,7 @@ export function LanguageToggle({ dark = false }: { dark?: boolean }) {
     <div
       className={cn(
         "inline-flex rounded-full p-0.5",
-        dark ? "bg-white/10" : "bg-[#EEF0F4]",
+        dark ? "bg-white/10" : "bg-muted",
       )}
     >
       {LANGS.map((option) => (
@@ -28,11 +28,11 @@ export function LanguageToggle({ dark = false }: { dark?: boolean }) {
             "rounded-full px-3 py-1 text-[12px] font-bold transition-colors",
             lang === option.key
               ? dark
-                ? "bg-white text-navy"
+                ? "bg-card text-navy"
                 : "bg-navy text-white"
               : dark
                 ? "text-white/60"
-                : "text-[#8A93A6]",
+                : "text-muted-foreground/70",
           )}
         >
           {option.label}

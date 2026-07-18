@@ -17,6 +17,8 @@ export interface PdfCompany {
   rccm: string;
   nif: string;
   taxRegime: string;
+  /** Offre Startup : branding complet (filigrane, pied de page à l'image de l'entreprise) */
+  premiumBranding: boolean;
 }
 
 export interface PdfLine {

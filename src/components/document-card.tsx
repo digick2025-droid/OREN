@@ -3,25 +3,24 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/features/i18n/language-context";
-import { STATUS_STYLES } from "@/lib/constants";
+import { STATUS_VARIANT } from "@/lib/constants";
 import { formatAmount, formatDate } from "@/lib/format";
 import { statusLabel, typeLabel } from "@/lib/i18n/labels";
 import type { DocumentRow } from "@/types/database";
 
 export function DocumentCard({ document }: { document: DocumentRow }) {
   const { t } = useI18n();
-  const status = STATUS_STYLES[document.status];
 
   return (
     <Link
       href={`/documents/${document.id}`}
-      className="block rounded-2xl border border-[#E9EBF0] bg-white p-4 transition-colors hover:border-[#C3C9D5]"
+      className="block rounded-2xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] font-semibold text-[#8A93A6]">
+        <span className="text-[12px] font-semibold text-muted-foreground/70">
           {document.number} · {typeLabel(t, document.type)}
         </span>
-        <Badge bg={status.bg} color={status.color}>
+        <Badge variant={STATUS_VARIANT[document.status]}>
           {statusLabel(t, document.status)}
         </Badge>
       </div>
@@ -29,7 +28,7 @@ export function DocumentCard({ document }: { document: DocumentRow }) {
         {document.title || document.client_name || t.untitled}
       </div>
       <div className="mt-1 flex items-center justify-between text-[13px]">
-        <span className="text-[#5A6377]">
+        <span className="text-muted-foreground">
           {document.client_name || "—"} · {formatDate(document.created_at)}
         </span>
         <span className="font-extrabold text-navy">

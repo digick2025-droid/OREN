@@ -28,7 +28,7 @@ export default function PaiementPage({
       <div className="px-4 pt-4">
         {plan ? (
           <>
-            <p className="pb-4 text-[14px] text-[#5A6377]">
+            <p className="pb-4 text-[14px] text-muted-foreground">
               {t.pay_sub_prefix}{" "}
               <span className="font-bold text-navy">{plan.name}</span>
             </p>
@@ -57,7 +57,7 @@ export default function PaiementPage({
             />
           </>
         ) : plans ? (
-          <p className="pt-8 text-center text-[14px] text-[#8A93A6]">
+          <p className="pt-8 text-center text-[14px] text-muted-foreground/70">
             {t.plan_not_found}
           </p>
         ) : null}

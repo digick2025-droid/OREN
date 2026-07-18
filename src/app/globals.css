@@ -2,33 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================
+   OREN — Design System · Tokens
+   Palette, radius, ombres et scaffold Dark Mode.
+   Tout est piloté par variables CSS → un seul point de vérité.
+   HSL "H S% L%" pour rester compatible avec les modificateurs
+   d'opacité Tailwind (ex: bg-primary/10).
+   ============================================================= */
+
 @layer base {
   :root {
-    --background: 220 27% 97%;
-    --foreground: 217 47% 14%;
-    --card: 0 0% 100%;
-    --card-foreground: 217 47% 14%;
-    --primary: 217 47% 14%;
+    /* --- Surfaces --- */
+    --background: 0 0% 100%; /* #FFFFFF — le blanc domine */
+    --surface: 210 40% 98%; /* #F8FAFC — canvas / zones secondaires */
+    --foreground: 222 47% 11%; /* #0F172A — texte principal */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 222 47% 11%;
+
+    /* --- Marque --- */
+    --primary: 222 47% 11%; /* #0F172A — Navy */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 20% 94%;
-    --secondary-foreground: 217 47% 14%;
-    --muted: 220 20% 94%;
-    --muted-foreground: 222 13% 41%;
-    --accent: 4 100% 66%;
+    --accent: 8 100% 67%; /* #FF6B57 — Corail */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 63% 55%;
+
+    /* --- Neutres --- */
+    --secondary: 210 40% 98%; /* surface pour boutons secondaires */
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%; /* #F1F5F9 — slate-100 */
+    --muted-foreground: 215 16% 47%; /* #64748B — texte secondaire */
+    --border: 214 32% 91%; /* #E2E8F0 — slate-200 */
+    --input: 214 32% 91%;
+    --ring: 8 100% 67%; /* focus = corail subtil */
+
+    /* --- Sémantique --- */
+    --success: 142 71% 45%; /* #22C55E */
+    --success-foreground: 143 64% 24%; /* texte lisible sur tint */
+    --success-surface: 141 79% 93%; /* #DCFCE7 */
+    --warning: 38 92% 50%; /* #F59E0B */
+    --warning-foreground: 26 90% 37%; /* #B45309 */
+    --warning-surface: 48 96% 89%; /* #FEF3C7 */
+    --error: 0 84% 60%; /* #EF4444 */
+    --error-foreground: 0 74% 42%; /* #B91C1C */
+    --error-surface: 0 93% 94%; /* #FEE2E2 */
+    --info: 217 91% 60%; /* #3B82F6 */
+    --info-foreground: 224 76% 40%; /* #1D4ED8 */
+    --info-surface: 214 95% 93%; /* #DBEAFE */
+
+    /* alias shadcn destructive */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 21% 91%;
-    --input: 220 21% 91%;
-    --ring: 217 47% 14%;
-    --radius: 1rem;
+
+    /* --- Rayons --- */
+    --radius: 14px; /* base : inputs & boutons */
+    --radius-card: 18px;
+    --radius-dialog: 24px;
+  }
+
+  /* ---------------------------------------------------------------
+     DARK MODE — architecture préparée (non activée par défaut).
+     Basculez en ajoutant la classe `dark` sur <html>.
+     --------------------------------------------------------------- */
+  .dark {
+    --background: 222 47% 7%; /* #0A0F1C */
+    --surface: 222 33% 12%; /* #131A2A */
+    --foreground: 210 40% 98%; /* #F8FAFC */
+    --card: 222 33% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%; /* inversion : navy -> clair */
+    --primary-foreground: 222 47% 11%;
+    --accent: 8 100% 67%; /* corail reste identique */
+    --accent-foreground: 0 0% 100%;
+
+    --secondary: 222 33% 16%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 33% 16%;
+    --muted-foreground: 215 20% 65%;
+    --border: 222 26% 20%;
+    --input: 222 26% 20%;
+    --ring: 8 100% 67%;
+
+    --success-surface: 142 40% 18%;
+    --warning-surface: 38 45% 18%;
+    --error-surface: 0 45% 20%;
+    --info-surface: 217 45% 20%;
+
+    --destructive: 0 74% 55%;
+    --destructive-foreground: 0 0% 100%;
   }
 
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-[#F4F5F7] text-navy antialiased;
+    background-color: hsl(var(--surface));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
   }
 }

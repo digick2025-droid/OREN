@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/connexion",
   "/express",
   "/offres",
+  "/design-system",
   "/api/payments",
   "/manifest.webmanifest",
 ];

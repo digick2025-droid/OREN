@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
-import { DOCUMENT_STATUSES, STATUS_STYLES } from "@/lib/constants";
+import { DOCUMENT_STATUSES, STATUS_SOLID, STATUS_VARIANT } from "@/lib/constants";
 import { formatAmount, formatDate } from "@/lib/format";
 import { statusLabel, typeLabel } from "@/lib/i18n/labels";
+import { cn } from "@/lib/utils";
 import {
   isQuotaError,
   useConvertToInvoice,
@@ -20,6 +21,7 @@ import {
   useDocument,
   useUpdateDocumentStatus,
 } from "@/hooks/use-documents";
+import { usePlanFeature } from "@/hooks/use-usage";
 import {
   printDocument,
   renderDocumentHtml,
@@ -41,6 +43,8 @@ export default function DocumentDetailPage({
   const updateStatus = useUpdateDocumentStatus();
   const convertToInvoice = useConvertToInvoice();
   const deleteDocument = useDeleteDocument();
+  // Branding Startup : la fonctionnalité « logo » débloque le PDF personnalisé
+  const { enabled: premiumBranding } = usePlanFeature("logo");
 
   if (isLoading || !data) {
     return (
@@ -57,7 +61,7 @@ export default function DocumentDetailPage({
   const openPdf = () => {
     const html = renderDocumentHtml(
       toPdfData(doc, items),
-      toPdfCompany(company),
+      toPdfCompany(company, { premiumBranding }),
       lang,
     );
     if (!printDocument(html)) {
@@ -107,13 +111,13 @@ export default function DocumentDetailPage({
         <Card className="p-4">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-[12px] font-semibold text-[#8A93A6]">
+              <div className="text-[12px] font-semibold text-muted-foreground/70">
                 {typeLabel(t, doc.type)} · {formatDate(doc.created_at)}
               </div>
               <div className="mt-0.5 text-[17px] font-extrabold text-navy">
                 {doc.title || doc.client_name || t.untitled}
               </div>
-              <div className="text-[13px] text-[#5A6377]">
+              <div className="text-[13px] text-muted-foreground">
                 {doc.client_name || "—"}
                 {doc.client_phone ? ` · ${doc.client_phone}` : ""}
               </div>
@@ -125,12 +129,11 @@ export default function DocumentDetailPage({
         </Card>
 
         <section>
-          <div className="mb-2 text-[13px] font-semibold text-[#5A6377]">
+          <div className="mb-2 text-[13px] font-semibold text-muted-foreground">
             {t.doc_status}
           </div>
           <div className="flex flex-wrap gap-2">
             {DOCUMENT_STATUSES.map((status) => {
-              const style = STATUS_STYLES[status];
               const active = doc.status === status;
               return (
                 <button
@@ -139,9 +142,8 @@ export default function DocumentDetailPage({
                   onClick={() => updateStatus.mutate({ id: doc.id, status })}
                 >
                   <Badge
-                    bg={active ? style.color : style.bg}
-                    color={active ? "#fff" : style.color}
-                    className="px-3 py-1.5 text-[12px]"
+                    variant={STATUS_VARIANT[status]}
+                    className={cn("px-3 py-1.5 text-[12px]", active && STATUS_SOLID[status])}
                   >
                     {statusLabel(t, status)}
                   </Badge>
@@ -152,10 +154,10 @@ export default function DocumentDetailPage({
         </section>
 
         <section>
-          <div className="mb-2 text-[13px] font-semibold text-[#5A6377]">
+          <div className="mb-2 text-[13px] font-semibold text-muted-foreground">
             {t.doc_items}
           </div>
-          <Card className="divide-y divide-[#F0F1F5]">
+          <Card className="divide-y divide-border">
             {items.map((item) => (
               <div
                 key={item.id}
@@ -165,7 +167,7 @@ export default function DocumentDetailPage({
                   <div className="text-[14px] font-semibold text-navy">
                     {item.name}
                   </div>
-                  <div className="text-[12px] text-[#8A93A6]">
+                  <div className="text-[12px] text-muted-foreground/70">
                     {item.quantity} {item.unit} ×{" "}
                     {formatAmount(item.unit_price)}
                   </div>
@@ -176,18 +178,18 @@ export default function DocumentDetailPage({
               </div>
             ))}
             <div className="space-y-1 px-4 py-3">
-              <div className="flex justify-between text-[13px] text-[#5A6377]">
+              <div className="flex justify-between text-[13px] text-muted-foreground">
                 <span>{t.subtotal}</span>
                 <span>{formatAmount(doc.subtotal)}</span>
               </div>
               {doc.discount > 0 && (
-                <div className="flex justify-between text-[13px] text-[#5A6377]">
+                <div className="flex justify-between text-[13px] text-muted-foreground">
                   <span>{t.discount}</span>
                   <span>− {formatAmount(doc.discount)}</span>
                 </div>
               )}
               {doc.vat_enabled && doc.vat_rate > 0 && (
-                <div className="flex justify-between text-[13px] text-[#5A6377]">
+                <div className="flex justify-between text-[13px] text-muted-foreground">
                   <span>TVA {doc.vat_rate}%</span>
                   <span>{formatAmount(doc.vat_amount)}</span>
                 </div>
@@ -198,7 +200,7 @@ export default function DocumentDetailPage({
               </div>
               {doc.advance_amount > 0 && (
                 <>
-                  <div className="flex justify-between text-[13px] text-[#5A6377]">
+                  <div className="flex justify-between text-[13px] text-muted-foreground">
                     <span>{t.advance_paid}</span>
                     <span>− {formatAmount(doc.advance_amount)}</span>
                   </div>
@@ -213,7 +215,7 @@ export default function DocumentDetailPage({
         </section>
 
         {(doc.note || doc.conditions) && (
-          <Card className="space-y-2 p-4 text-[13px] text-[#5A6377]">
+          <Card className="space-y-2 p-4 text-[13px] text-muted-foreground">
             {doc.conditions && (
               <div>
                 <span className="font-bold text-navy">

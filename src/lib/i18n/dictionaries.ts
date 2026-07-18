@@ -14,7 +14,7 @@ const fr = {
   nav_settings: "Réglages",
 
   // Landing
-  land_badge: "DIGICK Express",
+  land_badge: "OREN Express",
   land_headline: "Créez un devis professionnel en moins de 2 minutes",
   land_sub:
     "Envoyez-le à votre client sur WhatsApp. Sans compte · sans abonnement · 500 FCFA par devis.",
@@ -26,7 +26,7 @@ const fr = {
   land_s2d: "Un PDF propre, à votre nom.",
   land_s3: "Payez 500 F & envoyez",
   land_s3d: "Téléchargez et partagez sur WhatsApp.",
-  land_pro: "Découvrir DIGICK Pro",
+  land_pro: "Découvrir OREN Pro",
   land_have: "J'ai déjà un compte",
   land_login: "Se connecter",
 
@@ -72,7 +72,7 @@ const fr = {
   logo_change: "Changer le logo",
   logo_uploading: "Envoi du logo…",
   logo_save_first: "Enregistrez d'abord l'entreprise pour ajouter un logo.",
-  branding_locked: "Logo et slogan sont réservés à DIGICK Startup.",
+  branding_locked: "Logo et slogan sont réservés à OREN Startup.",
   branding_upgrade: "Passer à Startup",
   f_rccm: "N° RCCM",
   f_nif: "NIF / NCC",
@@ -167,10 +167,10 @@ const fr = {
   type_prestation: "Prestation",
   toast_article_saved: "Article enregistré",
   toast_need_price: "Entrez un prix unitaire valide",
-  catalog_locked_title: "Catalogue réservé à DIGICK Business",
+  catalog_locked_title: "Catalogue réservé à OREN Startup",
   catalog_locked_sub:
     "Enregistrez vos produits et prestations une fois pour toutes et ajoutez-les à vos devis en un geste.",
-  catalog_upgrade: "Passer à Business",
+  catalog_upgrade: "Passer à Startup",
 
   // Création de document
   new_quote: "Nouveau devis",
@@ -223,14 +223,18 @@ const fr = {
   toast_draft_saved: "Brouillon enregistré",
   draft_restored: "Brouillon restauré",
   home_proforma: "Nouvelle proforma",
-  proforma_locked: "La proforma est réservée à DIGICK Startup.",
+  proforma_locked: "La proforma est réservée à OREN Startup.",
 
   // Réglages
   set_title: "Réglages",
   set_sub: "Abonnement",
   set_lang: "Langue",
+  set_theme: "Apparence",
+  theme_light: "Clair",
+  theme_dark: "Sombre",
+  theme_system: "Auto",
   set_logout: "Se déconnecter",
-  app_version: "DIGICK Devis · MVP 1.0",
+  app_version: "OREN · MVP 1.0",
 
   // Abonnement
   sub_title: "Abonnement",
@@ -270,7 +274,7 @@ const fr = {
   off_business_tag: "Pour aller plus loin",
   off_business_aud: "Entreprises qui grandissent",
   off_business_feat: [
-    "Tout DIGICK Pro",
+    "Tout OREN Pro",
     "Documents illimités",
     "Catalogue & modèles",
     "Rapports simples",
@@ -319,10 +323,20 @@ const fr = {
   xdl_another: "Créer un autre devis",
   x_need_company: "Entrez le nom de votre entreprise",
   x_need_items: "Ajoutez au moins un élément avec un prix",
+  x_type_devis: "Devis",
+  x_type_facture: "Facture",
+  x_title_f: "Facture express",
+  x_doc_title_f: "Intitulé de la facture",
+  x_preview_cta_f: "Aperçu de la facture",
+  x_more_options: "Remise, acompte, conditions",
+  x_more_options_hide: "Masquer les options",
+  xpdf_pay_f: "Télécharger cette facture ·",
+  xdl_title_f: "Votre facture est prête",
+  xdl_another_f: "Créer une autre facture",
 
   // PWA
   pwa_title: "Installer l'application",
-  pwa_sub: "Ajoutez DIGICK à votre écran d'accueil pour un accès en 1 clic.",
+  pwa_sub: "Ajoutez OREN à votre écran d'accueil pour un accès en 1 clic.",
   pwa_install: "Installer",
   pwa_later: "Plus tard",
   pwa_ios_hint:
@@ -346,7 +360,7 @@ const en: Dict = {
   nav_catalog: "Catalog",
   nav_settings: "Settings",
 
-  land_badge: "DIGICK Express",
+  land_badge: "OREN Express",
   land_headline: "Create a professional quote in under 2 minutes",
   land_sub:
     "Send it to your client on WhatsApp. No account · no subscription · 500 FCFA per quote.",
@@ -358,7 +372,7 @@ const en: Dict = {
   land_s2d: "A clean PDF, in your name.",
   land_s3: "Pay 500 F & send",
   land_s3d: "Download and share on WhatsApp.",
-  land_pro: "Discover DIGICK Pro",
+  land_pro: "Discover OREN Pro",
   land_have: "I already have an account",
   land_login: "Sign in",
 
@@ -402,7 +416,7 @@ const en: Dict = {
   logo_change: "Change logo",
   logo_uploading: "Uploading logo…",
   logo_save_first: "Save the business first to add a logo.",
-  branding_locked: "Logo and slogan are a DIGICK Startup feature.",
+  branding_locked: "Logo and slogan are a OREN Startup feature.",
   branding_upgrade: "Upgrade to Startup",
   f_rccm: "Trade register No.",
   f_nif: "Tax ID (NIF/NCC)",
@@ -492,10 +506,10 @@ const en: Dict = {
   type_prestation: "Service",
   toast_article_saved: "Item saved",
   toast_need_price: "Enter a valid unit price",
-  catalog_locked_title: "Catalog is a DIGICK Business feature",
+  catalog_locked_title: "Catalog is a OREN Startup feature",
   catalog_locked_sub:
     "Save your products and services once and add them to quotes in one tap.",
-  catalog_upgrade: "Upgrade to Business",
+  catalog_upgrade: "Upgrade to Startup",
 
   new_quote: "New quote",
   new_invoice: "New invoice",
@@ -546,13 +560,17 @@ const en: Dict = {
   toast_draft_saved: "Draft saved",
   draft_restored: "Draft restored",
   home_proforma: "New proforma",
-  proforma_locked: "Proforma is a DIGICK Startup feature.",
+  proforma_locked: "Proforma is a OREN Startup feature.",
 
   set_title: "Settings",
   set_sub: "Subscription",
   set_lang: "Language",
+  set_theme: "Appearance",
+  theme_light: "Light",
+  theme_dark: "Dark",
+  theme_system: "Auto",
   set_logout: "Sign out",
-  app_version: "DIGICK Devis · MVP 1.0",
+  app_version: "OREN · MVP 1.0",
 
   sub_title: "Subscription",
   off_current: "Current plan",
@@ -589,7 +607,7 @@ const en: Dict = {
   off_business_tag: "To go further",
   off_business_aud: "Growing businesses",
   off_business_feat: [
-    "All of DIGICK Pro",
+    "All of OREN Pro",
     "Unlimited documents",
     "Catalog & templates",
     "Simple reports",
@@ -636,9 +654,19 @@ const en: Dict = {
   xdl_another: "Create another quote",
   x_need_company: "Enter your business name",
   x_need_items: "Add at least one item with a price",
+  x_type_devis: "Quote",
+  x_type_facture: "Invoice",
+  x_title_f: "Express invoice",
+  x_doc_title_f: "Invoice title",
+  x_preview_cta_f: "Preview invoice",
+  x_more_options: "Discount, deposit, terms",
+  x_more_options_hide: "Hide options",
+  xpdf_pay_f: "Download this invoice ·",
+  xdl_title_f: "Your invoice is ready",
+  xdl_another_f: "Create another invoice",
 
   pwa_title: "Install the app",
-  pwa_sub: "Add DIGICK to your home screen for 1-tap access.",
+  pwa_sub: "Add OREN to your home screen for 1-tap access.",
   pwa_install: "Install",
   pwa_later: "Later",
   pwa_ios_hint: "On iPhone: tap Share then “Add to Home Screen”.",

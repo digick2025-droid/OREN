@@ -59,7 +59,10 @@ export function toPdfData(
   };
 }
 
-export function toPdfCompany(company: Company): PdfCompany {
+export function toPdfCompany(
+  company: Company,
+  options?: { premiumBranding?: boolean },
+): PdfCompany {
   return {
     name: company.name,
     ownerName: company.owner_name ?? "",
@@ -73,6 +76,7 @@ export function toPdfCompany(company: Company): PdfCompany {
     rccm: company.rccm ?? "",
     nif: company.nif ?? "",
     taxRegime: company.tax_regime,
+    premiumBranding: options?.premiumBranding ?? false,
   };
 }
 

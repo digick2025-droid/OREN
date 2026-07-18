@@ -93,7 +93,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
                   "flex-1 rounded-xl border-[1.5px] px-3 py-2.5 text-[13px] font-semibold transition-colors",
                   type === value
                     ? "border-navy bg-navy text-white"
-                    : "border-[#E2E5EC] bg-white text-[#5A6377]",
+                    : "border-border bg-card text-muted-foreground",
                 )}
               >
                 {itemTypeLabel(t, value)}
@@ -119,7 +119,7 @@ export function CatalogItemForm({ item }: { item: CatalogItem | null }) {
               id="item-unit"
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              className="h-[52px] w-full rounded-[14px] border-[1.5px] border-[#E2E5EC] bg-white px-3 text-[15px] text-navy focus-visible:outline-none focus-visible:border-navy"
+              className="h-[52px] w-full rounded-[14px] border-[1.5px] border-border bg-card px-3 text-[15px] text-navy focus-visible:outline-none focus-visible:border-navy"
             >
               {UNITS.map((u) => (
                 <option key={u} value={u}>

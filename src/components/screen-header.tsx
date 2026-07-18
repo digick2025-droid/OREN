@@ -17,7 +17,7 @@ export function ScreenHeader({
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[#E9EBF0] bg-white/95 px-4 py-3.5 backdrop-blur">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-4 py-3.5 backdrop-blur">
       {(backHref !== undefined || onBack) && (
         <button
           type="button"
@@ -27,7 +27,7 @@ export function ScreenHeader({
             if (backHref) return router.push(backHref);
             router.back();
           }}
-          className="-ml-1 rounded-xl p-1.5 text-navy hover:bg-[#EEF0F4]"
+          className="-ml-1 rounded-xl p-1.5 text-navy hover:bg-muted"
         >
           <ArrowLeft size={22} />
         </button>

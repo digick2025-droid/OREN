@@ -19,7 +19,7 @@ export default function AbonnementPage() {
         {usage && (
           <>
             <Card className="p-5">
-              <div className="text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+              <div className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 {t.off_current}
               </div>
               <div className="mt-1 text-[20px] font-extrabold text-navy">
@@ -27,7 +27,7 @@ export default function AbonnementPage() {
               </div>
 
               <div className="mt-4">
-                <div className="flex justify-between text-[13px] text-[#64748B]">
+                <div className="flex justify-between text-[13px] text-muted-foreground">
                   <span>{t.sub_used}</span>
                   <span className="font-bold text-navy">
                     {usage.used}
@@ -37,7 +37,7 @@ export default function AbonnementPage() {
                   </span>
                 </div>
                 {usage.quota !== null && usage.quota > 0 ? (
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#F1F5F9]">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-navy transition-all"
                       style={{
@@ -49,14 +49,14 @@ export default function AbonnementPage() {
                     />
                   </div>
                 ) : (
-                  <p className="mt-1 text-[12.5px] text-[#94A3B8]">
+                  <p className="mt-1 text-[12.5px] text-muted-foreground/70">
                     {t.counter_unlimited}
                   </p>
                 )}
               </div>
 
               {usage.period_end && !usage.quota_lifetime && (
-                <p className="mt-4 text-[12.5px] text-[#94A3B8]">
+                <p className="mt-4 text-[12.5px] text-muted-foreground/70">
                   {t.sub_renew}{" "}
                   <span className="font-semibold text-navy">
                     {formatDate(usage.period_end)}
@@ -68,7 +68,7 @@ export default function AbonnementPage() {
             {usage.quota !== null &&
               usage.quota > 0 &&
               usage.used >= usage.quota && (
-                <Card className="border-coral/40 bg-[#FFF1EE] p-4 text-[13.5px] text-navy">
+                <Card className="border-coral/40 bg-accent/10 p-4 text-[13.5px] text-navy">
                   <span className="font-bold">{t.limit_notice_title}</span>{" "}
                   {t.limit_notice_sub}
                 </Card>

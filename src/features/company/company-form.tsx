@@ -235,12 +235,12 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
             <div className="text-[14px] font-bold text-navy">
               {t.branding_title}
             </div>
-            <p className="mt-0.5 text-[12px] text-[#8A93A6]">
+            <p className="mt-0.5 text-[12px] text-muted-foreground/70">
               {t.branding_hint}
             </p>
 
             <div className="mt-4 flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E9EBF0] bg-[#F6F7F9]">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-surface">
                 {logoUrl ? (
                   <Image
                     src={logoUrl}
@@ -250,7 +250,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
                     className="h-16 w-16 object-contain"
                   />
                 ) : (
-                  <ImagePlus size={22} className="text-[#A6ADBD]" />
+                  <ImagePlus size={22} className="text-muted-foreground/70" />
                 )}
               </div>
               <div className="flex-1">
@@ -284,7 +284,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
                   )}
                 </Button>
                 {!company && (
-                  <p className="mt-1.5 text-[11.5px] text-[#A6ADBD]">
+                  <p className="mt-1.5 text-[11.5px] text-muted-foreground/70">
                     {t.logo_save_first}
                   </p>
                 )}
@@ -303,10 +303,10 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
           </Card>
         ) : (
           <Card className="flex items-center gap-3 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF0F4] text-navy">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-navy">
               <Lock size={18} />
             </div>
-            <div className="min-w-0 flex-1 text-[12.5px] text-[#5A6377]">
+            <div className="min-w-0 flex-1 text-[12.5px] text-muted-foreground">
               {t.branding_locked}
             </div>
             <Link
@@ -318,9 +318,9 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
           </Card>
         ))}
 
-      <div className="rounded-2xl border border-[#E9EBF0] bg-white p-4">
+      <div className="rounded-2xl border border-border bg-card p-4">
         <div className="text-[14px] font-bold text-navy">{t.ohada_legal}</div>
-        <p className="mt-0.5 text-[12px] text-[#8A93A6]">{t.ohada_hint}</p>
+        <p className="mt-0.5 text-[12px] text-muted-foreground/70">{t.ohada_hint}</p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div>
@@ -353,7 +353,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
                   "flex-1 rounded-xl border-[1.5px] px-3 py-2.5 text-[13px] font-semibold transition-colors",
                   form.tax_regime === value
                     ? "border-navy bg-navy text-white"
-                    : "border-[#E2E5EC] bg-white text-[#5A6377]",
+                    : "border-border bg-card text-muted-foreground",
                 )}
               >
                 {regimeLabel(t, value)}
@@ -382,7 +382,7 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
             />
           </div>
         ) : (
-          <p className="mt-2 text-[12px] text-[#8A93A6]">{t.tva_off_note}</p>
+          <p className="mt-2 text-[12px] text-muted-foreground/70">{t.tva_off_note}</p>
         )}
       </div>
 

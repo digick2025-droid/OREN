@@ -34,7 +34,7 @@ export default function NouveauDocumentPage({
         <ScreenHeader title={t.new_proforma} backHref="/accueil" />
         <div className="px-4 pt-8">
           <Card className="p-6 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EEF0F4] text-navy">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-navy">
               <Lock size={22} />
             </div>
             <h2 className="mt-4 text-[17px] font-extrabold text-navy">

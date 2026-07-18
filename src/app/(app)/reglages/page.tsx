@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronRight, CreditCard, Globe, LogOut } from "lucide-react";
+import { Building2, ChevronRight, CreditCard, Globe, LogOut, Palette } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -43,11 +44,11 @@ export default function ReglagesPage() {
               <div className="truncate text-[15px] font-bold text-navy">
                 {company.name}
               </div>
-              <div className="flex items-center gap-1 text-[12.5px] text-[#5A6377]">
+              <div className="flex items-center gap-1 text-[12.5px] text-muted-foreground">
                 <Building2 size={12} /> {t.company_profile}
               </div>
             </div>
-            <ChevronRight size={18} className="text-[#A6ADBD]" />
+            <ChevronRight size={18} className="text-muted-foreground/70" />
           </Link>
         </Card>
 
@@ -56,21 +57,31 @@ export default function ReglagesPage() {
             href="/abonnement"
             className="flex items-center gap-3 px-4 py-4"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEF0F4] text-navy">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-navy">
               <CreditCard size={19} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[15px] font-bold text-navy">{t.set_sub}</div>
-              <div className="text-[12.5px] text-[#5A6377]">
+              <div className="text-[12.5px] text-muted-foreground">
                 {usage ? usage.plan_name : "…"}
               </div>
             </div>
-            <ChevronRight size={18} className="text-[#A6ADBD]" />
+            <ChevronRight size={18} className="text-muted-foreground/70" />
           </Link>
         </Card>
 
         <Card className="flex items-center gap-3 px-4 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEF0F4] text-navy">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-navy">
+            <Palette size={19} />
+          </div>
+          <div className="min-w-0 flex-1 text-[15px] font-bold text-navy">
+            {t.set_theme}
+          </div>
+          <ThemeToggle />
+        </Card>
+
+        <Card className="flex items-center gap-3 px-4 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-navy">
             <Globe size={19} />
           </div>
           <div className="min-w-0 flex-1 text-[15px] font-bold text-navy">
@@ -82,12 +93,12 @@ export default function ReglagesPage() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#E9EBF0] bg-white px-4 py-4 text-[14px] font-semibold text-danger"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-4 text-[14px] font-semibold text-danger"
         >
           <LogOut size={17} /> {t.set_logout}
         </button>
 
-        <p className="pt-2 text-center text-[11.5px] text-[#A6ADBD]">
+        <p className="pt-2 text-center text-[11.5px] text-muted-foreground/70">
           {t.app_version}
         </p>
       </div>
