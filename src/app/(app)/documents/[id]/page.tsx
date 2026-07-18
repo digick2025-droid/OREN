@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Copy, Eye, FileText, Pencil, Send, Trash2 } from "lucide-react";
@@ -27,6 +27,7 @@ import {
   renderDocumentHtml,
   toPdfCompany,
   toPdfData,
+  uploadSharedDocument,
 } from "@/services/pdf";
 import { buildDocumentShareLink } from "@/services/whatsapp";
 
@@ -45,6 +46,7 @@ export default function DocumentDetailPage({
   const deleteDocument = useDeleteDocument();
   // Branding Startup : la fonctionnalité « logo » débloque le PDF personnalisé
   const { enabled: premiumBranding } = usePlanFeature("logo");
+  const [sharing, setSharing] = useState(false);
 
   if (isLoading || !data) {
     return (
@@ -69,8 +71,35 @@ export default function DocumentDetailPage({
     }
   };
 
-  const shareWhatsApp = () => {
-    window.open(buildDocumentShareLink(doc, company.name, lang), "_blank");
+  const shareWhatsApp = async () => {
+    // Ouvre la fenêtre dans le geste utilisateur (évite le blocage pop-up),
+    // puis on la redirige vers wa.me une fois le lien du document prêt.
+    const waWindow = window.open("", "_blank");
+    setSharing(true);
+    let documentUrl: string | null = null;
+    try {
+      const html = renderDocumentHtml(
+        toPdfData(doc, items),
+        toPdfCompany(company, { premiumBranding }),
+        lang,
+      );
+      documentUrl = await uploadSharedDocument({
+        companyId: company.id,
+        docId: doc.id,
+        html,
+      });
+    } catch (error) {
+      // Bucket absent, RLS, réseau : on retombe sur un partage texte simple.
+      console.error("[share] upload document:", error);
+    } finally {
+      setSharing(false);
+    }
+    const link = buildDocumentShareLink(doc, company.name, lang, documentUrl);
+    if (waWindow) {
+      waWindow.location.href = link;
+    } else {
+      window.open(link, "_blank");
+    }
     if (doc.status === "brouillon") {
       updateStatus.mutate({ id: doc.id, status: "envoye" });
     }
@@ -237,7 +266,12 @@ export default function DocumentDetailPage({
           <Button className="w-full" onClick={openPdf}>
             <Eye size={17} /> {t.doc_preview}
           </Button>
-          <Button variant="whatsapp" className="w-full" onClick={shareWhatsApp}>
+          <Button
+            variant="whatsapp"
+            className="w-full"
+            onClick={() => void shareWhatsApp()}
+            disabled={sharing}
+          >
             <Send size={17} /> {t.wa_send}
           </Button>
           <Button
