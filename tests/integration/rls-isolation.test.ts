@@ -33,9 +33,8 @@ describe.skipIf(!env)("RLS — isolation entre deux entreprises", () => {
   let companyA: string;
   let docA: string;
 
-  // Entreprise B
+  // Entreprise B (son tenant est créé pour l'isolation ; l'id n'est pas relu).
   let clientB: SupabaseClient;
-  let companyB: string;
 
   beforeAll(async () => {
     admin = adminClient(testEnv);
@@ -46,7 +45,7 @@ describe.skipIf(!env)("RLS — isolation entre deux entreprises", () => {
 
     const userB = await createTestUser(testEnv, admin, createdUserIds, "rls-b");
     clientB = userB.client;
-    companyB = await createCompany(clientB, "Entreprise B");
+    await createCompany(clientB, "Entreprise B");
 
     // A crée un devis via la RPC.
     const { data, error } = await clientA.rpc("create_document", {
