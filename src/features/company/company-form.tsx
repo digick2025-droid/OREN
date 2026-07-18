@@ -18,6 +18,7 @@ import { regimeLabel } from "@/lib/i18n/labels";
 import { usePlanFeature } from "@/hooks/use-usage";
 import type { Company, CompanyUpdate, TaxRegime } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { LOGO_ACCEPT_ATTR, prepareLogo } from "@/lib/upload";
 
 interface CompanyFormProps {
   /** Entreprise existante (mode édition) ou null (création) */
@@ -79,12 +80,19 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
       toast.error(t.logo_save_first);
       return;
     }
+    // Validation + compression côté client (taille, MIME réel, anti-SVG).
+    const prepared = await prepareLogo(file);
+    if (!prepared.ok) {
+      toast.error(prepared.message);
+      return;
+    }
+    const safeFile = prepared.file;
     setUploading(true);
-    const ext = file.name.split(".").pop() ?? "png";
+    const ext = safeFile.name.split(".").pop() ?? "png";
     const path = `${company.id}/logo-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("logos")
-      .upload(path, file, { upsert: true });
+      .upload(path, safeFile, { upsert: true, contentType: safeFile.type });
     if (uploadError) {
       setUploading(false);
       console.error("[logo] upload storage:", uploadError);
@@ -257,11 +265,12 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp"
+                  accept={LOGO_ACCEPT_ATTR}
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) void uploadLogo(file);
+                    e.target.value = "";
                   }}
                 />
                 <Button
