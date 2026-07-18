@@ -5,8 +5,27 @@
  */
 
 export interface LineInput {
-  quantity: number;
-  unit_price: number;
+  quantity: number | string;
+  unit_price: number | string;
+}
+
+/**
+ * Normalise un montant en nombre sûr.
+ *
+ * Les colonnes monétaires sont des `bigint` en base (migration 0010).
+ * Selon la configuration, supabase-js / PostgREST peut renvoyer un
+ * `bigint` sous forme de **chaîne** pour préserver la précision. Ce
+ * helper accepte donc indifféremment un nombre ou une chaîne (et
+ * null/undefined), et renvoie 0 si la valeur est absente ou invalide.
+ * Les montants FCFA réels restent très en deçà de MAX_SAFE_INTEGER.
+ */
+export function parseAmount(value: number | string | null | undefined): number {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "string") {
+    const n = Number(value.trim());
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
 }
 
 export interface Totals {
@@ -25,19 +44,23 @@ export interface Totals {
 }
 
 export function lineTotal(line: LineInput): number {
-  const qty = Number.isFinite(line.quantity) ? line.quantity : 0;
-  const price = Number.isFinite(line.unit_price) ? line.unit_price : 0;
+  const qty = parseAmount(line.quantity);
+  const price = parseAmount(line.unit_price);
   return Math.round(qty * price);
 }
 
 export function computeTotals(
   items: LineInput[],
-  options: { discount?: number; vatEnabled?: boolean; vatRate?: number } = {},
+  options: {
+    discount?: number | string;
+    vatEnabled?: boolean;
+    vatRate?: number | string;
+  } = {},
 ): Totals {
   const subtotal = items.reduce((sum, item) => sum + lineTotal(item), 0);
-  const discount = Math.min(Math.max(options.discount ?? 0, 0), subtotal);
+  const discount = Math.min(Math.max(parseAmount(options.discount ?? 0), 0), subtotal);
   const net = subtotal - discount;
-  const vatRate = options.vatEnabled ? Math.max(options.vatRate ?? 0, 0) : 0;
+  const vatRate = options.vatEnabled ? Math.max(parseAmount(options.vatRate ?? 0), 0) : 0;
   const vatAmount = Math.round((net * vatRate) / 100);
   return { subtotal, discount, net, vatRate, vatAmount, total: net + vatAmount };
 }
@@ -66,8 +89,13 @@ export function parseQuantity(input: string): number {
 }
 
 /** Reste à payer après acompte (borné entre 0 et le total). */
-export function remainingToPay(total: number, advance: number): number {
-  return Math.max(total - Math.min(Math.max(advance, 0), total), 0);
+export function remainingToPay(
+  total: number | string,
+  advance: number | string,
+): number {
+  const t = parseAmount(total);
+  const a = parseAmount(advance);
+  return Math.max(t - Math.min(Math.max(a, 0), t), 0);
 }
 
 /** Formate un numéro de document : DEV-001, FAC-012, PRO-003… */
@@ -83,12 +111,16 @@ export function formatDocumentNumber(
 /**
  * Quota : true si la création d'un document supplémentaire est permise.
  * quota = null → illimité ; quota = 0 → paiement à l'usage (toujours permis,
- * le paiement est exigé en aval) ; sinon compteur mensuel strict.
+ * le paiement est exigé en aval) ; sinon compteur strict.
+ *
+ * Sémantique alignée sur la fonction SQL assert_quota (migration 0014) :
+ * null et 0 laissent toujours passer ; seul un quota > 0 borne l'usage.
  */
 export function canCreateDocument(
-  used: number,
-  quota: number | null,
+  used: number | string,
+  quota: number | string | null,
 ): boolean {
-  if (quota === null || quota === 0) return true;
-  return used < quota;
+  const q = quota === null ? null : parseAmount(quota);
+  if (q === null || q === 0) return true;
+  return parseAmount(used) < q;
 }

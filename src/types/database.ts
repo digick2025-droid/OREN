@@ -1,6 +1,17 @@
 /**
  * Types des tables Supabase (miroir de supabase/migrations).
  * Régénérer via `supabase gen types typescript` quand le schéma évolue.
+ *
+ * Montants (`bigint` en base depuis la migration 0010) :
+ * les colonnes monétaires — subtotal, discount, vat_amount, total,
+ * advance_amount, unit_price, line_total, amount, price_fcfa,
+ * per_document_price_fcfa — sont des `bigint` côté PostgreSQL (aucun
+ * risque de dépassement sur de gros devis FCFA). Elles sont typées
+ * `number` ici : les montants FCFA réels restent très en deçà de
+ * Number.MAX_SAFE_INTEGER. Si supabase-js / PostgREST renvoie un
+ * `bigint` sous forme de chaîne selon la configuration, la
+ * normalisation est assurée au point de calcul par
+ * `parseAmount` (src/lib/calculations.ts), qui accepte number | string.
  */
 
 export type DocumentType = "devis" | "facture" | "proforma";
