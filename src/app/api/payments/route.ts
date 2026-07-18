@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/services/payments";
+import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
+import type { PaymentInitiation } from "@/services/payments";
 import type { PaymentMethod } from "@/types/database";
 
 interface PaymentBody {
@@ -21,7 +24,32 @@ function isPaymentBody(value: unknown): value is PaymentBody {
   );
 }
 
+/**
+ * Traduit un échec d'initiation en réponse HTTP. `accepted === false` ⇒ la
+ * passerelle a refusé (mauvais numéro, montant, indisponible…) → 402.
+ */
+function initiationError(result: PaymentInitiation): NextResponse {
+  return NextResponse.json(
+    { error: result.error ?? "PAYMENT_FAILED" },
+    { status: 402 },
+  );
+}
+
 export async function POST(request: NextRequest) {
+  // Rate-limit best-effort par IP : un endpoint de paiement est une cible
+  // d'abus (spam d'initiations, énumération). Fenêtre courte et stricte.
+  const ip = clientIpFromHeaders(request.headers);
+  const limited = rateLimit(`pay:ip:${ip}`, { limit: 10, windowMs: 60_000 });
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "RATE_LIMITED" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limited.retryAfterSeconds) },
+      },
+    );
+  }
+
   let raw: unknown;
   try {
     raw = await request.json();
@@ -45,19 +73,34 @@ export async function POST(request: NextRequest) {
       .single();
     const amount = plan?.per_document_price_fcfa ?? 500;
 
-    const result = await provider.charge({
+    const reference = `OREN-EXP-${randomUUID()}`;
+    const result = await provider.initiate({
+      reference,
       amount,
+      currency: "XAF",
       method: body.method,
       phone: body.phone,
       purpose: "express_document",
     });
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error ?? "PAYMENT_FAILED" },
-        { status: 402 },
-      );
+    if (!result.accepted || result.status === "failed") {
+      return initiationError(result);
     }
-    return NextResponse.json({ reference: result.reference, amount });
+    // Passerelle réelle : la confirmation viendra du webhook signé. On renvoie
+    // la référence (et l'éventuelle URL de paiement hébergé) pour le suivi.
+    if (result.status === "pending") {
+      return NextResponse.json({
+        status: "pending",
+        reference,
+        redirectUrl: result.redirectUrl ?? null,
+        amount,
+      });
+    }
+    // Réglé de façon synchrone (simulateur) : bon pour émettre le document.
+    return NextResponse.json({
+      status: "succeeded",
+      reference: result.providerReference || reference,
+      amount,
+    });
   }
 
   // ---- Abonnement : utilisateur connecté uniquement ----
@@ -92,26 +135,37 @@ export async function POST(request: NextRequest) {
   }
 
   if (plan.price_fcfa > 0) {
-    const result = await provider.charge({
+    const reference = `OREN-SUB-${randomUUID()}`;
+    const result = await provider.initiate({
+      reference,
       amount: plan.price_fcfa,
+      currency: "XAF",
       method: body.method,
       phone: body.phone,
       purpose: "subscription",
       planKey: plan.key,
     });
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error ?? "PAYMENT_FAILED" },
-        { status: 402 },
-      );
+    if (!result.accepted || result.status === "failed") {
+      return initiationError(result);
     }
+    // Passerelle réelle : ne PAS changer d'offre ici. Le webhook signé
+    // confirmera le paiement et appliquera le plan (source de vérité unique).
+    if (result.status === "pending") {
+      return NextResponse.json({
+        status: "pending",
+        reference,
+        redirectUrl: result.redirectUrl ?? null,
+      });
+    }
+    // Réglé de façon synchrone (simulateur) : on enregistre le paiement et on
+    // applique l'offre immédiatement.
     await supabase.from("payments").insert({
       company_id: company.id,
       amount: plan.price_fcfa,
       provider: provider.name,
       method: body.method,
       status: "succeeded",
-      reference: result.reference,
+      reference: result.providerReference || reference,
       phone: body.phone ?? null,
     });
   }
