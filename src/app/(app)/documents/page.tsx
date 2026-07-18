@@ -9,7 +9,7 @@ import { useI18n } from "@/features/i18n/language-context";
 import { useDocuments } from "@/hooks/use-documents";
 import { cn } from "@/lib/utils";
 
-type Filter = "tous" | "devis" | "facture";
+type Filter = "tous" | "devis" | "facture" | "proforma";
 
 export default function DocumentsPage() {
   const { t } = useI18n();
@@ -20,6 +20,7 @@ export default function DocumentsPage() {
     { key: "tous", label: t.filter_all },
     { key: "devis", label: t.filter_devis },
     { key: "facture", label: t.filter_factures },
+    { key: "proforma", label: t.filter_proforma },
   ];
 
   const filtered = (documents ?? []).filter(
