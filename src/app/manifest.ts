@@ -8,8 +8,9 @@ export default function manifest(): MetadataRoute.Manifest {
       "Concentrez-vous sur votre métier. OREN s'occupe du reste. Devis et factures pros en quelques secondes.",
     start_url: "/",
     display: "standalone",
+    // Cohérent avec le themeColor sombre déclaré dans layout.tsx (viewport).
     background_color: "#FFFFFF",
-    theme_color: "#0F172A",
+    theme_color: "#0A0F1C",
     lang: "fr",
     icons: [
       {
