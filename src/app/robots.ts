@@ -1,13 +1,9 @@
 import type { MetadataRoute } from "next";
-
-// URL publique du site — surchargeable via NEXT_PUBLIC_SITE_URL,
-// avec un repli raisonnable pour les environnements sans variable.
-const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://oren.app").replace(
-  /\/$/,
-  "",
-);
+import { getSiteUrl } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
+  const siteUrl = getSiteUrl();
+
   return {
     rules: [
       {

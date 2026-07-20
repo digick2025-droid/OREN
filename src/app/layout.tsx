@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme/config";
+import { getSiteUrl } from "@/lib/site-url";
 import { InstallPrompt } from "@/components/install-prompt";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
@@ -16,12 +17,7 @@ const inter = Inter({
   display: "swap",
 });
 
-// URL publique du site — surchargeable via NEXT_PUBLIC_SITE_URL,
-// avec un repli raisonnable pour les environnements sans variable.
-const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://oren.app").replace(
-  /\/$/,
-  "",
-);
+const siteUrl = getSiteUrl();
 
 const siteTitle = "OREN — Gérez votre activité, simplement";
 const siteDescription =
