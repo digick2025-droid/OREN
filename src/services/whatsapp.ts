@@ -36,12 +36,37 @@ const STRINGS: Record<
   },
 };
 
-function normalizePhone(phone: string): string {
-  return phone.replace(/[^\d]/g, "");
+/**
+ * Indicatif pays par défaut (Cameroun) appliqué aux numéros saisis en
+ * format local. wa.me exige le numéro complet AVEC indicatif : un numéro
+ * local (ex. « 6 90 00 00 00 ») sans indicatif produit un lien que
+ * WhatsApp ne peut pas ouvrir.
+ */
+const DEFAULT_COUNTRY_CODE = "237";
+
+/**
+ * Met un numéro au format international requis par wa.me (chiffres seuls,
+ * indicatif inclus, sans « + »).
+ * - « +237 6XX… » / « 00237 6XX… » → déjà international, on garde l'indicatif.
+ * - « 237XXXXXXXXX »               → indicatif déjà présent, inchangé.
+ * - « 6 90 00 00 00 » (local)      → on préfixe l'indicatif par défaut.
+ */
+export function toInternationalPhone(
+  phone: string,
+  countryCode: string = DEFAULT_COUNTRY_CODE,
+): string {
+  const raw = phone.trim();
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  if (raw.startsWith("+")) return digits; // déjà E.164 (ex. +33…)
+  if (digits.startsWith("00")) return digits.slice(2); // préfixe international 00
+  if (digits.startsWith(countryCode)) return digits; // indicatif déjà présent
+  const national = digits.replace(/^0+/, ""); // retire le 0 de tête national
+  return countryCode + national;
 }
 
 export function buildWhatsAppLink(phone: string, message: string): string {
-  const digits = normalizePhone(phone);
+  const digits = toInternationalPhone(phone);
   const encoded = encodeURIComponent(message);
   return digits.length > 0
     ? `https://wa.me/${digits}?text=${encoded}`
