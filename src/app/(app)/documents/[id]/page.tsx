@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Eye, FileText, Pencil, Send, Trash2 } from "lucide-react";
+import { Copy, Download, Eye, FileText, Pencil, Send, Trash2 } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,13 +23,14 @@ import {
 } from "@/hooks/use-documents";
 import { usePlanFeature } from "@/hooks/use-usage";
 import {
-  printDocument,
+  downloadPdf as downloadPdfFile,
+  previewDocument,
   renderDocumentHtml,
+  sharePdf,
   toPdfCompany,
   toPdfData,
-  uploadSharedDocument,
 } from "@/services/pdf";
-import { buildDocumentShareLink } from "@/services/whatsapp";
+import { buildDocumentMessage, buildDocumentShareLink } from "@/services/whatsapp";
 
 export default function DocumentDetailPage({
   params,
@@ -47,6 +48,7 @@ export default function DocumentDetailPage({
   // Branding Startup : la fonctionnalité « logo » débloque le PDF personnalisé
   const { enabled: premiumBranding } = usePlanFeature("logo");
   const [sharing, setSharing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   if (isLoading || !data) {
     return (
@@ -60,48 +62,51 @@ export default function DocumentDetailPage({
   const isConvertible = doc.type === "devis" || doc.type === "proforma";
   const remaining = Math.max(doc.total - doc.advance_amount, 0);
 
-  const openPdf = () => {
-    const html = renderDocumentHtml(
+  const buildDocHtml = () =>
+    renderDocumentHtml(
       toPdfData(doc, items),
       toPdfCompany(company, { premiumBranding }),
       lang,
     );
-    if (!printDocument(html)) {
+
+  const openPdf = () => {
+    if (!previewDocument(buildDocHtml())) {
       toast.error(t.pdf_popup);
     }
   };
 
-  const shareWhatsApp = async () => {
-    // Ouvre la fenêtre dans le geste utilisateur (évite le blocage pop-up),
-    // puis on la redirige vers wa.me une fois le lien du document prêt.
-    const waWindow = window.open("", "_blank");
-    setSharing(true);
-    let documentUrl: string | null = null;
+  // Nom de fichier lisible, ex. « Devis DEV-2025-0001 ».
+  const docName = () => `${typeLabel(t, doc.type)} ${doc.number}`;
+
+  const downloadPdf = async () => {
+    setDownloading(true);
     try {
-      const html = renderDocumentHtml(
-        toPdfData(doc, items),
-        toPdfCompany(company, { premiumBranding }),
-        lang,
-      );
-      documentUrl = await uploadSharedDocument({
-        companyId: company.id,
-        docId: doc.id,
-        html,
-      });
-    } catch (error) {
-      // Bucket absent, RLS, réseau : on retombe sur un partage texte simple.
-      console.error("[share] upload document:", error);
+      await downloadPdfFile(buildDocHtml(), docName());
+    } catch {
+      toast.error(t.pdf_error);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const shareWhatsApp = async () => {
+    setSharing(true);
+    try {
+      const text = buildDocumentMessage(doc, company.name, lang);
+      const result = await sharePdf({ html: buildDocHtml(), name: docName(), text });
+      if (result === "error") {
+        toast.error(t.pdf_error);
+        return;
+      }
+      if (result === "unsupported") {
+        // Appareil sans partage de fichier (desktop) : lien wa.me texte court.
+        window.open(buildDocumentShareLink(doc, company.name, lang), "_blank");
+      }
+      if (doc.status === "brouillon") {
+        updateStatus.mutate({ id: doc.id, status: "envoye" });
+      }
     } finally {
       setSharing(false);
-    }
-    const link = buildDocumentShareLink(doc, company.name, lang, documentUrl);
-    if (waWindow) {
-      waWindow.location.href = link;
-    } else {
-      window.open(link, "_blank");
-    }
-    if (doc.status === "brouillon") {
-      updateStatus.mutate({ id: doc.id, status: "envoye" });
     }
   };
 
@@ -263,7 +268,15 @@ export default function DocumentDetailPage({
         )}
 
         <section className="space-y-3">
-          <Button className="w-full" onClick={openPdf}>
+          <Button
+            className="w-full"
+            onClick={() => void downloadPdf()}
+            disabled={downloading}
+          >
+            <Download size={17} />{" "}
+            {downloading ? t.pdf_generating : t.doc_download}
+          </Button>
+          <Button variant="outline" className="w-full" onClick={openPdf}>
             <Eye size={17} /> {t.doc_preview}
           </Button>
           <Button
@@ -272,7 +285,7 @@ export default function DocumentDetailPage({
             onClick={() => void shareWhatsApp()}
             disabled={sharing}
           >
-            <Send size={17} /> {t.wa_send}
+            <Send size={17} /> {sharing ? t.pdf_generating : t.wa_send}
           </Button>
           <Button
             variant="outline"

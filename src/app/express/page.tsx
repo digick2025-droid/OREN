@@ -28,7 +28,7 @@ import {
 } from "@/lib/calculations";
 import { DEFAULT_COMPANY_COLOR } from "@/lib/constants";
 import { formatAmount } from "@/lib/format";
-import { printDocument, renderDocumentHtml } from "@/services/pdf";
+import { downloadPdf, renderDocumentHtml, sharePdf } from "@/services/pdf";
 import { buildWhatsAppLink } from "@/services/whatsapp";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +61,7 @@ export default function ExpressPage() {
   const [discount, setDiscount] = useState("");
   const [advance, setAdvance] = useState("");
   const [conditions, setConditions] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const isFacture = docKind === "facture";
 
@@ -154,9 +155,19 @@ export default function ExpressPage() {
     setStep("preview");
   };
 
-  const download = () => {
-    if (!printDocument(buildHtml())) {
-      toast.error(t.pdf_popup);
+  const docName = () =>
+    `${isFacture ? t.wa_your_invoice : t.wa_your_quote} ${
+      isFacture ? "FAC-EXP" : "DEV-EXP"
+    }`;
+
+  const download = async () => {
+    setBusy(true);
+    try {
+      await downloadPdf(buildHtml(), docName());
+    } catch {
+      toast.error(t.pdf_error);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -172,17 +183,37 @@ export default function ExpressPage() {
     setStep("form");
   };
 
-  const shareWhatsApp = () => {
+  const buildShareText = () => {
     const docLabel = isFacture ? t.wa_your_invoice : t.wa_your_quote;
     const amount = isFacture && advanceValue > 0 ? remaining : totals.total;
-    const message = [
+    return [
       `${t.wa_hello} ${clientName}`.trim() + ",",
       "",
       `${t.wa_here_is} ${docLabel}${title.trim() ? ` — ${title.trim()}` : ""}. ${t.wa_amount} : ${formatAmount(amount)}.`,
       "",
       businessName,
     ].join("\n");
-    window.open(buildWhatsAppLink(clientPhone, message), "_blank");
+  };
+
+  const shareWhatsApp = async () => {
+    setBusy(true);
+    try {
+      const result = await sharePdf({
+        html: buildHtml(),
+        name: docName(),
+        text: buildShareText(),
+      });
+      if (result === "error") {
+        toast.error(t.pdf_error);
+        return;
+      }
+      if (result === "unsupported") {
+        // Pas de partage de fichier (desktop) : lien wa.me texte.
+        window.open(buildWhatsAppLink(clientPhone, buildShareText()), "_blank");
+      }
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -493,7 +524,7 @@ export default function ExpressPage() {
                 className="pointer-events-none h-[420px] w-full origin-top"
               />
               <div className="absolute inset-x-0 bottom-0 flex h-28 items-end justify-center bg-gradient-to-t from-white to-transparent pb-4">
-                <span className="flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-[12.5px] font-bold text-white">
+                <span className="flex items-center gap-1.5 rounded-full bg-brand-navy px-4 py-2 text-[12.5px] font-bold text-white">
                   <Lock size={13} /> {t.xpdf_lock}{" "}
                   {formatAmount(EXPRESS_PRICE)}
                 </span>
@@ -551,16 +582,22 @@ export default function ExpressPage() {
           <ScreenHeader title={isFacture ? t.xdl_title_f : t.xdl_title} />
           <div className="space-y-4 px-4 pt-5">
             <p className="text-[14px] text-muted-foreground">{t.xdl_sub}</p>
-            <Button size="lg" className="w-full" onClick={download}>
-              <Download size={18} /> {t.xdl_download}
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => void download()}
+              disabled={busy}
+            >
+              <Download size={18} /> {busy ? t.pdf_generating : t.xdl_download}
             </Button>
             <Button
               variant="whatsapp"
               size="lg"
               className="w-full"
-              onClick={shareWhatsApp}
+              onClick={() => void shareWhatsApp()}
+              disabled={busy}
             >
-              <Send size={18} /> {t.xdl_wa}
+              <Send size={18} /> {busy ? t.pdf_generating : t.xdl_wa}
             </Button>
 
             <Card className="p-5 text-center">

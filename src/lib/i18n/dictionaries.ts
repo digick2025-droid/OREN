@@ -129,6 +129,7 @@ const fr = {
   doc_conditions: "Conditions",
   doc_note: "Note",
   doc_preview: "Aperçu PDF",
+  doc_download: "Télécharger le PDF",
   wa_send: "Envoyer sur WhatsApp",
   doc_convert: "Convertir en facture",
   doc_duplicate: "Dupliquer",
@@ -141,6 +142,8 @@ const fr = {
   toast_delete_error: "Suppression impossible",
   toast_create_error: "Création impossible. Réessayez.",
   pdf_popup: "Autorisez les fenêtres pop-up pour télécharger",
+  pdf_generating: "Génération du PDF…",
+  pdf_error: "Échec de la génération du PDF",
 
   // Clients
   clients_title: "Clients",
@@ -471,6 +474,7 @@ const en: Dict = {
   doc_conditions: "Terms",
   doc_note: "Note",
   doc_preview: "PDF preview",
+  doc_download: "Download PDF",
   wa_send: "Send on WhatsApp",
   doc_convert: "Convert to invoice",
   doc_duplicate: "Duplicate",
@@ -483,6 +487,8 @@ const en: Dict = {
   toast_delete_error: "Could not delete",
   toast_create_error: "Could not create. Try again.",
   pdf_popup: "Allow pop-ups to download",
+  pdf_generating: "Generating PDF…",
+  pdf_error: "PDF generation failed",
 
   clients_title: "Clients",
   clients_empty: "No clients yet",

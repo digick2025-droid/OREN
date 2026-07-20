@@ -94,14 +94,30 @@ function isMobileBrowser(): boolean {
 }
 
 /**
+ * Petit script injecté dans l'onglet ouvert pour déclencher tout seul la
+ * boîte d'impression du navigateur (« Enregistrer en PDF »). Sans lui, sur
+ * mobile l'utilisateur voit juste la page et ne sait pas comment la
+ * télécharger — cause du « aucun bouton pour télécharger ».
+ */
+const AUTO_PRINT_SNIPPET =
+  "<script>window.addEventListener('load',function(){setTimeout(function(){try{window.focus();window.print();}catch(e){}},400);});</" +
+  "script>";
+
+/**
  * Ouvre le document A4 autonome dans un nouvel onglet via un blob URL.
- * Sur mobile, l'utilisateur enchaîne avec « Partager → Imprimer → PDF »
- * du navigateur : bien plus fiable que print() sur une iframe cachée.
+ * - `autoPrint` (téléchargement) : déclenche immédiatement « Imprimer →
+ *   Enregistrer en PDF » du navigateur.
+ * - sans `autoPrint` (aperçu) : ouvre simplement la page pour consultation.
  * Renvoie false si la fenêtre est bloquée (pop-up bloqueur).
  */
-function openDocumentTab(html: string): boolean {
+function openDocumentTab(html: string, autoPrint = false): boolean {
   try {
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const payload = autoPrint
+      ? html.includes("</body>")
+        ? html.replace("</body>", `${AUTO_PRINT_SNIPPET}</body>`)
+        : html + AUTO_PRINT_SNIPPET
+      : html;
+    const blob = new Blob([payload], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const win = window.open(url, "_blank");
     if (!win) {
@@ -117,6 +133,14 @@ function openDocumentTab(html: string): boolean {
 }
 
 /**
+ * Ouvre le document en simple consultation (aperçu), sans forcer
+ * l'impression. Renvoie false si la fenêtre est bloquée.
+ */
+export function previewDocument(html: string): boolean {
+  return openDocumentTab(html, false);
+}
+
+/**
  * Imprime / télécharge le document A4 (« Imprimer → PDF »).
  *
  * - Desktop : iframe cachée + print(), avec repli sur l'ouverture d'un
@@ -129,7 +153,7 @@ function openDocumentTab(html: string): boolean {
  */
 export function printDocument(html: string): boolean {
   if (isMobileBrowser()) {
-    return openDocumentTab(html);
+    return openDocumentTab(html, true);
   }
 
   try {
@@ -151,8 +175,8 @@ export function printDocument(html: string): boolean {
           win.focus();
           win.print();
         } catch {
-          // Repli : ouvre le document dans un onglet
-          openDocumentTab(html);
+          // Repli : ouvre le document dans un onglet (avec impression auto)
+          openDocumentTab(html, true);
         }
         // Nettoyage une fois la boîte de dialogue refermée
         setTimeout(() => iframe.remove(), 60_000);
@@ -161,7 +185,7 @@ export function printDocument(html: string): boolean {
     document.body.appendChild(iframe);
     return true;
   } catch {
-    return openDocumentTab(html);
+    return openDocumentTab(html, true);
   }
 }
 
@@ -170,6 +194,14 @@ export {
   uploadSharedDocument,
   type ShareDocumentInput,
 } from "./share";
+
+export {
+  downloadPdf,
+  htmlToPdfBlob,
+  sharePdf,
+  type ShareResult,
+  type SharePdfOptions,
+} from "./generate";
 
 export type {
   PdfCompany,
