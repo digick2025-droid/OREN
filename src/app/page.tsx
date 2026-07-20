@@ -25,7 +25,7 @@ export default async function LandingPage() {
   ];
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-navy px-6 pb-10 pt-10 text-white">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-brand-navy px-6 pb-10 pt-10 text-white">
       <div className="flex items-center justify-between">
         <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-coral/15 px-3 py-1.5 text-[12px] font-bold text-coral">
           <Zap size={13} /> {t.land_badge}

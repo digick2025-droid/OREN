@@ -64,6 +64,8 @@ const config: Config = {
         },
         // --- Alias rétro-compat repointés vers OREN ---
         navy: "hsl(var(--primary))",
+        // Navy fixe pour surfaces toujours sombres (ne s'inverse pas).
+        "brand-navy": "hsl(var(--brand-navy))",
         coral: "hsl(var(--accent))",
         danger: "hsl(var(--error))",
         whatsapp: "#25D366",

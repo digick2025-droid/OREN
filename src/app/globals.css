@@ -25,6 +25,12 @@
     --accent: 8 100% 67%; /* #FF6B57 — Corail */
     --accent-foreground: 0 0% 100%;
 
+    /* Navy de marque FIXE — ne s'inverse jamais (contrairement à
+       --primary). Réservé aux surfaces « toujours sombres » (héros,
+       badges, bandeaux) associées à du texte blanc, pour qu'elles
+       restent lisibles en mode clair ET sombre. */
+    --brand-navy: 222 47% 11%; /* #0F172A */
+
     /* --- Neutres --- */
     --secondary: 210 40% 98%; /* surface pour boutons secondaires */
     --secondary-foreground: 222 47% 11%;
