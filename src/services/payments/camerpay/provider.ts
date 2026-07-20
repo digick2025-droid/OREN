@@ -3,30 +3,40 @@ import type {
   PaymentIntentInput,
   PaymentInitiation,
 } from "../types";
+import { normalizeStatus, pickString } from "./payload";
 
 /**
  * Fournisseur CamerPay (Mobile Money Cameroun).
  *
- * ⚠️ Le contrat exact de l'API d'initiation CamerPay n'est pas figé ici :
- * tout est **paramétrable par variables d'environnement** et le parsing de
- * la réponse est **défensif** (plusieurs noms de champs tolérés). Aucune
- * clé n'est jamais codée en dur.
+ * Contrat repris de la doc « API REST » du tableau de bord CamerPay :
  *
- * Variables d'environnement attendues (côté serveur uniquement) :
- *   - CAMERPAY_API_URL      : endpoint d'initiation (POST JSON).
- *   - CAMERPAY_API_KEY      : clé/secret d'API, envoyée en `Authorization: Bearer`.
- *   - CAMERPAY_CALLBACK_URL : (optionnel) URL publique du webhook OREN
- *                             (`https://<app>/api/payments/webhook`) transmise
- *                             à CamerPay comme callback de confirmation.
+ *   POST https://camerpay.biz/api/payment/initiate
+ *   Authorization: Bearer <token>
+ *   {
+ *     "amount": 5000, "currency": "XAF",
+ *     "merchant_invoice_id": "FACTURE-001",
+ *     "customer_name": "…", "customer_email": "…", "customer_phone": "699123456",
+ *     "merchant_callback_url": "https://…/api/payments/webhook",
+ *     "merchant_return_url": "https://…/paiement/retour",
+ *     "source": "api"
+ *   }
+ *   → { "success": true, "transaction_uuid": "…", "pay_url": "https://camerpay.biz/pay/…", "status": "pending" }
  *
- * HYPOTHÈSES sur l'API (à ajuster selon la doc réelle CamerPay) :
- *   - POST JSON, réponse JSON.
- *   - Un identifiant de transaction est renvoyé sous l'un de :
- *     `reference`, `transaction_id`, `transactionId`, `id`, `data.reference`.
- *   - Un statut éventuel sous `status` ; toute valeur ≠ "success"/"succeeded"
- *     est traitée comme **pending** (la confirmation viendra du webhook signé).
- *   - Une URL de paiement hébergé peut être renvoyée sous `payment_url` /
- *     `redirect_url` / `checkout_url` (optionnelle pour le Mobile Money USSD).
+ * ⚠️ Parcours par REDIRECTION : CamerPay ne pousse pas de demande USSD depuis
+ * notre appel. Le client doit être envoyé sur `pay_url`, y choisir son moyen
+ * de paiement, puis il revient sur `merchant_return_url`. La confirmation, elle,
+ * arrive indépendamment sur `merchant_callback_url` (voir webhook).
+ *
+ * `merchant_return_url` reçoit notre référence en paramètre `ref` (voir
+ * `withReference`), pour que `/paiement/retour` sache quelle intention
+ * vérifier. CamerPay peut ajouter ses propres paramètres à la redirection ;
+ * on ne les lit jamais — seul le webhook signé fait foi du résultat.
+ *
+ * Variables d'environnement (serveur uniquement) :
+ *   - CAMERPAY_API_URL      : endpoint d'initiation.
+ *   - CAMERPAY_API_KEY      : token API, envoyé en `Authorization: Bearer`.
+ *   - CAMERPAY_CALLBACK_URL : URL publique de notre webhook.
+ *   - CAMERPAY_RETURN_URL   : page de retour après paiement.
  */
 export class CamerPayProvider implements PaymentProvider {
   readonly name = "camerpay";
@@ -34,11 +44,13 @@ export class CamerPayProvider implements PaymentProvider {
   private readonly apiUrl: string;
   private readonly apiKey: string;
   private readonly callbackUrl?: string;
+  private readonly returnUrl?: string;
 
   constructor() {
     this.apiUrl = process.env.CAMERPAY_API_URL ?? "";
     this.apiKey = process.env.CAMERPAY_API_KEY ?? "";
     this.callbackUrl = process.env.CAMERPAY_CALLBACK_URL || undefined;
+    this.returnUrl = process.env.CAMERPAY_RETURN_URL || undefined;
   }
 
   async initiate(input: PaymentIntentInput): Promise<PaymentInitiation> {
@@ -64,20 +76,20 @@ export class CamerPayProvider implements PaymentProvider {
       };
     }
 
-    // Corps de requête défensif : on envoie les champs les plus courants.
     const payload: Record<string, unknown> = {
       amount: input.amount,
       currency: input.currency,
-      reference: input.reference,
-      method: input.method,
-      channel: mapChannel(input.method),
-      phone: input.phone ?? null,
-      description: describe(input),
-      metadata: input.metadata ?? {},
+      // Notre référence interne : CamerPay nous la renvoie telle quelle dans
+      // le callback sous le nom `invoice_id`. C'est le lien init ⇆ confirmation.
+      merchant_invoice_id: input.reference,
+      customer_phone: input.phone ? toLocalPhone(input.phone) : undefined,
+      customer_name: input.metadata?.customerName,
+      customer_email: input.metadata?.customerEmail,
+      source: "api",
     };
-    if (this.callbackUrl) {
-      payload.callback_url = this.callbackUrl;
-      payload.webhook_url = this.callbackUrl;
+    if (this.callbackUrl) payload.merchant_callback_url = this.callbackUrl;
+    if (this.returnUrl) {
+      payload.merchant_return_url = withReference(this.returnUrl, input.reference);
     }
 
     let response: Response;
@@ -89,6 +101,8 @@ export class CamerPayProvider implements PaymentProvider {
           Accept: "application/json",
           Authorization: `Bearer ${this.apiKey}`,
         },
+        // Les clés `undefined` sont omises par JSON.stringify : on n'envoie
+        // pas de champs vides pour les infos client qu'on n'a pas.
         body: JSON.stringify(payload),
         // Ne jamais mettre en cache un appel de paiement.
         cache: "no-store",
@@ -115,80 +129,76 @@ export class CamerPayProvider implements PaymentProvider {
     try {
       data = await response.json();
     } catch {
-      // Réponse non-JSON mais 2xx : on considère l'initiation acceptée,
-      // la confirmation viendra du webhook.
       return {
-        accepted: true,
-        status: "pending",
-        providerReference: input.reference,
+        accepted: false,
+        status: "failed",
+        providerReference: "",
+        error: "PROVIDER_BAD_RESPONSE",
       };
     }
 
-    const providerReference =
-      pickString(data, [
-        "reference",
-        "transaction_id",
-        "transactionId",
-        "id",
-      ]) ?? input.reference;
+    // `success: false` ⇒ refus applicatif malgré un HTTP 200.
+    if (
+      typeof data === "object" &&
+      data !== null &&
+      (data as Record<string, unknown>).success === false
+    ) {
+      return {
+        accepted: false,
+        status: "failed",
+        providerReference: "",
+        error:
+          pickString(data, ["message", "error"]) ?? "PROVIDER_REFUSED",
+      };
+    }
 
-    const redirectUrl = pickString(data, [
-      "payment_url",
-      "redirect_url",
-      "checkout_url",
-    ]);
-
-    const rawStatus = pickString(data, ["status", "state"])?.toLowerCase();
-    const settledSynchronously =
-      rawStatus === "success" || rawStatus === "succeeded" || rawStatus === "completed";
+    const redirectUrl = pickString(data, ["pay_url"]);
+    if (!redirectUrl) {
+      // Sans URL de paiement le client n'a aucun moyen de payer : mieux vaut
+      // un échec net qu'une intention laissée en attente pour toujours.
+      return {
+        accepted: false,
+        status: "failed",
+        providerReference: pickString(data, ["transaction_uuid"]) ?? "",
+        error: "PROVIDER_NO_PAY_URL",
+      };
+    }
 
     return {
       accepted: true,
-      // Une vraie passerelle Mobile Money confirme via webhook → pending par
-      // défaut ; on ne fait confiance à un "success" synchrone que s'il est
-      // explicite (rare pour du USSD).
-      status: settledSynchronously ? "succeeded" : "pending",
-      providerReference,
+      // CamerPay répond toujours `pending` ici : le client n'a pas encore payé.
+      // Seul le callback signé peut faire basculer en succès.
+      status: normalizeStatus(pickString(data, ["status"])),
+      providerReference:
+        pickString(data, ["transaction_uuid"]) ?? input.reference,
       redirectUrl,
     };
   }
 }
 
-function mapChannel(method: string): string {
-  switch (method) {
-    case "orange_money":
-      return "ORANGE";
-    case "mtn_momo":
-      return "MTN";
-    default:
-      return "CARD";
-  }
+/**
+ * Format attendu par CamerPay : 9 chiffres sans indicatif (« 699123456 »).
+ * Nos numéros circulent en E.164 (« +237699123456 ») ; on retire donc
+ * l'indicatif pays s'il est présent.
+ */
+function toLocalPhone(phone: string): string {
+  const digits = phone.replace(/[^\d]/g, "");
+  return digits.startsWith("237") && digits.length > 9
+    ? digits.slice(3)
+    : digits;
 }
 
-function describe(input: PaymentIntentInput): string {
-  return input.purpose === "subscription"
-    ? `OREN abonnement ${input.planKey ?? ""}`.trim()
-    : "OREN document express";
-}
-
-/** Récupère la 1ʳᵉ chaîne non vide trouvée parmi des clés (au niveau racine
- *  ou sous `data`), de façon tolérante au format de réponse. */
-function pickString(value: unknown, keys: string[]): string | undefined {
-  const sources: Record<string, unknown>[] = [];
-  if (isRecord(value)) {
-    sources.push(value);
-    if (isRecord(value.data)) sources.push(value.data);
+/**
+ * Ajoute `?ref=<reference>` à l'URL de retour configurée. Si `CAMERPAY_RETURN_URL`
+ * est mal formée (erreur de config), on renvoie l'URL brute plutôt que de faire
+ * échouer toute l'initiation pour un problème d'affichage du retour.
+ */
+function withReference(returnUrl: string, reference: string): string {
+  try {
+    const url = new URL(returnUrl);
+    url.searchParams.set("ref", reference);
+    return url.toString();
+  } catch {
+    return returnUrl;
   }
-  for (const source of sources) {
-    for (const key of keys) {
-      const found = source[key];
-      if (typeof found === "string" && found.length > 0) return found;
-      if (typeof found === "number") return String(found);
-    }
-  }
-  return undefined;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

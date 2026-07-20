@@ -1,8 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
-import { getPaymentProvider } from "@/services/payments";
+import {
+  createServiceClient,
+  getPaymentProvider,
+  settlePaymentIntent,
+} from "@/services/payments";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PaymentInitiation } from "@/services/payments";
 import type { PaymentMethod } from "@/types/database";
 
@@ -64,6 +69,19 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const provider = getPaymentProvider();
 
+  // Les intentions de paiement sont écrites avec le service role : elles ne
+  // doivent jamais être créées ni modifiées depuis le navigateur (un payeur
+  // express est d'ailleurs anonyme et n'a aucune session).
+  let service: SupabaseClient;
+  try {
+    service = createServiceClient();
+  } catch {
+    return NextResponse.json(
+      { error: "PAYMENTS_NOT_CONFIGURED" },
+      { status: 500 },
+    );
+  }
+
   // ---- Express : 500 FCFA par document, sans compte ----
   if (body.purpose === "express_document") {
     const { data: plan } = await supabase
@@ -74,6 +92,23 @@ export async function POST(request: NextRequest) {
     const amount = plan?.per_document_price_fcfa ?? 500;
 
     const reference = `OREN-EXP-${randomUUID()}`;
+    // L'intention est persistée AVANT l'appel passerelle : si le webhook
+    // arrive avant que `initiate()` ne rende la main, la référence existe déjà.
+    const { error: intentError } = await service
+      .from("payment_intents")
+      .insert({
+        reference,
+        provider: provider.name,
+        purpose: "express_document",
+        amount,
+        currency: "XAF",
+        method: body.method,
+        phone: body.phone ?? null,
+      });
+    if (intentError) {
+      return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
+    }
+
     const result = await provider.initiate({
       reference,
       amount,
@@ -83,11 +118,20 @@ export async function POST(request: NextRequest) {
       purpose: "express_document",
     });
     if (!result.accepted || result.status === "failed") {
+      await settlePaymentIntent(
+        { reference, providerReference: result.providerReference, status: "failed" },
+        service,
+      );
       return initiationError(result);
     }
+
     // Passerelle réelle : la confirmation viendra du webhook signé. On renvoie
     // la référence (et l'éventuelle URL de paiement hébergé) pour le suivi.
     if (result.status === "pending") {
+      await service
+        .from("payment_intents")
+        .update({ provider_reference: result.providerReference })
+        .eq("reference", reference);
       return NextResponse.json({
         status: "pending",
         reference,
@@ -95,7 +139,13 @@ export async function POST(request: NextRequest) {
         amount,
       });
     }
-    // Réglé de façon synchrone (simulateur) : bon pour émettre le document.
+
+    // Réglé de façon synchrone (simulateur) : on passe par le MÊME chemin de
+    // confirmation que le webhook, pour ne pas avoir deux vérités.
+    await settlePaymentIntent(
+      { reference, providerReference: result.providerReference, status: "succeeded" },
+      service,
+    );
     return NextResponse.json({
       status: "succeeded",
       reference: result.providerReference || reference,
@@ -136,6 +186,23 @@ export async function POST(request: NextRequest) {
 
   if (plan.price_fcfa > 0) {
     const reference = `OREN-SUB-${randomUUID()}`;
+    const { error: intentError } = await service
+      .from("payment_intents")
+      .insert({
+        reference,
+        provider: provider.name,
+        purpose: "subscription",
+        company_id: company.id,
+        plan_key: plan.key,
+        amount: plan.price_fcfa,
+        currency: "XAF",
+        method: body.method,
+        phone: body.phone ?? null,
+      });
+    if (intentError) {
+      return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
+    }
+
     const result = await provider.initiate({
       reference,
       amount: plan.price_fcfa,
@@ -146,30 +213,40 @@ export async function POST(request: NextRequest) {
       planKey: plan.key,
     });
     if (!result.accepted || result.status === "failed") {
+      await settlePaymentIntent(
+        { reference, providerReference: result.providerReference, status: "failed" },
+        service,
+      );
       return initiationError(result);
     }
+
     // Passerelle réelle : ne PAS changer d'offre ici. Le webhook signé
     // confirmera le paiement et appliquera le plan (source de vérité unique).
     if (result.status === "pending") {
+      await service
+        .from("payment_intents")
+        .update({ provider_reference: result.providerReference })
+        .eq("reference", reference);
       return NextResponse.json({
         status: "pending",
         reference,
         redirectUrl: result.redirectUrl ?? null,
       });
     }
-    // Réglé de façon synchrone (simulateur) : on enregistre le paiement et on
-    // applique l'offre immédiatement.
-    await supabase.from("payments").insert({
-      company_id: company.id,
-      amount: plan.price_fcfa,
-      provider: provider.name,
-      method: body.method,
-      status: "succeeded",
-      reference: result.providerReference || reference,
-      phone: body.phone ?? null,
-    });
+
+    // Réglé de façon synchrone (simulateur) : `settle_payment_intent` insère
+    // le paiement ET applique l'offre — rien à faire de plus ici.
+    const settled = await settlePaymentIntent(
+      { reference, providerReference: result.providerReference, status: "succeeded" },
+      service,
+    );
+    if (settled !== "succeeded") {
+      return NextResponse.json({ error: "PLAN_CHANGE_FAILED" }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
   }
 
+  // ---- Offre gratuite : aucun paiement, changement direct ----
   const { error: planError } = await supabase.rpc("change_plan", {
     p_company_id: company.id,
     p_plan_key: plan.key,

@@ -45,7 +45,13 @@ export default function PaiementPage({
                     phone,
                   }),
                 });
-                return { ok: response.ok };
+                if (!response.ok) return { ok: false };
+                const data = await response.json();
+                return {
+                  ok: true,
+                  status: data.status,
+                  redirectUrl: data.redirectUrl ?? null,
+                };
               }}
               onSuccess={() => {
                 toast.success(t.pay_welcome.replace("{plan}", plan.name), {

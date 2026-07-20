@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/express",
   "/offres",
   "/design-system",
+  "/paiement/retour",
   "/api/payments",
   "/manifest.webmanifest",
   "/robots.txt",

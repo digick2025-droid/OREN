@@ -301,6 +301,23 @@ const fr = {
   pay_welcome: "Bienvenue sur {plan} ! 🎉 Votre abonnement est actif.",
   plan_not_found: "Offre introuvable.",
 
+  // Retour de paiement (redirection CamerPay)
+  retour_checking_title: "Vérification du paiement…",
+  retour_checking_sub: "Ne fermez pas cette page, cela prend quelques secondes.",
+  retour_succeeded_title: "Paiement confirmé",
+  retour_succeeded_sub_sub: "Votre abonnement est actif.",
+  retour_succeeded_sub_express: "Votre document est prêt.",
+  retour_continue: "Continuer",
+  retour_failed_title: "Paiement refusé",
+  retour_failed_sub: "Le paiement n'a pas abouti. Vous pouvez réessayer.",
+  retour_retry: "Réessayer",
+  retour_timeout_title: "Ça prend plus de temps que prévu",
+  retour_timeout_sub:
+    "La confirmation peut encore arriver. Si le paiement a bien été débité, il sera pris en compte automatiquement.",
+  retour_invalid_title: "Lien de paiement invalide",
+  retour_invalid_sub: "Retournez à l'application pour réessayer votre paiement.",
+  retour_back: "Retour",
+
   // Express
   x_title: "Devis express",
   x_business_label: "Votre entreprise",
@@ -635,6 +652,23 @@ const en: Dict = {
   pay_secure: "Secure payment via CamerPay · cancel anytime",
   pay_failed: "Payment failed. Try again.",
   pay_welcome: "Welcome to {plan}! 🎉 Your subscription is active.",
+
+  // Payment return (CamerPay redirect)
+  retour_checking_title: "Checking your payment…",
+  retour_checking_sub: "Don't close this page, this takes a few seconds.",
+  retour_succeeded_title: "Payment confirmed",
+  retour_succeeded_sub_sub: "Your subscription is active.",
+  retour_succeeded_sub_express: "Your document is ready.",
+  retour_continue: "Continue",
+  retour_failed_title: "Payment declined",
+  retour_failed_sub: "The payment didn't go through. You can try again.",
+  retour_retry: "Try again",
+  retour_timeout_title: "This is taking longer than expected",
+  retour_timeout_sub:
+    "Confirmation may still arrive. If you were charged, it will be applied automatically.",
+  retour_invalid_title: "Invalid payment link",
+  retour_invalid_sub: "Go back to the app to try your payment again.",
+  retour_back: "Back",
   plan_not_found: "Plan not found.",
 
   x_title: "Express quote",

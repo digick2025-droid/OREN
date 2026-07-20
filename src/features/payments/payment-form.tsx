@@ -16,10 +16,13 @@ import { cn } from "@/lib/utils";
 export interface PaymentFormProps {
   amount: number;
   buttonLabel?: string;
-  onPay: (input: {
-    method: PaymentMethod;
-    phone: string;
-  }) => Promise<{ ok: boolean; error?: string }>;
+  onPay: (input: { method: PaymentMethod; phone: string }) => Promise<{
+    ok: boolean;
+    /** "pending" = passerelle réelle, redirection nécessaire avant confirmation. */
+    status?: "succeeded" | "pending";
+    redirectUrl?: string | null;
+    error?: string;
+  }>;
   onSuccess: () => void;
 }
 
@@ -51,11 +54,19 @@ export function PaymentForm({
     }
     setProcessing(true);
     const result = await onPay({ method, phone });
-    setProcessing(false);
     if (!result.ok) {
+      setProcessing(false);
       toast.error(t.pay_failed);
       return;
     }
+    if (result.status === "pending" && result.redirectUrl) {
+      // Passerelle réelle : le client quitte l'appli pour payer sur CamerPay.
+      // Le retour est géré par /paiement/retour — on laisse "processing"
+      // affiché, la page est de toute façon sur le point de se décharger.
+      window.location.assign(result.redirectUrl);
+      return;
+    }
+    setProcessing(false);
     onSuccess();
   };
 

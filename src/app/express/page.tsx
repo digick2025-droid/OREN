@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   ChevronDown,
@@ -46,8 +47,33 @@ const EXPRESS_PRICE = 500;
 
 let uidCounter = 1;
 
+interface ExpressDraft {
+  docKind: DocKind;
+  businessName: string;
+  title: string;
+  clientName: string;
+  clientPhone: string;
+  lines: ExpressLine[];
+  discount: string;
+  advance: string;
+  conditions: string;
+}
+
+/** Clé sessionStorage du brouillon sauvegardé avant un départ vers CamerPay. */
+const draftKey = (reference: string) => `oren_express_draft_${reference}`;
+
 export default function ExpressPage() {
+  return (
+    <Suspense fallback={null}>
+      <ExpressPageContent />
+    </Suspense>
+  );
+}
+
+function ExpressPageContent() {
   const { t, lang } = useI18n();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("form");
   const [docKind, setDocKind] = useState<DocKind>("devis");
   const [businessName, setBusinessName] = useState("");
@@ -62,6 +88,38 @@ export default function ExpressPage() {
   const [advance, setAdvance] = useState("");
   const [conditions, setConditions] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Retour de CamerPay après un paiement réussi : l'état React a été perdu
+  // pendant la redirection complète, on restaure le brouillon sauvegardé
+  // juste avant de partir (voir onPay du step "pay") et on saute direct à
+  // "done". Sans brouillon retrouvé (stockage vidé, autre appareil…) on
+  // reste sur le formulaire vide — cas limite assumé d'un parcours anonyme.
+  useEffect(() => {
+    const paidRef = searchParams.get("paid");
+    if (!paidRef) return;
+    try {
+      const raw = sessionStorage.getItem(draftKey(paidRef));
+      if (raw) {
+        const draft = JSON.parse(raw) as ExpressDraft;
+        setDocKind(draft.docKind);
+        setBusinessName(draft.businessName);
+        setTitle(draft.title);
+        setClientName(draft.clientName);
+        setClientPhone(draft.clientPhone);
+        setLines(draft.lines);
+        uidCounter = Math.max(uidCounter, ...draft.lines.map((l) => l.uid + 1));
+        setDiscount(draft.discount);
+        setAdvance(draft.advance);
+        setConditions(draft.conditions);
+        setStep("done");
+        sessionStorage.removeItem(draftKey(paidRef));
+      }
+    } catch {
+      // Brouillon introuvable ou corrompu : on reste sur le formulaire vide.
+    }
+    router.replace("/express");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isFacture = docKind === "facture";
 
@@ -569,7 +627,38 @@ export default function ExpressPage() {
                     phone,
                   }),
                 });
-                return { ok: response.ok };
+                if (!response.ok) return { ok: false };
+                const data = await response.json();
+                if (data.status === "pending" && data.redirectUrl) {
+                  // Le client part payer sur CamerPay : l'état React ne
+                  // survivra pas à la redirection complète, on sauvegarde le
+                  // brouillon pour reconstruire le document à son retour.
+                  try {
+                    const draft: ExpressDraft = {
+                      docKind,
+                      businessName,
+                      title,
+                      clientName,
+                      clientPhone,
+                      lines,
+                      discount,
+                      advance,
+                      conditions,
+                    };
+                    sessionStorage.setItem(
+                      draftKey(data.reference),
+                      JSON.stringify(draft),
+                    );
+                  } catch {
+                    // Stockage indisponible (navigation privée…) : tant pis,
+                    // le retour n'affichera qu'une confirmation générique.
+                  }
+                }
+                return {
+                  ok: true,
+                  status: data.status,
+                  redirectUrl: data.redirectUrl ?? null,
+                };
               }}
               onSuccess={() => setStep("done")}
             />

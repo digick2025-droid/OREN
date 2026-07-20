@@ -20,7 +20,10 @@ export function getPaymentProvider(): PaymentProvider {
 
 export { settlePaymentIntent } from "./confirm";
 export { createServiceClient } from "./supabase";
-export { verifyWebhookSignature } from "./camerpay/signature";
+export {
+  parseCallback,
+  verifyCallbackSignature,
+} from "./camerpay/signature";
 
 export type {
   PaymentProvider,
