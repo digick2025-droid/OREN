@@ -8,6 +8,10 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 const PUBLIC_PATHS = [
   "/",
   "/connexion",
+  "/inscription",
+  "/mot-de-passe-oublie",
+  "/mot-de-passe",
+  "/auth",
   "/express",
   "/offres",
   "/design-system",

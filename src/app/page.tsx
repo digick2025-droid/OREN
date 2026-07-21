@@ -79,6 +79,10 @@ export default async function LandingPage() {
           <Link href="/connexion" className="font-bold text-white underline">
             {t.land_login}
           </Link>
+          {" · "}
+          <Link href="/inscription" className="font-bold text-white underline">
+            {t.land_signup}
+          </Link>
         </p>
       </div>
     </div>

@@ -7,7 +7,7 @@ partage WhatsApp, abonnements avec quotas et mode Express sans compte.
 ## Stack
 
 - **Frontend** : Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind CSS · composants style shadcn/ui
-- **Backend / BDD / Auth / Stockage** : Supabase (PostgreSQL, Auth OTP par téléphone, Storage)
+- **Backend / BDD / Auth / Stockage** : Supabase (PostgreSQL, Auth email + mot de passe, Storage)
 - **Données client** : TanStack React Query
 - **Déploiement** : Vercel
 
@@ -18,7 +18,9 @@ src/
   app/                  Routes (App Router)
     (app)/              Écrans connectés (accueil, documents, clients, catalogue, réglages…)
     api/payments/       Paiement (simulé, interface CamerPay-compatible)
-    connexion/          Auth OTP téléphone
+    connexion/          Auth email + mot de passe
+    inscription/        Création de compte B2B
+    mot-de-passe-oublie/  Récupération de mot de passe
     express/            Devis express sans compte
     offres/             Page des offres (publique)
   components/           UI réutilisable (bouton, carte, navigation…)
@@ -39,13 +41,15 @@ supabase/migrations/    Schéma SQL, RLS, fonctions métier
    (SQL Editor ou `supabase db push`) :
    `0001_initial_schema.sql` → `0002_rls_policies.sql` → `0003_functions.sql`
 
-2. **Activer l'authentification par téléphone** :
-   Dashboard → Authentication → Providers → Phone (configurer un fournisseur
-   SMS, ex. Twilio). Pour tester sans SMS : Authentication → Phone →
-   *Test OTPs* permet de déclarer des numéros + codes de test.
+2. **Configurer l'authentification par email** :
+   Dashboard → Authentication → Providers → **Email** (activer).
+   Désactiver le provider **Phone** si vous n'utilisez plus l'OTP SMS.
+   Authentication → URL Configuration :
+   - Site URL : `http://localhost:3000` (dev) ou votre domaine de production
+   - Redirect URLs : `http://localhost:3000/auth/callback`, `https://votre-domaine/auth/callback`
 
 3. **Variables d'environnement** : copier `.env.example` vers `.env.local`
-   et renseigner l'URL et la clé anon du projet.
+   et renseigner l'URL Supabase, la clé anon et `NEXT_PUBLIC_SITE_URL`.
 
 4. **Lancer** :
 

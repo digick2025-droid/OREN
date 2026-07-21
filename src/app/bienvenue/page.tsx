@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CompanyForm } from "@/features/company/company-form";
+import { AutoOnboard } from "@/features/auth/auto-onboard";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
@@ -25,6 +26,7 @@ export default async function BienvenuePage() {
 
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md bg-surface">
+      <AutoOnboard />
       <div className="px-4 pt-10">
         <h1 className="text-[26px] font-extrabold text-navy">
           {t.setup_title}
