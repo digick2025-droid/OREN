@@ -1,17 +1,23 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useCompany } from "@/features/company/company-context";
+import { useCompanyOrNull } from "@/features/company/company-context";
 import { createClient } from "@/lib/supabase/client";
 import type { Plan, PlanFeature, Usage } from "@/types/database";
 
 export function useUsage() {
-  const company = useCompany();
+  // Tolère l'absence de CompanyProvider : CompanyForm est aussi rendu sur
+  // /bienvenue (création), où l'entreprise n'existe pas encore. La requête
+  // est simplement désactivée — usePlanFeature retombe sur enabled: false,
+  // le bon comportement pour un compte tout neuf (offre gratuite).
+  const company = useCompanyOrNull();
   const supabase = createClient();
 
   return useQuery({
-    queryKey: ["usage", company.id],
+    queryKey: ["usage", company?.id ?? "none"],
+    enabled: company !== null,
     queryFn: async (): Promise<Usage> => {
+      if (!company) throw new Error("unreachable: query disabled sans company");
       const { data, error } = await supabase.rpc("get_usage", {
         p_company_id: company.id,
       });

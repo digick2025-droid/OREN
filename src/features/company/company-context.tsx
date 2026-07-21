@@ -26,3 +26,12 @@ export function useCompany(): Company {
   }
   return company;
 }
+
+/**
+ * Variante tolérante : renvoie null hors de CompanyProvider.
+ * Nécessaire pour les composants partagés avec /bienvenue (création),
+ * rendus avant que l'entreprise n'existe — ex. CompanyForm.
+ */
+export function useCompanyOrNull(): Company | null {
+  return useContext(CompanyContext);
+}
