@@ -69,12 +69,21 @@ export default function InscriptionPage() {
     setLoading(false);
 
     if (error) {
-      toast.error(mapAuthError(error.message, t));
+      toast.error(mapAuthError(error, t));
       return;
     }
 
     if (!data.user) {
       toast.error(t.auth_error_generic);
+      return;
+    }
+
+    // Anti-énumération Supabase : un email déjà inscrit ne renvoie pas
+    // d'erreur, mais un utilisateur fictif sans identité (identities: []).
+    // Sans ce contrôle, chaque nouvelle tentative resignait un email de
+    // confirmation et finissait par épuiser le quota d'envoi.
+    if (data.user.identities && data.user.identities.length === 0) {
+      toast.error(t.auth_error_email_taken);
       return;
     }
 

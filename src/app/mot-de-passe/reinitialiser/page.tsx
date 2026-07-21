@@ -39,7 +39,7 @@ export default function ReinitialiserMotDePassePage() {
     setLoading(false);
 
     if (error) {
-      toast.error(mapAuthError(error.message, t));
+      toast.error(mapAuthError(error, t));
       return;
     }
 
