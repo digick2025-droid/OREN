@@ -16,6 +16,8 @@ interface PaymentBody {
   method: PaymentMethod;
   phone?: string;
   planKey?: string;
+  /** Code promo (abonnement uniquement) — revalidé authoritativement ici. */
+  promoCode?: string;
 }
 
 function isPaymentBody(value: unknown): value is PaymentBody {
@@ -185,6 +187,40 @@ export async function POST(request: NextRequest) {
   }
 
   if (plan.price_fcfa > 0) {
+    // Code promo optionnel : revalidé ici (authoritatif), jamais le montant
+    // envoyé tel quel par le client — même RPC que l'aperçu côté formulaire.
+    let amount = plan.price_fcfa;
+    let promoCodeId: string | null = null;
+    let discountFcfa = 0;
+    if (body.promoCode) {
+      const { data: promoResult, error: promoError } = await supabase.rpc(
+        "preview_promo_code",
+        { p_code: body.promoCode, p_plan_key: plan.key },
+      );
+      if (promoError) {
+        return NextResponse.json(
+          { error: "PROMO_CHECK_FAILED" },
+          { status: 500 },
+        );
+      }
+      const preview = promoResult as {
+        valid: boolean;
+        reason: string | null;
+        promo_code_id: string | null;
+        discount_fcfa: number | null;
+        final_amount_fcfa: number | null;
+      };
+      if (!preview.valid) {
+        return NextResponse.json(
+          { error: "INVALID_PROMO", reason: preview.reason },
+          { status: 400 },
+        );
+      }
+      amount = preview.final_amount_fcfa ?? amount;
+      promoCodeId = preview.promo_code_id;
+      discountFcfa = preview.discount_fcfa ?? 0;
+    }
+
     const reference = `OREN-SUB-${randomUUID()}`;
     const { error: intentError } = await service
       .from("payment_intents")
@@ -194,10 +230,12 @@ export async function POST(request: NextRequest) {
         purpose: "subscription",
         company_id: company.id,
         plan_key: plan.key,
-        amount: plan.price_fcfa,
+        amount,
         currency: "XAF",
         method: body.method,
         phone: body.phone ?? null,
+        promo_code_id: promoCodeId,
+        discount_fcfa: discountFcfa,
       });
     if (intentError) {
       return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
@@ -205,7 +243,7 @@ export async function POST(request: NextRequest) {
 
     const result = await provider.initiate({
       reference,
-      amount: plan.price_fcfa,
+      amount,
       currency: "XAF",
       method: body.method,
       phone: body.phone,

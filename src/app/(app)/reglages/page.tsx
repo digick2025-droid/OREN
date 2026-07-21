@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronRight, CreditCard, Globe, LogOut, Palette } from "lucide-react";
+import { Building2, ChevronRight, CreditCard, Globe, LogOut, Palette, ShieldCheck } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUsage } from "@/hooks/use-usage";
 
 export default function ReglagesPage() {
@@ -17,6 +18,7 @@ export default function ReglagesPage() {
   const company = useCompany();
   const { t } = useI18n();
   const { data: usage } = useUsage();
+  const isAdmin = useIsAdmin();
   const supabase = createClient();
 
   const signOut = async () => {
@@ -89,6 +91,20 @@ export default function ReglagesPage() {
           </div>
           <LanguageToggle />
         </Card>
+
+        {isAdmin ? (
+          <Card>
+            <Link href="/admin" className="flex items-center gap-3 px-4 py-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-navy">
+                <ShieldCheck size={19} />
+              </div>
+              <div className="min-w-0 flex-1 text-[15px] font-bold text-navy">
+                Espace Admin
+              </div>
+              <ChevronRight size={18} className="text-muted-foreground/70" />
+            </Link>
+          </Card>
+        ) : null}
 
         <button
           type="button"

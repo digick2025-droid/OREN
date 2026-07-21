@@ -10,36 +10,6 @@ import { createClient } from "@/lib/supabase/server";
 import { formatAmountShort } from "@/lib/format";
 import type { Plan } from "@/types/database";
 
-/** Contenu marketing des offres (prix et quotas viennent de la base) */
-function planContent(t: Dict, key: string): {
-  tag: string;
-  audience: string;
-  features: readonly string[];
-} {
-  switch (key) {
-    case "express":
-      return {
-        tag: t.off_express_tag,
-        audience: t.off_express_aud,
-        features: t.off_express_feat,
-      };
-    case "pro":
-      return {
-        tag: t.off_pro_tag,
-        audience: t.off_pro_aud,
-        features: t.off_pro_feat,
-      };
-    case "business":
-      return {
-        tag: t.off_business_tag,
-        audience: t.off_business_aud,
-        features: t.off_business_feat,
-      };
-    default:
-      return { tag: "", audience: "", features: [] };
-  }
-}
-
 function planPrice(t: Dict, plan: Plan): string {
   if (plan.per_document_price_fcfa) {
     return `${formatAmountShort(plan.per_document_price_fcfa)} F / ${t.per_quote}`;
@@ -51,7 +21,8 @@ function planPrice(t: Dict, plan: Plan): string {
 export default async function OffresPage() {
   const supabase = await createClient();
   const cookieStore = await cookies();
-  const t = getDict(parseLang(cookieStore.get(LANG_COOKIE)?.value));
+  const lang = parseLang(cookieStore.get(LANG_COOKIE)?.value);
+  const t = getDict(lang);
 
   const [{ data: plansData }, authResult] = await Promise.all([
     supabase
@@ -92,7 +63,7 @@ export default async function OffresPage() {
 
       <div className="mt-4 space-y-4 px-4">
         {plans.map((plan) => {
-          const content = planContent(t, plan.key);
+          const content = plan.marketing?.[lang] ?? { tag: "", audience: "", features: [] };
           const isCurrent = currentPlanKey === plan.key;
           const highlight = plan.key === "pro";
 

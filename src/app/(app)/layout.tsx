@@ -20,6 +20,7 @@ export default async function AppLayout({
     .is("deleted_at", null)
     .maybeSingle();
   if (!company) redirect("/bienvenue");
+  if (company.suspended_at) redirect("/suspendu");
 
   return (
     <CompanyProvider company={company as Company}>

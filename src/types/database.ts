@@ -54,6 +54,8 @@ export interface Company {
   tax_regime: TaxRegime;
   vat_enabled: boolean;
   vat_rate: number;
+  suspended_at: string | null;
+  suspended_reason: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -165,6 +167,18 @@ export type PlanFeature =
   | "logo"
   | "advance";
 
+/** Contenu marketing bilingue d'une offre (`plans.marketing`, migration 0021). */
+export interface PlanMarketingContent {
+  tag: string;
+  audience: string;
+  features: string[];
+}
+
+export interface PlanMarketing {
+  fr: PlanMarketingContent;
+  en: PlanMarketingContent;
+}
+
 export interface Plan {
   key: string;
   name: string;
@@ -172,6 +186,7 @@ export interface Plan {
   monthly_quota: number | null;
   per_document_price_fcfa: number | null;
   features: PlanFeature[];
+  marketing: PlanMarketing;
   sort_order: number;
   is_active: boolean;
   created_at: string;
