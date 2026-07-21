@@ -25,6 +25,8 @@ interface CompanyFormProps {
   company: Company | null;
   userId: string;
   defaultPhone?: string;
+  defaultName?: string;
+  defaultOwnerName?: string;
 }
 
 interface FormState {
@@ -45,7 +47,13 @@ interface FormState {
 
 const TAX_REGIMES: TaxRegime[] = ["reel", "synthetique", "franchise"];
 
-export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps) {
+export function CompanyForm({
+  company,
+  userId,
+  defaultPhone,
+  defaultName,
+  defaultOwnerName,
+}: CompanyFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const { t } = useI18n();
@@ -57,8 +65,8 @@ export function CompanyForm({ company, userId, defaultPhone }: CompanyFormProps)
     company?.logo_url ?? null,
   );
   const [form, setForm] = useState<FormState>({
-    name: company?.name ?? "",
-    owner_name: company?.owner_name ?? "",
+    name: company?.name ?? defaultName ?? "",
+    owner_name: company?.owner_name ?? defaultOwnerName ?? "",
     slogan: company?.slogan ?? "",
     phone: company?.phone ?? defaultPhone ?? "",
     whatsapp: company?.whatsapp ?? defaultPhone ?? "",

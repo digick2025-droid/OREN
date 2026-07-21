@@ -37,6 +37,8 @@ export default async function BienvenuePage() {
         company={null}
         userId={user.id}
         defaultPhone={user.phone ?? ""}
+        defaultName={user.user_metadata?.company_name ?? ""}
+        defaultOwnerName={user.user_metadata?.full_name ?? ""}
       />
     </div>
   );

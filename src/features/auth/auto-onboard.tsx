@@ -38,10 +38,14 @@ export function AutoOnboard() {
         owner_id: user.id,
         email: user.email ?? null,
       });
-      if (!error) {
-        router.replace("/accueil");
-        router.refresh();
+      if (error) {
+        // Échec silencieux volontaire : le formulaire manuel de /bienvenue
+        // (prérempli avec les mêmes métadonnées) reste la voie de secours.
+        console.error("[auto-onboard] company insert failed:", error);
+        return;
       }
+      router.replace("/accueil");
+      router.refresh();
     }
 
     void run();

@@ -33,7 +33,11 @@ export function mapAuthError(message: string, t: Dict): string {
   if (lower.includes("email not confirmed")) {
     return t.auth_error_email_unconfirmed;
   }
-  if (lower.includes("invalid email") || lower.includes("unable to validate email")) {
+  if (
+    lower.includes("invalid email") ||
+    lower.includes("unable to validate email") ||
+    (lower.includes("email") && lower.includes("is invalid"))
+  ) {
     return t.auth_error_invalid_email;
   }
   if (lower.includes("rate limit") || lower.includes("too many requests")) {
