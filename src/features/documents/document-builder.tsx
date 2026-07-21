@@ -489,7 +489,7 @@ export function DocumentBuilder({
                 <Card key={line.uid} className="p-3.5">
                   <div className="flex items-start justify-between gap-2">
                     <Input
-                      className="h-9 rounded-lg border-transparent px-1 text-[14px] font-semibold focus-visible:border-border"
+                      className="h-9 rounded-lg border border-dashed border-border bg-muted/40 px-2.5 text-[14px] font-semibold focus-visible:border-solid focus-visible:bg-card"
                       value={line.name}
                       placeholder={t.q_free_ph}
                       onChange={(e) =>
