@@ -88,10 +88,13 @@ export async function POST(request: NextRequest) {
   if (body.purpose === "express_document") {
     const { data: plan } = await supabase
       .from("plans")
-      .select("per_document_price_fcfa")
+      .select("per_document_price_fcfa, is_active")
       .eq("key", "express")
-      .single();
-    const amount = plan?.per_document_price_fcfa ?? 500;
+      .maybeSingle();
+    if (!plan || !plan.is_active) {
+      return NextResponse.json({ error: "INVALID_PLAN" }, { status: 400 });
+    }
+    const amount = plan.per_document_price_fcfa ?? 500;
 
     const reference = `OREN-EXP-${randomUUID()}`;
     // L'intention est persistée AVANT l'appel passerelle : si le webhook

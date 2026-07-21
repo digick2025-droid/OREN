@@ -189,6 +189,9 @@ export interface Plan {
   marketing: PlanMarketing;
   sort_order: number;
   is_active: boolean;
+  /** Prix avant bascule "toutes les offres gratuites" — null si pas en promo. */
+  promo_price_snapshot_fcfa: number | null;
+  promo_per_doc_snapshot_fcfa: number | null;
   created_at: string;
   updated_at: string;
 }

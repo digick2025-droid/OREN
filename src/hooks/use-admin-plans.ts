@@ -53,3 +53,39 @@ export function useUpdatePlan() {
     },
   });
 }
+
+/** Bascule groupée "toutes les offres gratuites", réversible (admin_restore_plan_prices). */
+export function useSetAllPlansFree() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<Plan[]> => {
+      const { data, error } = await supabase.rpc("admin_set_all_plans_free");
+      if (error) throw error;
+      return data as Plan[];
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
+      void queryClient.invalidateQueries({ queryKey: ["plans"] });
+    },
+  });
+}
+
+/** Annule la promo "toutes les offres gratuites" : restaure les prix d'origine. */
+export function useRestorePlanPrices() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<Plan[]> => {
+      const { data, error } = await supabase.rpc("admin_restore_plan_prices");
+      if (error) throw error;
+      return data as Plan[];
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
+      void queryClient.invalidateQueries({ queryKey: ["plans"] });
+    },
+  });
+}
