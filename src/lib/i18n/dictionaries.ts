@@ -148,6 +148,9 @@ const fr = {
   // Détail document
   doc_status: "Statut",
   doc_items: "Éléments",
+  cat_article_total: "Total matériel/prestation",
+  cat_main_oeuvre_total: "Total main d'œuvre",
+  cat_transport_total: "Total transport",
   subtotal: "Sous-total",
   discount: "Remise",
   amount_ht: "Montant HT",
@@ -219,6 +222,9 @@ const fr = {
   q_freeline: "Ligne libre",
   q_add_line: "Ajouter une ligne",
   q_free_ph: "Ex : Peinture, plomberie, câble électrique…",
+  cat_article: "Article",
+  cat_main_oeuvre: "Main d'œuvre",
+  cat_transport: "Transport",
   q_title: "Intitulé du document",
   q_title_ph: "Ex : Pose peinture chambre 4 m²",
   q_discount: "Remise (FCFA)",
@@ -256,6 +262,23 @@ const fr = {
   draft_restored: "Brouillon restauré",
   home_proforma: "Nouvelle proforma",
   proforma_locked: "La proforma est réservée à OREN Startup.",
+
+  // Métier (sélecteur au premier élément d'un document)
+  metier_title: "Quel est votre métier ?",
+  metier_sub_catalog:
+    "On remplit votre catalogue avec les prestations les plus courantes. Vous mettrez vos prix ensuite.",
+  metier_sub_suggest:
+    "On vous proposera les prestations les plus courantes pendant la saisie.",
+  metier_skip: "Passer",
+  metier_electricien: "Électricien",
+  metier_plombier: "Plombier",
+  metier_menuisier: "Menuisier",
+  metier_peintre: "Peintre",
+  metier_climaticien: "Climaticien",
+  metier_general: "Autre métier",
+  metier_suggestions: "Suggestions",
+  toast_metier_seeded: "Catalogue pré-rempli — renseignez vos prix",
+  toast_metier_saved: "Métier enregistré",
 
   // Réglages
   set_title: "Réglages",
@@ -521,6 +544,9 @@ const en: Dict = {
 
   doc_status: "Status",
   doc_items: "Items",
+  cat_article_total: "Materials/services total",
+  cat_main_oeuvre_total: "Labor total",
+  cat_transport_total: "Transport total",
   subtotal: "Subtotal",
   discount: "Discount",
   amount_ht: "Net amount",
@@ -589,6 +615,9 @@ const en: Dict = {
   q_freeline: "Custom line",
   q_add_line: "Add a line",
   q_free_ph: "E.g. Painting, plumbing, electrical cable…",
+  cat_article: "Item",
+  cat_main_oeuvre: "Labor",
+  cat_transport: "Transport",
   q_title: "Document title",
   q_title_ph: "E.g. Painting a 4 m² bedroom",
   q_discount: "Discount (FCFA)",
@@ -625,6 +654,22 @@ const en: Dict = {
   draft_restored: "Draft restored",
   home_proforma: "New proforma",
   proforma_locked: "Proforma is a OREN Startup feature.",
+
+  metier_title: "What is your trade?",
+  metier_sub_catalog:
+    "We fill your catalog with the most common services. You set your prices afterwards.",
+  metier_sub_suggest:
+    "We will suggest the most common services as you type.",
+  metier_skip: "Skip",
+  metier_electricien: "Electrician",
+  metier_plombier: "Plumber",
+  metier_menuisier: "Carpenter",
+  metier_peintre: "Painter",
+  metier_climaticien: "AC technician",
+  metier_general: "Other trade",
+  metier_suggestions: "Suggestions",
+  toast_metier_seeded: "Catalog pre-filled — add your prices",
+  toast_metier_saved: "Trade saved",
 
   set_title: "Settings",
   set_sub: "Subscription",

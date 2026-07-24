@@ -10,6 +10,7 @@
 import type {
   PdfCompany,
   PdfDocumentData,
+  PdfLineCategory,
   PdfStrings,
   PdfTemplate,
 } from "../types";
@@ -81,7 +82,31 @@ export const classicTemplate: PdfTemplate = {
       .filter(Boolean)
       .join(" · ");
 
-    const rows = doc.lines
+    // Matériel/prestation avant main d'œuvre avant transport, ordre stable
+    // au sein d'une même catégorie.
+    const categoryRank: Record<PdfLineCategory, number> = {
+      article: 0,
+      main_oeuvre: 1,
+      transport: 2,
+    };
+    const sortedLines = [...doc.lines].sort(
+      (a, b) =>
+        categoryRank[a.category ?? "article"] -
+        categoryRank[b.category ?? "article"],
+    );
+
+    const categoryTotals = doc.lines.reduce<Record<PdfLineCategory, number>>(
+      (acc, line) => {
+        const category = line.category ?? "article";
+        acc[category] += line.lineTotal;
+        return acc;
+      },
+      { article: 0, main_oeuvre: 0, transport: 0 },
+    );
+    const hasCategorySplit =
+      categoryTotals.main_oeuvre > 0 || categoryTotals.transport > 0;
+
+    const rows = sortedLines
       .map(
         (line, i) => `
       <tr>
@@ -95,6 +120,17 @@ export const classicTemplate: PdfTemplate = {
 
     const totalLine = (label: string, value: string, minus = false) =>
       `<div style="display:flex;justify-content:space-between;font-size:12px;color:#475569;padding:4px 0"><span>${label}</span><span style="font-variant-numeric:tabular-nums">${minus ? "− " : ""}${value}</span></div>`;
+
+    const categoryRows = hasCategorySplit
+      ? totalLine(s.catArticleTotal, fcfa(categoryTotals.article)) +
+        (categoryTotals.main_oeuvre > 0
+          ? totalLine(s.catMainOeuvreTotal, fcfa(categoryTotals.main_oeuvre))
+          : "") +
+        (categoryTotals.transport > 0
+          ? totalLine(s.catTransportTotal, fcfa(categoryTotals.transport))
+          : "") +
+        `<div style="border-top:1px dashed #E2E8F0;margin:4px 0"></div>`
+      : "";
 
     const discountRow =
       doc.discount > 0 ? totalLine(s.discount, fcfa(doc.discount), true) : "";
@@ -213,6 +249,7 @@ export const classicTemplate: PdfTemplate = {
 
   <div style="display:flex;justify-content:flex-end;margin-top:16px">
     <div style="width:260px;background:#F8FAFC;border:1px solid #EEF2F7;border-radius:12px;padding:12px 14px">
+      ${categoryRows}
       ${totalLine(s.subtotal, fcfa(doc.subtotal))}
       ${discountRow}
       ${vatRows}

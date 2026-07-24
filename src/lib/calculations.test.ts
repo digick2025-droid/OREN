@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canCreateDocument,
+  computeCategoryTotals,
   computeTotals,
   formatDocumentNumber,
   lineTotal,
@@ -89,6 +90,32 @@ describe("computeTotals — TVA", () => {
     expect(totals.vatRate).toBe(0);
     expect(totals.vatAmount).toBe(0);
     expect(totals.total).toBe(100000);
+  });
+});
+
+describe("computeCategoryTotals — sous-totaux par catégorie", () => {
+  it("regroupe matériel/prestation, main d'œuvre et transport", () => {
+    const totals = computeCategoryTotals([
+      { quantity: 1, unit_price: 20000, category: "article" },
+      { quantity: 1, unit_price: 25000, category: "main_oeuvre" },
+      { quantity: 1, unit_price: 5000, category: "transport" },
+    ]);
+    expect(totals).toEqual({ article: 20000, main_oeuvre: 25000, transport: 5000 });
+  });
+
+  it("une ligne sans catégorie compte comme article", () => {
+    const totals = computeCategoryTotals([{ quantity: 2, unit_price: 1000 }]);
+    expect(totals.article).toBe(2000);
+    expect(totals.main_oeuvre).toBe(0);
+    expect(totals.transport).toBe(0);
+  });
+
+  it("cumule plusieurs lignes de la même catégorie", () => {
+    const totals = computeCategoryTotals([
+      { quantity: 1, unit_price: 10000, category: "main_oeuvre" },
+      { quantity: 1, unit_price: 5000, category: "main_oeuvre" },
+    ]);
+    expect(totals.main_oeuvre).toBe(15000);
   });
 });
 

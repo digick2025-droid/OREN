@@ -1,5 +1,6 @@
 /** Libellés traduits des énumérations métier. */
 
+import type { Metier } from "@/lib/catalog-templates";
 import type {
   CatalogItemType,
   DocumentStatus,
@@ -30,6 +31,18 @@ export function typeLabel(t: Dict, type: DocumentType): string {
 
 export function itemTypeLabel(t: Dict, type: CatalogItemType): string {
   return type === "produit" ? t.type_produit : t.type_prestation;
+}
+
+export function metierLabel(t: Dict, metier: Metier): string {
+  const map: Record<Metier, string> = {
+    electricien: t.metier_electricien,
+    plombier: t.metier_plombier,
+    menuisier: t.metier_menuisier,
+    peintre: t.metier_peintre,
+    climaticien: t.metier_climaticien,
+    general: t.metier_general,
+  };
+  return map[metier];
 }
 
 export function regimeLabel(t: Dict, regime: TaxRegime): string {

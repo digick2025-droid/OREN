@@ -20,13 +20,20 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { LineCategoryPicker } from "@/features/documents/line-category-picker";
+import { LineNameInput } from "@/features/documents/line-name-input";
+import { LineUnitSelect } from "@/features/documents/line-unit-select";
+import { MetierPicker } from "@/features/documents/metier-picker";
 import { PaymentForm } from "@/features/payments/payment-form";
 import { useI18n } from "@/features/i18n/language-context";
 import {
+  computeCategoryTotals,
   computeTotals,
   parseQuantity,
   remainingToPay,
+  type LineCategory,
 } from "@/lib/calculations";
+import { METIERS, type Metier } from "@/lib/catalog-templates";
 import { DEFAULT_COMPANY_COLOR } from "@/lib/constants";
 import { formatAmount } from "@/lib/format";
 import { downloadPdf, renderDocumentHtml, sharePdf } from "@/services/pdf";
@@ -36,6 +43,8 @@ import { cn } from "@/lib/utils";
 interface ExpressLine {
   uid: number;
   name: string;
+  unit: string;
+  category: LineCategory;
   qty: string;
   unit_price: number;
 }
@@ -62,6 +71,13 @@ interface ExpressDraft {
 /** Clé sessionStorage du brouillon sauvegardé avant un départ vers CamerPay. */
 const draftKey = (reference: string) => `oren_express_draft_${reference}`;
 
+/**
+ * Clé sessionStorage du métier choisi. Express est anonyme : rien n'est écrit
+ * en base, le choix ne sert qu'à alimenter les suggestions de désignation et
+ * disparaît avec la session.
+ */
+const METIER_KEY = "oren_express_metier";
+
 export function ExpressForm() {
   return (
     <Suspense fallback={null}>
@@ -81,13 +97,38 @@ function ExpressFormContent() {
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [lines, setLines] = useState<ExpressLine[]>([
-    { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
+    { uid: uidCounter++, name: "", unit: "unité", category: "article", qty: "1", unit_price: 0 },
   ]);
   const [showOptions, setShowOptions] = useState(false);
   const [discount, setDiscount] = useState("");
   const [advance, setAdvance] = useState("");
   const [conditions, setConditions] = useState("");
   const [busy, setBusy] = useState(false);
+  const [metier, setMetier] = useState<Metier | null>(null);
+  const [metierSkipped, setMetierSkipped] = useState(false);
+
+  // Relecture du métier choisi plus tôt dans la session (rafraîchissement,
+  // retour de CamerPay…). Lu ici et pas dans un initialiseur useState :
+  // sessionStorage n'existe pas au rendu serveur.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(METIER_KEY);
+      if (saved && (METIERS as readonly string[]).includes(saved)) {
+        setMetier(saved as Metier);
+      }
+    } catch {
+      // Stockage indisponible : le sélecteur sera simplement reproposé.
+    }
+  }, []);
+
+  const chooseMetier = (choice: Metier) => {
+    setMetier(choice);
+    try {
+      sessionStorage.setItem(METIER_KEY, choice);
+    } catch {
+      // Sans stockage, le choix vit quand même le temps de la saisie.
+    }
+  };
 
   // Retour de CamerPay après un paiement réussi : l'état React a été perdu
   // pendant la redirection complète, on restaure le brouillon sauvegardé
@@ -135,6 +176,20 @@ function ExpressFormContent() {
     [lines, discount],
   );
 
+  const categoryTotals = useMemo(
+    () =>
+      computeCategoryTotals(
+        lines.map((l) => ({
+          quantity: parseQuantity(l.qty),
+          unit_price: l.unit_price,
+          category: l.category,
+        })),
+      ),
+    [lines],
+  );
+  const hasCategorySplit =
+    categoryTotals.main_oeuvre > 0 || categoryTotals.transport > 0;
+
   const advanceValue = isFacture ? parseInt(advance, 10) || 0 : 0;
   const remaining = remainingToPay(totals.total, advanceValue);
 
@@ -168,7 +223,8 @@ function ExpressFormContent() {
             const quantity = parseQuantity(l.qty);
             return {
               name: l.name,
-              unit: "unité",
+              unit: l.unit,
+              category: l.category,
               quantity,
               unitPrice: l.unit_price,
               lineTotal: Math.round(quantity * l.unit_price),
@@ -230,7 +286,9 @@ function ExpressFormContent() {
   };
 
   const resetForm = () => {
-    setLines([{ uid: uidCounter++, name: "", qty: "1", unit_price: 0 }]);
+    setLines([
+      { uid: uidCounter++, name: "", unit: "unité", category: "article", qty: "1", unit_price: 0 },
+    ]);
     setTitle("");
     setClientName("");
     setClientPhone("");
@@ -346,17 +404,25 @@ function ExpressFormContent() {
 
             <div>
               <Label>{t.q_items_label}</Label>
+              {metier === null && !metierSkipped && (
+                <div className="mb-3">
+                  <MetierPicker
+                    variant="suggest"
+                    onSelect={chooseMetier}
+                    onSkip={() => setMetierSkipped(true)}
+                  />
+                </div>
+              )}
               <div className="space-y-3">
                 {lines.map((line) => (
                   <Card key={line.uid} className="p-3.5">
                     <div className="flex items-start justify-between gap-2">
-                      <Input
+                      <LineNameInput
                         className="h-9 rounded-lg border border-dashed border-border bg-muted/40 px-2.5 text-[14px] font-semibold focus-visible:border-solid focus-visible:bg-card"
                         value={line.name}
                         placeholder={t.q_free_ph}
-                        onChange={(e) =>
-                          updateLine(line.uid, { name: e.target.value })
-                        }
+                        metier={metier}
+                        onChange={(name) => updateLine(line.uid, { name })}
                       />
                       {lines.length > 1 && (
                         <button
@@ -372,6 +438,12 @@ function ExpressFormContent() {
                           <Trash2 size={17} />
                         </button>
                       )}
+                    </div>
+                    <div className="mt-2">
+                      <LineCategoryPicker
+                        value={line.category}
+                        onChange={(category) => updateLine(line.uid, { category })}
+                      />
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-1">
@@ -401,6 +473,11 @@ function ExpressFormContent() {
                         >
                           <Plus size={14} />
                         </button>
+                        <LineUnitSelect
+                          className="ml-1"
+                          value={line.unit}
+                          onChange={(unit) => updateLine(line.uid, { unit })}
+                        />
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Input
@@ -435,7 +512,14 @@ function ExpressFormContent() {
                 onClick={() =>
                   setLines((prev) => [
                     ...prev,
-                    { uid: uidCounter++, name: "", qty: "1", unit_price: 0 },
+                    {
+                      uid: uidCounter++,
+                      name: "",
+                      unit: "unité",
+                      category: "article",
+                      qty: "1",
+                      unit_price: 0,
+                    },
                   ])
                 }
                 className="mt-3 w-full rounded-xl border-[1.5px] border-dashed border-border py-3 text-[13.5px] font-semibold text-muted-foreground hover:border-navy"
@@ -531,6 +615,27 @@ function ExpressFormContent() {
 
             {/* ----- Totaux ----- */}
             <Card className="space-y-1.5 p-4">
+              {hasCategorySplit && (
+                <>
+                  <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                    <span>{t.cat_article_total}</span>
+                    <span>{formatAmount(categoryTotals.article)}</span>
+                  </div>
+                  {categoryTotals.main_oeuvre > 0 && (
+                    <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                      <span>{t.cat_main_oeuvre_total}</span>
+                      <span>{formatAmount(categoryTotals.main_oeuvre)}</span>
+                    </div>
+                  )}
+                  {categoryTotals.transport > 0 && (
+                    <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                      <span>{t.cat_transport_total}</span>
+                      <span>{formatAmount(categoryTotals.transport)}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-dashed border-muted" />
+                </>
+              )}
               <div className="flex justify-between text-[13.5px] text-muted-foreground">
                 <span>{t.subtotal}</span>
                 <span>{formatAmount(totals.subtotal)}</span>

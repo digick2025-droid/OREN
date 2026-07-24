@@ -44,6 +44,7 @@ export function toPdfData(
     lines: items.map((item) => ({
       name: item.name,
       unit: item.unit,
+      category: item.category,
       quantity: item.quantity,
       unitPrice: item.unit_price,
       lineTotal: item.line_total,

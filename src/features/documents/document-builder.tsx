@@ -12,7 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
-import { computeTotals, parseQuantity, remainingToPay } from "@/lib/calculations";
+import {
+  computeCategoryTotals,
+  computeTotals,
+  parseQuantity,
+  remainingToPay,
+  type LineCategory,
+} from "@/lib/calculations";
 import { formatAmount } from "@/lib/format";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useClients, useSaveClient } from "@/hooks/use-clients";
@@ -21,18 +27,25 @@ import {
   useCreateDocument,
   useUpdateDocument,
 } from "@/hooks/use-documents";
+import { useSetMetier } from "@/hooks/use-metier";
 import { usePlanFeature } from "@/hooks/use-usage";
+import type { Metier } from "@/lib/catalog-templates";
 import type {
   DocumentItem,
   DocumentRow,
   DocumentType,
 } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { LineCategoryPicker } from "./line-category-picker";
+import { LineNameInput } from "./line-name-input";
+import { LineUnitSelect } from "./line-unit-select";
+import { MetierPicker } from "./metier-picker";
 
 interface DraftLine {
   uid: number;
   name: string;
   unit: string;
+  category: LineCategory;
   qty: string;
   unit_price: number;
 }
@@ -71,6 +84,7 @@ export function DocumentBuilder({
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument();
   const catalogAccess = usePlanFeature("catalog");
+  const setMetier = useSetMetier();
 
   const isEdit = Boolean(editDoc);
   const type: DocumentType = editDoc?.type ?? createType ?? "devis";
@@ -88,6 +102,7 @@ export function DocumentBuilder({
       uid: uidCounter++,
       name: item.name,
       unit: item.unit,
+      category: item.category ?? "article",
       qty: String(item.quantity),
       unit_price: item.unit_price,
     })),
@@ -103,6 +118,18 @@ export function DocumentBuilder({
   const [conditions, setConditions] = useState(editDoc?.conditions ?? "");
   const [draftRestored, setDraftRestored] = useState(false);
   const restoredRef = useRef(false);
+
+  // ---- Métier : pré-remplissage du catalogue / suggestions de lignes ----
+  // `company` vient d'un composant serveur : après écriture, on tient l'état à
+  // jour localement (le router.refresh() propage la valeur au reste de l'app).
+  // `?? null` et pas seulement `company.metier` : tant que la migration 0026
+  // n'a pas tourné, la colonne est absente du `select("*")` et vaut `undefined`.
+  const [metier, setMetierState] = useState<Metier | null>(
+    company.metier ?? null,
+  );
+  // Le sélecteur ne réapparaît pas dans le même document après un « Passer » —
+  // mais bien au prochain, ce composant étant remonté à chaque création.
+  const [metierSkipped, setMetierSkipped] = useState(false);
 
   // ---- Autosave local (création uniquement) : reprise + hors-ligne ----
   useEffect(() => {
@@ -173,6 +200,23 @@ export function DocumentBuilder({
     [lines, discount, company.vat_enabled, company.vat_rate],
   );
 
+  const categoryTotals = useMemo(
+    () =>
+      computeCategoryTotals(
+        lines.map((l) => ({
+          quantity: parseQuantity(l.qty),
+          unit_price: l.unit_price,
+          category: l.category,
+        })),
+      ),
+    [lines],
+  );
+  // La ventilation ne s'affiche que si au moins une ligne main d'œuvre/
+  // transport existe — sinon elle ferait doublon avec le sous-total juste
+  // en dessous, pour le cas (largement majoritaire) où tout est "article".
+  const hasCategorySplit =
+    categoryTotals.main_oeuvre > 0 || categoryTotals.transport > 0;
+
   const advanceValue = parseInt(advance, 10) || 0;
   const remaining = remainingToPay(totals.total, advanceValue);
 
@@ -189,8 +233,38 @@ export function DocumentBuilder({
     [catalog],
   );
 
-  const addLine = (line: Omit<DraftLine, "uid">) => {
-    setLines((prev) => [...prev, { ...line, uid: uidCounter++ }]);
+  // Deux situations distinctes, un seul sélecteur :
+  //  - offre avec catalogue mais catalogue vide : chercher dans du vide ne sert
+  //    à rien, le sélecteur prend la place de la barre de recherche ;
+  //  - offre sans catalogue : le sélecteur n'alimente que les suggestions de
+  //    saisie (aucun article n'est créé, la feature reste payante).
+  const showMetierPicker =
+    metier === null &&
+    !metierSkipped &&
+    !catalogAccess.loading &&
+    (catalogAccess.enabled ? catalog !== undefined && catalog.length === 0 : true);
+
+  const chooseMetier = (choice: Metier) => {
+    setMetier.mutate(
+      { metier: choice, seedCatalog: catalogAccess.enabled },
+      {
+        onSuccess: ({ seeded }) => {
+          setMetierState(choice);
+          toast.success(seeded ? t.toast_metier_seeded : t.toast_metier_saved);
+          router.refresh();
+        },
+        onError: () => toast.error(t.toast_save_error),
+      },
+    );
+  };
+
+  const addLine = (
+    line: Omit<DraftLine, "uid" | "category"> & { category?: LineCategory },
+  ) => {
+    setLines((prev) => [
+      ...prev,
+      { category: "article", ...line, uid: uidCounter++ },
+    ]);
     setSearch("");
   };
 
@@ -245,6 +319,7 @@ export function DocumentBuilder({
     lines.map((line) => ({
       name: line.name || "—",
       unit: line.unit,
+      category: line.category,
       quantity: parseQuantity(line.qty),
       unit_price: line.unit_price,
     }));
@@ -412,19 +487,28 @@ export function DocumentBuilder({
         {/* ----- Articles ----- */}
         <section>
           <Label>{t.q_items_label}</Label>
-          {catalogAccess.enabled && (
-            <div className="relative">
-              <Search
-                size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/70"
-              />
-              <Input
-                className="pl-11"
-                placeholder={t.q_search_ph}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+          {showMetierPicker ? (
+            <MetierPicker
+              variant={catalogAccess.enabled ? "catalog" : "suggest"}
+              pending={setMetier.isPending}
+              onSelect={chooseMetier}
+              onSkip={() => setMetierSkipped(true)}
+            />
+          ) : (
+            catalogAccess.enabled && (
+              <div className="relative">
+                <Search
+                  size={17}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/70"
+                />
+                <Input
+                  className="pl-11"
+                  placeholder={t.q_search_ph}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            )
           )}
 
           {catalogAccess.enabled && searchResults.length > 0 && (
@@ -488,13 +572,12 @@ export function DocumentBuilder({
               lines.map((line) => (
                 <Card key={line.uid} className="p-3.5">
                   <div className="flex items-start justify-between gap-2">
-                    <Input
+                    <LineNameInput
                       className="h-9 rounded-lg border border-dashed border-border bg-muted/40 px-2.5 text-[14px] font-semibold focus-visible:border-solid focus-visible:bg-card"
                       value={line.name}
                       placeholder={t.q_free_ph}
-                      onChange={(e) =>
-                        updateLine(line.uid, { name: e.target.value })
-                      }
+                      metier={metier}
+                      onChange={(name) => updateLine(line.uid, { name })}
                     />
                     <button
                       type="button"
@@ -504,6 +587,12 @@ export function DocumentBuilder({
                     >
                       <Trash2 size={17} />
                     </button>
+                  </div>
+                  <div className="mt-2">
+                    <LineCategoryPicker
+                      value={line.category}
+                      onChange={(category) => updateLine(line.uid, { category })}
+                    />
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-1">
@@ -533,9 +622,11 @@ export function DocumentBuilder({
                       >
                         <Plus size={14} />
                       </button>
-                      <span className="ml-1 text-[12px] text-muted-foreground/70">
-                        {line.unit}
-                      </span>
+                      <LineUnitSelect
+                        className="ml-1"
+                        value={line.unit}
+                        onChange={(unit) => updateLine(line.uid, { unit })}
+                      />
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Input
@@ -655,6 +746,27 @@ export function DocumentBuilder({
 
         {/* ----- Totaux ----- */}
         <Card className="space-y-1.5 p-4">
+          {hasCategorySplit && (
+            <>
+              <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                <span>{t.cat_article_total}</span>
+                <span>{formatAmount(categoryTotals.article)}</span>
+              </div>
+              {categoryTotals.main_oeuvre > 0 && (
+                <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                  <span>{t.cat_main_oeuvre_total}</span>
+                  <span>{formatAmount(categoryTotals.main_oeuvre)}</span>
+                </div>
+              )}
+              {categoryTotals.transport > 0 && (
+                <div className="flex justify-between text-[13.5px] text-muted-foreground">
+                  <span>{t.cat_transport_total}</span>
+                  <span>{formatAmount(categoryTotals.transport)}</span>
+                </div>
+              )}
+              <div className="border-t border-dashed border-muted" />
+            </>
+          )}
           <div className="flex justify-between text-[13.5px] text-muted-foreground">
             <span>{t.subtotal}</span>
             <span>{formatAmount(totals.subtotal)}</span>

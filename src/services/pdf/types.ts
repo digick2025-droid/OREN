@@ -21,9 +21,13 @@ export interface PdfCompany {
   premiumBranding: boolean;
 }
 
+export type PdfLineCategory = "article" | "main_oeuvre" | "transport";
+
 export interface PdfLine {
   name: string;
   unit: string;
+  /** Matériel/prestation (défaut), main d'œuvre ou transport. */
+  category?: PdfLineCategory;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -65,6 +69,9 @@ export interface PdfStrings {
   unitPrice: string;
   total: string;
   totalTtc: string;
+  catArticleTotal: string;
+  catMainOeuvreTotal: string;
+  catTransportTotal: string;
   subtotal: string;
   discount: string;
   netAmount: string;

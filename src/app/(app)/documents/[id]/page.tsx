@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
+import { computeCategoryTotals } from "@/lib/calculations";
 import { DOCUMENT_STATUSES, STATUS_SOLID, STATUS_VARIANT } from "@/lib/constants";
 import { formatAmount, formatDate } from "@/lib/format";
 import { statusLabel, typeLabel } from "@/lib/i18n/labels";
@@ -61,6 +62,9 @@ export default function DocumentDetailPage({
   const { document: doc, items } = data;
   const isConvertible = doc.type === "devis" || doc.type === "proforma";
   const remaining = Math.max(doc.total - doc.advance_amount, 0);
+  const categoryTotals = computeCategoryTotals(items);
+  const hasCategorySplit =
+    categoryTotals.main_oeuvre > 0 || categoryTotals.transport > 0;
 
   const buildDocHtml = () =>
     renderDocumentHtml(
@@ -212,6 +216,27 @@ export default function DocumentDetailPage({
               </div>
             ))}
             <div className="space-y-1 px-4 py-3">
+              {hasCategorySplit && (
+                <>
+                  <div className="flex justify-between text-[13px] text-muted-foreground">
+                    <span>{t.cat_article_total}</span>
+                    <span>{formatAmount(categoryTotals.article)}</span>
+                  </div>
+                  {categoryTotals.main_oeuvre > 0 && (
+                    <div className="flex justify-between text-[13px] text-muted-foreground">
+                      <span>{t.cat_main_oeuvre_total}</span>
+                      <span>{formatAmount(categoryTotals.main_oeuvre)}</span>
+                    </div>
+                  )}
+                  {categoryTotals.transport > 0 && (
+                    <div className="flex justify-between text-[13px] text-muted-foreground">
+                      <span>{t.cat_transport_total}</span>
+                      <span>{formatAmount(categoryTotals.transport)}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-dashed border-muted" />
+                </>
+              )}
               <div className="flex justify-between text-[13px] text-muted-foreground">
                 <span>{t.subtotal}</span>
                 <span>{formatAmount(doc.subtotal)}</span>

@@ -14,6 +14,9 @@
  * `parseAmount` (src/lib/calculations.ts), qui accepte number | string.
  */
 
+import type { LineCategory } from "@/lib/calculations";
+import type { Metier } from "@/lib/catalog-templates";
+
 export type DocumentType = "devis" | "facture" | "proforma";
 export type DocumentStatus =
   | "brouillon"
@@ -54,6 +57,8 @@ export interface Company {
   tax_regime: TaxRegime;
   vat_enabled: boolean;
   vat_rate: number;
+  /** Métier déclaré au premier document — pré-remplissage / suggestions (migration 0026). */
+  metier: Metier | null;
   suspended_at: string | null;
   suspended_reason: string | null;
   created_at: string;
@@ -151,6 +156,8 @@ export interface DocumentItem {
   position: number;
   name: string;
   unit: string;
+  /** Matériel/prestation (défaut), main d'œuvre ou transport (migration 0027). */
+  category: LineCategory;
   quantity: number;
   unit_price: number;
   line_total: number;
@@ -250,6 +257,8 @@ export interface Usage {
 export interface DocumentLineInput {
   name: string;
   unit: string;
+  /** Optionnelle : la base par défaut sur `article` si absente. */
+  category?: LineCategory;
   quantity: number;
   unit_price: number;
 }

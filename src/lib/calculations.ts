@@ -10,6 +10,26 @@ export interface LineInput {
 }
 
 /**
+ * Catégorie d'une ligne de devis/facture.
+ * `article` (matériel/prestation) est la catégorie par défaut ; `main_oeuvre`
+ * et `transport` sont des lignes à part, affichées après dans le
+ * récapitulatif des totaux.
+ */
+export type LineCategory = "article" | "main_oeuvre" | "transport";
+
+export const LINE_CATEGORIES: readonly LineCategory[] = [
+  "article",
+  "main_oeuvre",
+  "transport",
+] as const;
+
+export interface CategorizedLineInput extends LineInput {
+  category?: LineCategory;
+}
+
+export type CategoryTotals = Record<LineCategory, number>;
+
+/**
  * Normalise un montant en nombre sûr.
  *
  * Les colonnes monétaires sont des `bigint` en base (migration 0010).
@@ -63,6 +83,21 @@ export function computeTotals(
   const vatRate = options.vatEnabled ? Math.max(parseAmount(options.vatRate ?? 0), 0) : 0;
   const vatAmount = Math.round((net * vatRate) / 100);
   return { subtotal, discount, net, vatRate, vatAmount, total: net + vatAmount };
+}
+
+/**
+ * Somme des lignes par catégorie (matériel/prestation, main d'œuvre,
+ * transport). Une ligne sans catégorie est comptée comme `article`.
+ */
+export function computeCategoryTotals(
+  items: CategorizedLineInput[],
+): CategoryTotals {
+  const totals: CategoryTotals = { article: 0, main_oeuvre: 0, transport: 0 };
+  for (const item of items) {
+    const category = item.category ?? "article";
+    totals[category] += lineTotal(item);
+  }
+  return totals;
 }
 
 /**
