@@ -23,6 +23,7 @@ import {
   useAdminCompanyDetail,
   useAdminSetSuspended,
 } from "@/hooks/use-admin-companies";
+import { useAdminSetUserBanned } from "@/hooks/use-admin-users";
 import { usePlans } from "@/hooks/use-usage";
 import { formatAmount, formatDate } from "@/lib/format";
 import { buildWhatsAppLink } from "@/services/whatsapp";
@@ -46,6 +47,7 @@ export default function AdminCompanyDetailPage({
   const { data: plans } = usePlans();
   const changePlan = useAdminChangePlan();
   const setSuspended = useAdminSetSuspended();
+  const setBanned = useAdminSetUserBanned();
   const [selectedPlan, setSelectedPlan] = useState("");
   const [suspendReason, setSuspendReason] = useState("");
 
@@ -66,7 +68,10 @@ export default function AdminCompanyDetailPage({
     payments,
     payment_intents,
     last_sign_in_at,
+    banned_until,
   } = data;
+
+  const isBanned = banned_until !== null && new Date(banned_until).getTime() > Date.now();
 
   const applyPlanChange = () => {
     if (!selectedPlan) return;
@@ -85,6 +90,26 @@ export default function AdminCompanyDetailPage({
     setSuspendReason("");
   };
 
+  const toggleBan = () => {
+    if (isBanned) {
+      if (!window.confirm(`Débannir ${company.name} ?`)) return;
+      setBanned.mutate({ userId: company.owner_id, banned: false, reason: null });
+      return;
+    }
+    const reason = window.prompt(
+      `Motif du bannissement de ${company.name} (optionnel) :`,
+    );
+    if (reason === null) return;
+    if (
+      !window.confirm(
+        `${company.name} ne pourra plus du tout se connecter. Confirmer le bannissement ?`,
+      )
+    ) {
+      return;
+    }
+    setBanned.mutate({ userId: company.owner_id, banned: true, reason: reason.trim() || null });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -97,6 +122,7 @@ export default function AdminCompanyDetailPage({
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-bold text-navy">{company.name}</h1>
           {company.suspended_at ? <Badge variant="error">Suspendu</Badge> : null}
+          {isBanned ? <Badge variant="error">Banni</Badge> : null}
         </div>
         <p className="text-[13.5px] text-muted-foreground">
           {company.phone ?? "—"} · Inscrite le {formatDate(company.created_at)} ·
@@ -201,6 +227,21 @@ export default function AdminCompanyDetailPage({
                 </Button>
               </div>
             )}
+
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-[12.5px] text-muted-foreground">
+                {isBanned
+                  ? "Bloque toute nouvelle connexion, même sans cette entreprise."
+                  : "Bannir bloque la connexion au niveau du compte (plus fort que la suspension)."}
+              </p>
+              <Button
+                variant={isBanned ? "outline" : "danger"}
+                disabled={setBanned.isPending}
+                onClick={toggleBan}
+              >
+                {isBanned ? "Débannir le compte" : "Bannir le compte"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

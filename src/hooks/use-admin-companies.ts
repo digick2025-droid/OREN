@@ -47,6 +47,7 @@ export interface AdminPaymentIntentRow {
 export interface AdminCompanyDetail {
   company: Company;
   last_sign_in_at: string | null;
+  banned_until: string | null;
   subscription: Subscription | null;
   plan: Plan | null;
   usage_used: number;

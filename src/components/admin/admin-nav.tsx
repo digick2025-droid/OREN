@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Vue d'ensemble" },
+  { href: "/admin/utilisateurs", label: "Utilisateurs" },
   { href: "/admin/abonnements", label: "Abonnements" },
   { href: "/admin/promos", label: "Codes promo" },
   { href: "/admin/offres", label: "Offres" },
