@@ -601,7 +601,7 @@ function ExpressFormContent() {
 
             <p className="text-center text-[12.5px] text-muted-foreground/70">
               {t.xpdf_or}{" "}
-              <Link href="/connexion" className="font-bold text-navy underline">
+              <Link href="/inscription" className="font-bold text-navy underline">
                 {t.xpdf_create}
               </Link>{" "}
               {t.xpdf_gift}
@@ -697,7 +697,7 @@ function ExpressFormContent() {
                 {t.xdl_acc_sub}
               </p>
               <Button asChild variant="accent" className="mt-4 w-full">
-                <Link href="/connexion">{t.xdl_create}</Link>
+                <Link href="/inscription">{t.xdl_create}</Link>
               </Button>
             </Card>
 

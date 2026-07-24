@@ -17,19 +17,19 @@ const fr = {
   land_badge: "OREN Express",
   land_headline: "Créez un devis professionnel en moins de 2 minutes",
   land_sub:
-    "Envoyez-le à votre client sur WhatsApp. Sans compte · sans abonnement · 500 FCFA par devis.",
+    "Envoyez-le à votre client sur WhatsApp. Sans compte, 500 F le devis — ou gratuit avec un compte OREN (3 premiers devis offerts).",
   land_cta: "Créer mon devis",
   land_how: "Comment ça marche",
   land_s1: "Ajoutez vos articles",
   land_s1d: "Client, prestations et quantités.",
   land_s2: "Aperçu professionnel",
   land_s2d: "Un PDF propre, à votre nom.",
-  land_s3: "Payez 500 F & envoyez",
-  land_s3d: "Téléchargez et partagez sur WhatsApp.",
+  land_s3: "Téléchargez et envoyez",
+  land_s3d: "500 F sans compte, ou gratuit avec un compte OREN.",
   land_pro: "Découvrir OREN Pro",
   land_have: "J'ai déjà un compte",
   land_login: "Se connecter",
-  land_signup: "Créer un compte",
+  land_signup: "Créer un compte gratuit",
 
   // Connexion / Inscription
   login_title: "Bienvenue",
@@ -313,7 +313,8 @@ const fr = {
 
   // Retour de paiement (redirection CamerPay)
   retour_checking_title: "Vérification du paiement…",
-  retour_checking_sub: "Ne fermez pas cette page, cela prend quelques secondes.",
+  retour_checking_sub:
+    "Ne fermez pas cette page — votre devis est prêt dès que le paiement est confirmé, cela prend quelques secondes.",
   retour_succeeded_title: "Paiement confirmé",
   retour_succeeded_sub_sub: "Votre abonnement est actif.",
   retour_succeeded_sub_express: "Votre document est prêt.",
@@ -341,15 +342,15 @@ const fr = {
   xpdf_lock: "Débloquez le téléchargement pour",
   xpdf_pay: "Télécharger ce devis ·",
   xpdf_or: "ou",
-  xpdf_create: "Créez un compte",
-  xpdf_gift: "— recevez 3 documents gratuits",
+  xpdf_create: "créez votre compte gratuit",
+  xpdf_gift: "— 3 devis offerts, à retrouver à tout moment",
   xdl_title: "Votre devis est prêt",
   xdl_sub: "Téléchargez-le ou envoyez-le directement à votre client.",
   xdl_download: "Télécharger le PDF",
   xdl_wa: "Envoyer sur WhatsApp",
   xdl_acc_title: "Gardez tous vos devis au même endroit",
   xdl_acc_sub:
-    "Créez un compte gratuit pour retrouver vos documents, vos clients et convertir vos devis en factures.",
+    "Créez un compte gratuit : vos 3 prochains devis seront offerts, et vous retrouverez tous vos documents et clients au même endroit.",
   xdl_create: "Créer mon compte gratuit",
   xdl_another: "Créer un autre devis",
   x_need_company: "Entrez le nom de votre entreprise",
