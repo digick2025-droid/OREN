@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Ban, ChevronRight, Search, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
+import { Ban, ChevronRight, MailCheck, Search, ShieldCheck } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,16 +20,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  useAdminConfirmUserEmail,
   useAdminSetUserBanned,
   useAdminUsers,
   type AdminUserListItem,
 } from "@/hooks/use-admin-users";
 import { formatDate } from "@/lib/format";
 
-type StatusFilter = "all" | "never_connected" | "no_company" | "banned";
+type StatusFilter =
+  | "all"
+  | "unconfirmed"
+  | "never_connected"
+  | "no_company"
+  | "banned";
 
 function isBanned(bannedUntil: string | null): boolean {
   return bannedUntil !== null && new Date(bannedUntil).getTime() > Date.now();
+}
+
+function needsEmailConfirmation(u: AdminUserListItem): boolean {
+  return Boolean(u.email) && !u.email_confirmed_at;
 }
 
 function connectionLabel(u: AdminUserListItem): string {
@@ -40,6 +51,7 @@ function connectionLabel(u: AdminUserListItem): string {
 export default function AdminUtilisateursPage() {
   const { data: users, isLoading, error } = useAdminUsers();
   const setBanned = useAdminSetUserBanned();
+  const confirmEmail = useAdminConfirmUserEmail();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -56,6 +68,7 @@ export default function AdminUtilisateursPage() {
       ) {
         return false;
       }
+      if (statusFilter === "unconfirmed" && !needsEmailConfirmation(u)) return false;
       if (statusFilter === "never_connected" && u.last_sign_in_at) return false;
       if (statusFilter === "no_company" && u.company_id) return false;
       if (statusFilter === "banned" && !isBanned(u.banned_until)) return false;
@@ -75,6 +88,23 @@ export default function AdminUtilisateursPage() {
       return;
     }
     setBanned.mutate({ userId: u.user_id, banned: true, reason: reason.trim() || null });
+  };
+
+  const handleConfirmEmail = (u: AdminUserListItem) => {
+    if (
+      !window.confirm(
+        `Confirmer l'email ${u.email} à la place de l'utilisateur ? Il pourra se connecter immédiatement avec son mot de passe.`,
+      )
+    ) {
+      return;
+    }
+    confirmEmail.mutate(
+      { userId: u.user_id },
+      {
+        onSuccess: () => toast.success(`Email de ${u.email} confirmé.`),
+        onError: (e) => toast.error(e.message),
+      },
+    );
   };
 
   const handleUnban = (u: AdminUserListItem) => {
@@ -113,6 +143,7 @@ export default function AdminUtilisateursPage() {
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           >
             <option value="all">Tous les comptes</option>
+            <option value="unconfirmed">Email non confirmé</option>
             <option value="never_connected">Jamais connecté</option>
             <option value="no_company">Sans entreprise</option>
             <option value="banned">Bannis</option>
@@ -149,6 +180,7 @@ export default function AdminUtilisateursPage() {
             ) : (
               filtered.map((u) => {
                 const banned = isBanned(u.banned_until);
+                const unconfirmed = needsEmailConfirmation(u);
                 return (
                   <TableRow key={u.user_id}>
                     <TableCell>
@@ -180,16 +212,29 @@ export default function AdminUtilisateursPage() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1.5">
                         {banned ? <Badge variant="error">Banni</Badge> : null}
+                        {unconfirmed ? (
+                          <Badge variant="warning">Email non confirmé</Badge>
+                        ) : null}
                         {u.company_suspended_at ? (
                           <Badge variant="error">Entreprise suspendue</Badge>
                         ) : null}
-                        {!banned && !u.company_suspended_at ? (
+                        {!banned && !unconfirmed && !u.company_suspended_at ? (
                           <Badge variant="success">Actif</Badge>
                         ) : null}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
+                        {unconfirmed ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={confirmEmail.isPending}
+                            onClick={() => handleConfirmEmail(u)}
+                          >
+                            <MailCheck size={15} /> Confirmer l&apos;email
+                          </Button>
+                        ) : null}
                         {banned ? (
                           <Button
                             variant="outline"
