@@ -42,21 +42,19 @@ function sign(
     .digest("hex");
 }
 
-/** Callback CamerPay complet et correctement signé. */
+/** Callback CamerPay complet et correctement signé (form-urlencoded réel). */
 function signedBody(overrides: Record<string, unknown> = {}) {
   const body = {
-    transaction_uuid: "uuid-tx",
+    uuid: "uuid-tx",
     invoice_id: "OREN-SUB-001",
     status: "completed",
     amount: 3000,
-    currency: "XAF",
-    payment_method: "mtn_momo",
     ...overrides,
   };
   return {
     ...body,
     signature: sign([
-      String(body.transaction_uuid),
+      String(body.uuid),
       String(body.invoice_id),
       String(body.status),
       body.amount as number,
@@ -64,11 +62,15 @@ function signedBody(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function post(body: unknown): NextRequest {
+function post(body: Record<string, unknown>): NextRequest {
+  const form = new URLSearchParams();
+  for (const [key, value] of Object.entries(body)) {
+    if (value !== undefined) form.set(key, String(value));
+  }
   return new NextRequest("http://localhost/api/payments/webhook", {
     method: "POST",
-    body: JSON.stringify(body),
-    headers: { "Content-Type": "application/json" },
+    body: form.toString(),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
   });
 }
 
@@ -92,7 +94,7 @@ describe("POST /api/payments/webhook", () => {
       received: true,
       status: "succeeded",
     });
-    // `invoice_id` est notre référence ; `transaction_uuid` celle de CamerPay.
+    // `invoice_id` est notre référence ; `uuid` celle de CamerPay.
     expect(settlePaymentIntent).toHaveBeenCalledWith(
       {
         reference: "OREN-SUB-001",

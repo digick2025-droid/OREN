@@ -13,10 +13,11 @@ import { normalizeStatus } from "@/services/payments/camerpay/payload";
  * acquis : `settle_payment_intent` insère la ligne `payments` et applique
  * l'offre, de façon atomique et idempotente.
  *
- * Contrat CamerPay (doc « API REST » → Webhooks) :
- *   - POST JSON vers notre `merchant_callback_url`.
+ * Contrat CamerPay (confirmé le 24/07/2026 via le « Webhook tester » du
+ * tableau de bord — pas du JSON comme l'annonçait la doc initiale) :
+ *   - POST `application/x-www-form-urlencoded` vers notre `merchant_callback_url`.
  *   - La signature est un champ `signature` DU CORPS, calculé sur
- *     `transaction_uuid|invoice_id|status|amount` (voir signature.ts).
+ *     `uuid|invoice_id|status|amount` (voir signature.ts).
  *   - `invoice_id` nous revient : c'est le `merchant_invoice_id` envoyé à
  *     l'initiation, donc notre référence interne (OREN-SUB-… / OREN-EXP-…).
  *   - Il faut répondre 200 pour accuser réception ; CamerPay réessaie
@@ -38,26 +39,29 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let payload: unknown;
+  // CamerPay poste en `application/x-www-form-urlencoded`, pas en JSON.
+  let fields: Record<string, string>;
   try {
-    payload = await request.json();
+    const form = await request.formData();
+    fields = Object.fromEntries(
+      Array.from(form.entries(), ([key, value]) => [
+        key,
+        typeof value === "string" ? value : "",
+      ]),
+    );
   } catch {
     return NextResponse.json({ error: "INVALID_BODY" }, { status: 400 });
   }
 
-  const callback = parseCallback(payload);
+  const callback = parseCallback(fields);
   if (!callback) {
     return NextResponse.json({ error: "INVALID_BODY" }, { status: 400 });
   }
 
-  const signature = (payload as Record<string, unknown>).signature;
-  if (
-    !verifyCallbackSignature(
-      callback,
-      typeof signature === "string" ? signature : null,
-      secret,
-    )
-  ) {
+  // Dupliquée dans l'en-tête X-CamerPay-Signature (même valeur) ; le champ
+  // du corps fait foi, conforme à l'exemple officiel ($_POST['signature']).
+  const signature = fields.signature || request.headers.get("x-camerpay-signature");
+  if (!verifyCallbackSignature(callback, signature, secret)) {
     return NextResponse.json({ error: "INVALID_SIGNATURE" }, { status: 401 });
   }
 

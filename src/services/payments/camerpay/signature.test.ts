@@ -19,17 +19,13 @@ function sign(
     .digest("hex");
 }
 
-/** Callback conforme à l'exemple de la doc. */
+/** Callback conforme au format réel confirmé via le Webhook tester CamerPay. */
 function callbackBody(overrides: Record<string, unknown> = {}) {
   return {
-    transaction_uuid: "uuid-de-la-transaction",
+    uuid: "uuid-de-la-transaction",
     invoice_id: "OREN-SUB-001",
     status: "completed",
     amount: 5000,
-    currency: "XAF",
-    payment_method: "mtn_momo",
-    provider_tx_id: "tx-id-provider",
-    paid_at: "2026-04-04T12:00:00Z",
     ...overrides,
   };
 }
@@ -48,7 +44,7 @@ describe("parseCallback", () => {
     expect(parseCallback(callbackBody({ amount: "5000" }))?.amount).toBe("5000");
   });
 
-  it.each(["transaction_uuid", "invoice_id", "status", "amount"])(
+  it.each(["uuid", "invoice_id", "status", "amount"])(
     "refuse une charge sans %s",
     (field) => {
       const body = callbackBody();

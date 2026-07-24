@@ -3,20 +3,26 @@ import crypto from "node:crypto";
 /**
  * Vérification de la signature d'un callback CamerPay.
  *
- * Contrat réel (doc « API REST » → onglet Webhooks du tableau de bord) :
- * la signature n'est PAS un en-tête HTTP couvrant le corps brut, mais un
- * champ `signature` **dans le corps JSON**, calculé sur quatre champs
- * concaténés par des barres verticales :
+ * Contrat réel (confirmé le 24/07/2026 via le « Webhook tester » du tableau
+ * de bord CamerPay — la doc initiale annonçait du JSON, ce n'est pas ce que
+ * CamerPay envoie réellement) :
+ *   - Corps en **`application/x-www-form-urlencoded`**, pas en JSON.
+ *   - Champs `uuid`, `invoice_id`, `status`, `amount`, `signature`.
+ *   - `signature` est aussi dupliquée dans l'en-tête `X-CamerPay-Signature`
+ *     (même valeur) ; on lit le champ du corps, qui fait foi dans l'exemple
+ *     officiel (`$_POST['signature']`).
+ *   - Calcul : quatre champs concaténés par des barres verticales :
  *
- *     hmac_sha256("transaction_uuid|invoice_id|status|amount", secret)
+ *     hmac_sha256("uuid|invoice_id|status|amount", secret)
  *
  * Conséquences à garder en tête :
- *   - Les autres champs du callback (`payment_method`, `paid_at`,
- *     `provider_tx_id`, `currency`) ne sont PAS signés : ils sont
- *     informatifs et ne doivent jamais décider de quoi que ce soit.
+ *   - Les autres champs du callback (`test`, en-têtes `X-CamerPay-Event*`,
+ *     `Idempotency-Key`) ne sont PAS signés : ils sont informatifs et ne
+ *     doivent jamais décider de quoi que ce soit.
  *   - `amount` étant signé, on peut le comparer au montant attendu de
  *     l'intention — c'est ce qui empêche qu'un paiement de 100 FCFA valide
- *     un abonnement à 3000.
+ *     un abonnement à 3000. CamerPay l'envoie avec 2 décimales ("5000.00") ;
+ *     `Number()` le compare correctement à un montant entier stocké.
  */
 
 /** Champs signés d'un callback CamerPay, une fois validés. */
@@ -33,7 +39,7 @@ export function parseCallback(payload: unknown): CamerPayCallback | null {
   if (typeof payload !== "object" || payload === null) return null;
   const body = payload as Record<string, unknown>;
 
-  const transactionUuid = asString(body.transaction_uuid);
+  const transactionUuid = asString(body.uuid);
   const invoiceId = asString(body.invoice_id);
   const status = asString(body.status);
   const amount = asString(body.amount);
