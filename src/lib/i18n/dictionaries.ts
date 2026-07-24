@@ -74,6 +74,13 @@ const fr = {
   auth_error_email_unconfirmed: "Veuillez confirmer votre email avant de vous connecter",
   auth_error_rate_limit: "Trop de tentatives. Réessayez dans quelques minutes.",
   auth_error_generic: "Une erreur est survenue. Réessayez.",
+  auth_error_link_expired:
+    "Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau.",
+  auth_error_other_browser:
+    "Ouvrez le lien dans le navigateur où vous avez fait la demande, ou demandez un nouveau lien.",
+  auth_error_no_session:
+    "Votre lien n'est plus valide. Demandez un nouveau lien de réinitialisation.",
+  auth_request_new_link: "Demander un nouveau lien",
   toast_need_phone: "Entrez un numéro valide",
 
   // Profil entreprise
@@ -474,6 +481,13 @@ const en: Dict = {
   auth_error_email_unconfirmed: "Please confirm your email before signing in",
   auth_error_rate_limit: "Too many attempts. Try again in a few minutes.",
   auth_error_generic: "Something went wrong. Try again.",
+  auth_error_link_expired:
+    "This link has expired or was already used. Request a new one.",
+  auth_error_other_browser:
+    "Open the link in the browser where you made the request, or request a new link.",
+  auth_error_no_session:
+    "Your link is no longer valid. Request a new reset link.",
+  auth_request_new_link: "Request a new link",
   toast_need_phone: "Enter a valid number",
 
   setup_title: "Your business",

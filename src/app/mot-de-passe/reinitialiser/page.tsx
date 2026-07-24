@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,24 @@ export default function ReinitialiserMotDePassePage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  // Sans session de récupération, `updateUser` échouerait après coup avec une
+  // erreur opaque : on vérifie avant d'afficher le formulaire.
+  const [session, setSession] = useState<"checking" | "valid" | "missing">(
+    "checking",
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) {
+        setSession(data.session ? "valid" : "missing");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updatePassword = async () => {
     if (!isStrongPassword(password)) {
@@ -63,9 +81,17 @@ export default function ReinitialiserMotDePassePage() {
           {t.auth_new_password_title}
         </h1>
         <p className="mt-1.5 text-[14px] text-muted-foreground">
-          {t.auth_new_password_sub}
+          {session === "missing" ? t.auth_error_no_session : t.auth_new_password_sub}
         </p>
 
+        {session === "missing" && (
+          <Button asChild className="mt-8 w-full">
+            <Link href="/mot-de-passe-oublie">{t.auth_request_new_link}</Link>
+          </Button>
+        )}
+
+        {session === "valid" && (
+          <>
         <div className="mt-8 space-y-4">
           <div>
             <Label htmlFor="password">{t.auth_new_password}</Label>
@@ -104,6 +130,8 @@ export default function ReinitialiserMotDePassePage() {
         >
           {loading ? t.saving : t.auth_new_password_btn}
         </Button>
+          </>
+        )}
       </div>
     </div>
   );
