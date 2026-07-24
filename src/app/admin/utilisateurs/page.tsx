@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Ban, ChevronRight, Search, ShieldCheck } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,7 @@ function connectionLabel(u: AdminUserListItem): string {
 }
 
 export default function AdminUtilisateursPage() {
-  const { data: users, isLoading } = useAdminUsers();
+  const { data: users, isLoading, error } = useAdminUsers();
   const setBanned = useAdminSetUserBanned();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -119,7 +120,11 @@ export default function AdminUtilisateursPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <Alert variant="error" title="Impossible de charger les comptes">
+          {error.message}
+        </Alert>
+      ) : isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full" />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChevronRight, MessageCircle, Search } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -33,7 +34,7 @@ function daysUntil(iso: string | null): number | null {
 }
 
 export default function AdminAbonnementsPage() {
-  const { data: companies, isLoading } = useAdminCompanies();
+  const { data: companies, isLoading, error } = useAdminCompanies();
   const { data: plans } = usePlans();
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
@@ -103,7 +104,11 @@ export default function AdminAbonnementsPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <Alert variant="error" title="Impossible de charger les entreprises">
+          {error.message}
+        </Alert>
+      ) : isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full" />
