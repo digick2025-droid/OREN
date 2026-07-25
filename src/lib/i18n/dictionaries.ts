@@ -13,23 +13,133 @@ const fr = {
   nav_catalog: "Catalogue",
   nav_settings: "Réglages",
 
-  // Landing
-  land_badge: "OREN Express",
-  land_headline: "Créez un devis professionnel en moins de 2 minutes",
-  land_sub:
-    "Envoyez-le à votre client sur WhatsApp. Sans compte, 500 F le devis — ou gratuit avec un compte OREN (3 premiers devis offerts).",
-  land_cta: "Créer mon devis",
-  land_how: "Comment ça marche",
-  land_s1: "Ajoutez vos articles",
-  land_s1d: "Client, prestations et quantités.",
-  land_s2: "Aperçu professionnel",
-  land_s2d: "Un PDF propre, à votre nom.",
-  land_s3: "Téléchargez et envoyez",
-  land_s3d: "500 F sans compte, ou gratuit avec un compte OREN.",
-  land_pro: "Découvrir OREN Pro",
-  land_have: "J'ai déjà un compte",
+  // Landing — barre du haut & héros
   land_login: "Se connecter",
-  land_signup: "Créer un compte gratuit",
+  land_signup: "Créer un compte",
+  land_hero_eyebrow: "L'assistant des pros du terrain",
+  land_hero_title: "Le devis qui vous fait signer le chantier",
+  land_hero_sub:
+    "Créez un devis professionnel en 2 minutes, envoyez-le sur WhatsApp, et donnez à vos clients l'image sérieuse qui fait la différence.",
+  land_cta_primary: "Commencer gratuitement",
+  land_cta_secondary: "Créer un devis rapide",
+  land_cta_note: "3 documents offerts · sans carte bancaire",
+  land_proof_title: "Conçu au Cameroun, pour les pros du terrain",
+  land_proof_note:
+    "Pensé pour le chantier, pas pour le bureau : ça marche sur votre téléphone.",
+
+  // Landing — le devis dans WhatsApp
+  land_demo_contact: "Jean Kouassi",
+  land_demo_status: "en ligne",
+  land_demo_message: "Bonjour, voici votre devis pour les travaux 👇",
+  land_demo_time: "10:24",
+  land_demo_company: "Électricité Pro",
+  land_demo_company_initials: "ÉP",
+  land_demo_company_tagline: "Votre partenaire de confiance",
+  land_demo_doc_label: "DEVIS",
+  land_demo_doc_number: "N° DEV-014",
+  land_demo_client_label: "Client",
+  land_demo_date_label: "Date",
+  land_demo_col_desc: "Désignation",
+  land_demo_col_amount: "Montant",
+  land_demo_line1: "Installation tableau électrique",
+  land_demo_line2: "Câblage & prises (forfait)",
+  land_demo_line3: "Main d'œuvre",
+  land_demo_total: "Total à payer",
+  land_demo_terms: "Devis valable 30 jours · Acompte de 50 % à la commande",
+  land_demo_caption:
+    "Voilà ce que votre client reçoit. Propre, à votre nom, en 2 minutes.",
+
+  // Landing — bénéfices
+  land_ben_kicker: "Pourquoi OREN",
+  land_ben_title: "Vous ne vendez pas des devis. Vous gagnez des chantiers.",
+  land_ben1_title: "Gagnez un temps précieux",
+  land_ben1_desc:
+    "2 minutes au lieu de 30. Le devis est prêt avant même que vous quittiez le chantier.",
+  land_ben2_title: "Inspirez confiance immédiatement",
+  land_ben2_desc:
+    "Un document net, à votre nom, avec votre logo. Le client voit un vrai pro, pas un bricoleur.",
+  land_ben3_title: "Décrochez plus de ventes",
+  land_ben3_desc:
+    "Un devis rapide et soigné, c'est un client qui dit oui avant que vos concurrents ne répondent.",
+
+  // Landing — comment ça marche
+  land_how_kicker: "Comment ça marche",
+  land_how_title: "Trois étapes. Aucune formation.",
+  land_step1_title: "Ajoutez vos prestations",
+  land_step1_desc:
+    "Le client, les travaux, les prix. En quelques touches sur votre téléphone.",
+  land_step2_title: "Votre devis prend vie",
+  land_step2_desc:
+    "Un PDF propre, à votre image, prêt à impressionner. Aucune mise en page à faire.",
+  land_step3_title: "Envoyez sur WhatsApp",
+  land_step3_desc:
+    "Le client reçoit, valide, vous commencez. Convertissez le devis en facture en un clic.",
+
+  // Landing — objections
+  land_obj_kicker: "Vos questions, nos réponses",
+  land_obj_title:
+    "Fait pour le terrain, pas pour les experts en informatique.",
+  land_obj1_q: "« Je ne suis pas doué avec les applis »",
+  land_obj1_a:
+    "Si vous savez envoyer un message WhatsApp, vous savez utiliser OREN. Rien de compliqué à installer, rien à configurer.",
+  land_obj2_q: "« Et quand je n'ai pas de réseau ? »",
+  land_obj2_a:
+    "Vos devis et vos clients restent consultables même hors connexion. OREN fonctionne sur le chantier comme au bureau.",
+  land_obj3_q: "« Mes données sont en sécurité ? »",
+  land_obj3_a:
+    "Vos documents et vos clients vous appartiennent. Protégés, jamais revendus, accessibles uniquement par vous.",
+  land_obj4_q: "« Ça coûte combien ? »",
+  land_obj4_a:
+    "Gratuit pour commencer : 3 documents offerts, sans carte bancaire. Vous ne payez que si OREN vous fait gagner de l'argent.",
+
+  // Landing — plateforme
+  land_plat_kicker: "Une vraie plateforme",
+  land_plat_title: "Pas juste des devis. Toute votre activité.",
+  land_plat_lead:
+    "Clients, catalogue, paiements, rapports : OREN gère déjà l'essentiel de votre entreprise. Trésorerie, stocks et intelligence artificielle arrivent.",
+  land_plat_live: "DISPO",
+  land_plat_soon: "BIENTÔT",
+  land_plat_docs: "Devis & factures",
+  land_plat_clients: "Clients",
+  land_plat_catalog: "Catalogue",
+  land_plat_payments: "Paiements",
+  land_plat_reports: "Rapports",
+  land_plat_treasury: "Trésorerie",
+  land_plat_stock: "Stocks",
+  land_plat_ai: "Intelligence artificielle",
+
+  // Landing — offres
+  land_price_kicker: "Nos offres",
+  land_price_title: "Commencez gratuitement. Payez quand ça rapporte.",
+  land_price_tag_start: "Commencez ici",
+  land_price_free_name: "Gratuit",
+  land_price_free_desc:
+    "3 documents offerts à vie. De quoi tester en conditions réelles, sans engagement.",
+  land_price_express_name: "Express",
+  land_price_express_desc:
+    "Un devis pressé, sans même créer de compte. Vous payez à l'unité.",
+  land_price_pro_name: "Pro",
+  land_price_pro_desc:
+    "Jusqu'à 25 documents par mois, puis paiement à l'usage. Pour l'activité qui tourne.",
+  land_price_startup_name: "Startup",
+  land_price_startup_desc:
+    "Documents illimités, catalogue, logo, statistiques. Pour aller plus loin.",
+  land_price_currency: "FCFA",
+  land_price_unit_doc: "FCFA / doc",
+  land_price_unit_month: "FCFA / mois",
+  land_price_compare: "Comparer les offres en détail",
+
+  // Landing — CTA final, footer & support
+  land_final_title: "Prêt à décrocher votre prochain chantier ?",
+  land_final_sub:
+    "Créez votre premier devis maintenant. C'est gratuit, et ça prend 2 minutes.",
+  land_final_note: "3 documents offerts · sans carte bancaire · sans engagement",
+  land_foot_support: "Support WhatsApp :",
+  land_foot_note:
+    "OREN — une marque DIGICK · Conçu pour les professionnels d'Afrique.",
+  land_wa_float: "Une question ?",
+  land_wa_aria: "Contacter le support OREN sur WhatsApp",
+  land_wa_message: "Bonjour OREN, j'ai une question",
 
   // Connexion / Inscription
   login_title: "Bienvenue",
@@ -422,22 +532,124 @@ const en: Dict = {
   nav_catalog: "Catalog",
   nav_settings: "Settings",
 
-  land_badge: "OREN Express",
-  land_headline: "Create a professional quote in under 2 minutes",
-  land_sub:
-    "Send it to your client on WhatsApp. No account · no subscription · 500 FCFA per quote.",
-  land_cta: "Create my quote",
-  land_how: "How it works",
-  land_s1: "Add your items",
-  land_s1d: "Client, services and quantities.",
-  land_s2: "Professional preview",
-  land_s2d: "A clean PDF, in your name.",
-  land_s3: "Pay 500 F & send",
-  land_s3d: "Download and share on WhatsApp.",
-  land_pro: "Discover OREN Pro",
-  land_have: "I already have an account",
   land_login: "Sign in",
   land_signup: "Create an account",
+  land_hero_eyebrow: "The assistant for pros in the field",
+  land_hero_title: "The quote that wins you the job",
+  land_hero_sub:
+    "Create a professional quote in 2 minutes, send it on WhatsApp, and give your clients the serious image that makes the difference.",
+  land_cta_primary: "Start for free",
+  land_cta_secondary: "Create a quick quote",
+  land_cta_note: "3 free documents · no bank card",
+  land_proof_title: "Built in Cameroon, for pros in the field",
+  land_proof_note:
+    "Designed for the job site, not the office: it works on your phone.",
+
+  land_demo_contact: "Jean Kouassi",
+  land_demo_status: "online",
+  land_demo_message: "Hello, here is your quote for the work 👇",
+  land_demo_time: "10:24",
+  land_demo_company: "Électricité Pro",
+  land_demo_company_initials: "ÉP",
+  land_demo_company_tagline: "Your trusted partner",
+  land_demo_doc_label: "QUOTE",
+  land_demo_doc_number: "No. QUO-014",
+  land_demo_client_label: "Client",
+  land_demo_date_label: "Date",
+  land_demo_col_desc: "Description",
+  land_demo_col_amount: "Amount",
+  land_demo_line1: "Electrical panel installation",
+  land_demo_line2: "Wiring & sockets (flat rate)",
+  land_demo_line3: "Labour",
+  land_demo_total: "Total due",
+  land_demo_terms: "Quote valid 30 days · 50% deposit on order",
+  land_demo_caption:
+    "This is what your client receives. Clean, in your name, in 2 minutes.",
+
+  land_ben_kicker: "Why OREN",
+  land_ben_title: "You don't sell quotes. You win jobs.",
+  land_ben1_title: "Save precious time",
+  land_ben1_desc:
+    "2 minutes instead of 30. The quote is ready before you even leave the site.",
+  land_ben2_title: "Earn trust instantly",
+  land_ben2_desc:
+    "A clean document, in your name, with your logo. The client sees a real pro, not a handyman.",
+  land_ben3_title: "Win more deals",
+  land_ben3_desc:
+    "A fast, polished quote means a client who says yes before your competitors even reply.",
+
+  land_how_kicker: "How it works",
+  land_how_title: "Three steps. No training.",
+  land_step1_title: "Add your services",
+  land_step1_desc:
+    "The client, the work, the prices. In a few taps on your phone.",
+  land_step2_title: "Your quote comes to life",
+  land_step2_desc:
+    "A clean PDF, in your colours, ready to impress. No layout work at all.",
+  land_step3_title: "Send it on WhatsApp",
+  land_step3_desc:
+    "The client receives it, approves, you start. Turn the quote into an invoice in one tap.",
+
+  land_obj_kicker: "Your questions, answered",
+  land_obj_title: "Made for the field, not for computer experts.",
+  land_obj1_q: "“I'm not good with apps”",
+  land_obj1_a:
+    "If you can send a WhatsApp message, you can use OREN. Nothing complicated to install, nothing to configure.",
+  land_obj2_q: "“What if I have no network?”",
+  land_obj2_a:
+    "Your quotes and clients stay available even offline. OREN works on site just like at the office.",
+  land_obj3_q: "“Is my data safe?”",
+  land_obj3_a:
+    "Your documents and your clients belong to you. Protected, never resold, accessible only by you.",
+  land_obj4_q: "“How much does it cost?”",
+  land_obj4_a:
+    "Free to start: 3 documents on us, no bank card. You only pay if OREN makes you money.",
+
+  land_plat_kicker: "A real platform",
+  land_plat_title: "Not just quotes. Your whole business.",
+  land_plat_lead:
+    "Clients, catalog, payments, reports: OREN already runs the essentials of your business. Cash flow, stock and artificial intelligence are coming.",
+  land_plat_live: "LIVE",
+  land_plat_soon: "SOON",
+  land_plat_docs: "Quotes & invoices",
+  land_plat_clients: "Clients",
+  land_plat_catalog: "Catalog",
+  land_plat_payments: "Payments",
+  land_plat_reports: "Reports",
+  land_plat_treasury: "Cash flow",
+  land_plat_stock: "Stock",
+  land_plat_ai: "Artificial intelligence",
+
+  land_price_kicker: "Our plans",
+  land_price_title: "Start free. Pay when it pays off.",
+  land_price_tag_start: "Start here",
+  land_price_free_name: "Free",
+  land_price_free_desc:
+    "3 free documents, for life. Enough to test in real conditions, no commitment.",
+  land_price_express_name: "Express",
+  land_price_express_desc:
+    "A quote in a hurry, without even creating an account. Pay per document.",
+  land_price_pro_name: "Pro",
+  land_price_pro_desc:
+    "Up to 25 documents a month, then pay as you go. For a business that is running.",
+  land_price_startup_name: "Startup",
+  land_price_startup_desc:
+    "Unlimited documents, catalog, logo, statistics. To go further.",
+  land_price_currency: "FCFA",
+  land_price_unit_doc: "FCFA / doc",
+  land_price_unit_month: "FCFA / mo",
+  land_price_compare: "Compare plans in detail",
+
+  land_final_title: "Ready to win your next job?",
+  land_final_sub:
+    "Create your first quote now. It's free, and it takes 2 minutes.",
+  land_final_note: "3 free documents · no bank card · no commitment",
+  land_foot_support: "WhatsApp support:",
+  land_foot_note:
+    "OREN — a DIGICK brand · Built for professionals across Africa.",
+  land_wa_float: "Any questions?",
+  land_wa_aria: "Contact OREN support on WhatsApp",
+  land_wa_message: "Hello OREN, I have a question",
 
   login_title: "Welcome",
   login_sub: "Sign in to your OREN workspace",

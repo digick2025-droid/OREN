@@ -68,7 +68,15 @@ const config: Config = {
         "brand-navy": "hsl(var(--brand-navy))",
         coral: "hsl(var(--accent))",
         danger: "hsl(var(--error))",
-        whatsapp: "#25D366",
+        // WhatsApp — couleurs officielles du client, jamais thématisées :
+        // elles servent à *reconnaître* WhatsApp (bouton support, maquette
+        // de conversation sur la landing), pas à habiller OREN.
+        whatsapp: {
+          DEFAULT: "#25D366",
+          header: "#075E54", // bandeau de la conversation
+          chat: "#ECE5DD", // fond de la conversation
+          bubble: "#DCF8C6", // bulle du message envoyé
+        },
       },
       borderRadius: {
         // Échelle sémantique OREN
