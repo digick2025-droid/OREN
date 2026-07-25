@@ -54,6 +54,10 @@ export default function InscriptionPage() {
     }
 
     setLoading(true);
+    // La validation d'email est désactivée côté projet Supabase
+    // (« Confirm email » = OFF) : signUp renvoie directement une session et
+    // l'inscription se termine ici. `emailRedirectTo` et l'écran "confirm"
+    // plus bas ne servent que de filet si la confirmation était réactivée.
     const redirectTo = `${window.location.origin}/auth/callback?next=/accueil`;
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),

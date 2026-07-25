@@ -23,9 +23,21 @@ export default function ConnexionPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "auth") {
+    // GoTrue renvoie ses erreurs de lien dans le fragment (#error_code=…), que
+    // le serveur ne voit jamais : on le lit ici pour ne pas afficher un message
+    // générique là où « lien expiré » est la vraie cause.
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const errorCode = hash.get("error_code");
+    const error = params.get("error");
+
+    if (errorCode === "otp_expired" || error === "expired") {
+      toast.error(t.auth_error_link_expired);
+    } else if (error === "other_browser") {
+      toast.error(t.auth_error_other_browser);
+    } else if (error === "auth" || errorCode) {
       toast.error(t.auth_error_generic);
     }
+
     if (params.get("reset") === "ok") {
       toast.success(t.auth_reset_ok);
     }

@@ -1,12 +1,23 @@
 -- ============================================================
 -- DIGICK Devis — Offre gratuite : accès complet à l'outil
--- Les nouveaux utilisateurs démarrent sur l'offre « free » avec
--- toutes les fonctionnalités débloquées (catalogue, rapports,
--- proforma, logo, acompte), dans la limite de 3 documents / mois.
--- Seul le quota (monthly_quota = 3) borne l'usage — jamais les
--- fonctionnalités.
+--
+-- NEUTRALISÉ (2026-07-24). La version d'origine faisait :
+--
+--   update public.plans
+--   set features = '["catalog","reports","proforma","logo","advance"]'::jsonb
+--   where key = 'free';
+--
+-- soit un `update` de DONNÉES non gardé. Or `plans.features` est
+-- désormais éditable en production depuis /admin/offres
+-- (plan-form.tsx). Rejouer ce fichier — ce qui arriverait via
+-- `supabase db push`, la migration n'ayant jamais été inscrite au
+-- journal `supabase_migrations.schema_migrations` — écraserait
+-- silencieusement la configuration choisie par l'admin.
+--
+-- L'intention (offre gratuite = toutes les features, bornée par le
+-- seul quota) reste vraie et est déjà en base ; elle n'a plus à être
+-- imposée par une migration. On garde le fichier — et donc son
+-- numéro dans la séquence — mais vidé de tout effet.
 -- ============================================================
 
-update public.plans
-set features = '["catalog", "reports", "proforma", "logo", "advance"]'::jsonb
-where key = 'free';
+-- Volontairement aucune instruction : no-op.

@@ -2,6 +2,12 @@ import type { DocumentStatus } from "@/types/database";
 
 export const APP_NAME = "OREN";
 
+/**
+ * Numéro du support WhatsApp OREN — affiché tel quel et normalisé en lien
+ * wa.me par `buildWhatsAppLink`.
+ */
+export const SUPPORT_WHATSAPP = "+237 655 52 39 60";
+
 export type StatusVariant = "neutral" | "info" | "success" | "error" | "warning";
 
 /** Statut → variante Badge (pilule teintée, dark-aware). */

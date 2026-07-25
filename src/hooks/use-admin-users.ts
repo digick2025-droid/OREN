@@ -33,6 +33,28 @@ export function useAdminUsers() {
   });
 }
 
+/**
+ * Confirme l'email à la place de l'utilisateur (support). Débloque la
+ * connexion : sans email confirmé, Supabase Auth refuse la session et
+ * l'entreprise n'est jamais créée.
+ */
+export function useAdminConfirmUserEmail() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { userId: string }) => {
+      const { error } = await supabase.rpc("admin_confirm_user_email", {
+        p_user_id: input.userId,
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+}
+
 export function useAdminSetUserBanned() {
   const supabase = createClient();
   const queryClient = useQueryClient();
