@@ -439,8 +439,15 @@ const fr = {
   pay_need_phone: "Entrez un numéro Mobile Money valide",
   pay_processing: "Validez le paiement sur votre téléphone…",
   pay_wait: "Traitement en cours…",
-  pay_secure: "Paiement sécurisé via CamerPay · résiliable à tout moment",
+  pay_secure: "Paiement Mobile Money sécurisé · résiliable à tout moment",
   pay_failed: "Le paiement a échoué. Réessayez.",
+  pay_push_title: "Validez sur votre téléphone",
+  pay_push_sub:
+    "Une demande Mobile Money vient de vous être envoyée. Saisissez votre code secret pour confirmer — cette page se met à jour toute seule.",
+  pay_push_timeout_title: "Toujours pas de confirmation",
+  pay_push_timeout_sub:
+    "Si vous avez été débité, le paiement sera pris en compte automatiquement. Sinon, réessayez.",
+  pay_retry: "Réessayer",
   pay_welcome: "Bienvenue sur {plan} ! 🎉 Votre abonnement est actif.",
   plan_not_found: "Offre introuvable.",
   promo_label: "Code promo",
@@ -934,8 +941,15 @@ const en: Dict = {
   pay_need_phone: "Enter a valid Mobile Money number",
   pay_processing: "Approve the payment on your phone…",
   pay_wait: "Processing…",
-  pay_secure: "Secure payment via CamerPay · cancel anytime",
+  pay_secure: "Secure Mobile Money payment · cancel anytime",
   pay_failed: "Payment failed. Try again.",
+  pay_push_title: "Approve on your phone",
+  pay_push_sub:
+    "A Mobile Money request was just sent to you. Enter your PIN to confirm — this page updates on its own.",
+  pay_push_timeout_title: "Still no confirmation",
+  pay_push_timeout_sub:
+    "If you were charged, the payment will be applied automatically. Otherwise, try again.",
+  pay_retry: "Try again",
   pay_welcome: "Welcome to {plan}! 🎉 Your subscription is active.",
   promo_label: "Promo code",
   promo_placeholder: "Enter a code",

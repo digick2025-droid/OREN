@@ -10,8 +10,13 @@ import type { PaymentWebhookEvent } from "./types";
  * C'est l'UNIQUE chemin qui insère dans `payments` et applique le changement
  * de plan. Il est appelé :
  *   1. par le webhook signé CamerPay (source de vérité) ;
- *   2. par l'endpoint d'initiation UNIQUEMENT pour les fournisseurs qui règlent
+ *   2. par `/api/payments/status`, qui interroge la passerelle au retour du
+ *      client — filet de sécurité quand le callback n'arrive pas ;
+ *   3. par l'endpoint d'initiation UNIQUEMENT pour les fournisseurs qui règlent
  *      de façon synchrone (simulateur), afin de garder le flux dev fonctionnel.
+ *
+ * Ces trois chemins passent par la même fonction SQL verrouillée : quel que
+ * soit celui qui arrive en premier, le second est sans effet.
  *
  * @returns le statut final de l'intention ("succeeded" | "failed" | "pending"),
  *          ou null si l'intention est introuvable.
@@ -26,6 +31,8 @@ export async function settlePaymentIntent(
     p_reference: event.reference,
     p_status: event.status,
     p_provider_reference: event.providerReference,
+    p_failure_reason: event.failureReason ?? null,
+    p_failure_code: event.failureCode ?? null,
   });
 
   if (error) {

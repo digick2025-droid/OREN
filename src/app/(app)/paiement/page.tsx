@@ -153,6 +153,7 @@ export default function PaiementPage({
                   ok: true,
                   status: data.status,
                   redirectUrl: data.redirectUrl ?? null,
+                  reference: data.reference ?? null,
                 };
               }}
               onSuccess={() => {

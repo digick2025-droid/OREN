@@ -20,8 +20,13 @@ import { normalizeStatus } from "@/services/payments/camerpay/payload";
  *     `uuid|invoice_id|status|amount` (voir signature.ts).
  *   - `invoice_id` nous revient : c'est le `merchant_invoice_id` envoyé à
  *     l'initiation, donc notre référence interne (OREN-SUB-… / OREN-EXP-…).
- *   - Il faut répondre 200 pour accuser réception ; CamerPay réessaie
- *     jusqu'à 5 fois sinon.
+ *   - Il faut répondre 200 pour accuser réception.
+ *
+ * ⚠️ CamerPay ne rejoue QUE sur erreur réseau (3 tentatives, ~17 s au total).
+ * Un 4xx/5xx de notre part est définitif : le webhook est perdu. C'est
+ * précisément pourquoi `/api/payments/status` réconcille activement à partir
+ * de l'état lu chez la passerelle — ce callback ne doit pas être le seul
+ * chemin par lequel un paiement peut aboutir.
  *
  * Sécurité : la route est publique (impossible d'authentifier CamerPay par
  * session). La signature est la SEULE barrière — sans secret configuré, on
@@ -89,6 +94,8 @@ export async function POST(request: NextRequest) {
             reference: callback.invoiceId,
             providerReference: callback.transactionUuid,
             status: "failed",
+            failureReason: "Montant réglé différent du montant attendu",
+            failureCode: "AMOUNT_MISMATCH",
           },
           service,
         );
@@ -104,12 +111,20 @@ export async function POST(request: NextRequest) {
         reference: callback.invoiceId,
         providerReference: callback.transactionUuid,
         status,
+        // Extras NON signés, présents seulement sur un échec : purement
+        // informatifs (on les montre au client), ils ne décident de rien.
+        failureReason: fields.failure_reason || undefined,
+        failureCode: fields.failure_code || undefined,
       },
       service,
     );
   } catch {
-    // Erreur base : 500 pour que CamerPay REJOUE (jusqu'à 5 fois).
-    // Le rejeu est sans danger : `settle_payment_intent` est idempotent.
+    // Erreur base : 500 pour signaler l'échec côté CamerPay. Attention, un
+    // 5xx ne déclenche AUCUN rejeu automatique (seules les erreurs réseau en
+    // provoquent) : le rattrapage vient du rejeu manuel depuis
+    // /client/webhook-logs, ou de la réconciliation active dans
+    // /api/payments/status. Les deux sont sans danger, le règlement étant
+    // idempotent.
     return NextResponse.json({ error: "SETTLEMENT_FAILED" }, { status: 500 });
   }
 
