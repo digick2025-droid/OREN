@@ -1,15 +1,24 @@
 import { SimulatedPaymentProvider } from "./simulated";
 import { CamerPayProvider } from "./camerpay/provider";
+import { KPayProvider } from "./kpay/provider";
 import type { PaymentProvider } from "./types";
 
 /**
  * Sélection du fournisseur via PAYMENT_PROVIDER (env, côté serveur).
  *   - "simulated" (défaut MVP) : règle de façon synchrone.
- *   - "camerpay"               : Mobile Money réel, confirmé par webhook signé.
+ *   - "kpay"                   : Mobile Money SANS quitter l'application
+ *                                (demande poussée sur le téléphone du client).
+ *   - "camerpay"               : Mobile Money par redirection vers leur page.
+ *
+ * La bascule est une simple variable d'environnement : les intentions déjà
+ * créées gardent en base le nom du fournisseur qui les a initiées, et la
+ * réconciliation refuse d'interroger une passerelle qui n'est pas la leur.
  */
 export function getPaymentProvider(): PaymentProvider {
   const provider = process.env.PAYMENT_PROVIDER ?? "simulated";
   switch (provider) {
+    case "kpay":
+      return new KPayProvider();
     case "camerpay":
       return new CamerPayProvider();
     case "simulated":
