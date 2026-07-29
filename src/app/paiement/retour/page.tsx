@@ -25,11 +25,13 @@ type PollState =
   | { kind: "invalid" }
   | { kind: "checking" }
   | { kind: "succeeded"; purpose: Purpose }
-  | { kind: "failed" }
+  | { kind: "failed"; reason: string | null }
   | { kind: "timeout" };
 
-const POLL_INTERVAL_MS = 2000;
-const MAX_ATTEMPTS = 25; // ~50s, le temps qu'un webhook lambda arrive
+// Chaque sondage déclenche, côté serveur, une lecture de l'état réel chez la
+// passerelle : on espace donc un peu plus qu'un simple polling en base.
+const POLL_INTERVAL_MS = 3000;
+const MAX_ATTEMPTS = 20; // ~60s, le temps qu'un paiement Mobile Money aboutisse
 
 function RetourContent() {
   const { t } = useI18n();
@@ -65,6 +67,7 @@ function RetourContent() {
             status: "pending" | "succeeded" | "failed";
             purpose: Purpose;
             planKey: string | null;
+            failureReason?: string | null;
           };
           meta.current = { purpose: data.purpose, planKey: data.planKey };
           if (data.status === "succeeded") {
@@ -72,7 +75,9 @@ function RetourContent() {
             return;
           }
           if (data.status === "failed") {
-            if (!cancelled) setState({ kind: "failed" });
+            if (!cancelled) {
+              setState({ kind: "failed", reason: data.failureReason ?? null });
+            }
             return;
           }
         }
@@ -177,6 +182,13 @@ function RetourContent() {
             <p className="text-[13.5px] text-muted-foreground">
               {t.retour_failed_sub}
             </p>
+            {state.reason && (
+              // Motif renvoyé par l'opérateur (« Solde insuffisant », « PIN
+              // incorrect »…) : c'est ce qui dit au client quoi refaire.
+              <p className="rounded-xl bg-error-surface px-3 py-2 text-[12.5px] font-semibold text-danger">
+                {state.reason}
+              </p>
+            )}
             <Button className="w-full" onClick={goToRetry}>
               {t.retour_retry}
             </Button>

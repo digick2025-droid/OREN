@@ -58,9 +58,35 @@ export interface PaymentInitiation {
   error?: string;
 }
 
+/**
+ * État d'une transaction lu **directement chez le fournisseur**, à la demande.
+ *
+ * Complément indispensable au webhook : un callback perdu (endpoint
+ * momentanément indisponible, URL mal déclarée, notification jamais émise)
+ * laisserait sinon l'intention « pending » pour toujours, alors même que le
+ * client a payé. On interroge donc la passerelle au retour du client.
+ */
+export interface ProviderTransactionStatus {
+  status: PaymentStatus;
+  /** Montant connu du fournisseur, pour le confronter à l'intention. */
+  amount?: number;
+  /** Motif d'échec lisible, quand le fournisseur le fournit. */
+  failureReason?: string;
+  /** Code technique d'échec (provider ou passerelle). */
+  failureCode?: string;
+}
+
 export interface PaymentProvider {
   readonly name: string;
   initiate(input: PaymentIntentInput): Promise<PaymentInitiation>;
+  /**
+   * Interroge l'état réel d'une transaction (réconciliation active).
+   * Optionnel : un fournisseur synchrone n'en a pas besoin.
+   *
+   * @returns null si l'état n'est pas déterminable (réseau, config, réponse
+   *          inattendue) — l'appelant ne doit alors RIEN conclure.
+   */
+  checkStatus?(providerReference: string): Promise<ProviderTransactionStatus | null>;
 }
 
 /**
@@ -74,6 +100,10 @@ export interface PaymentWebhookEvent {
   /** Référence côté fournisseur. */
   providerReference: string;
   status: PaymentStatus;
+  /** Motif d'échec lisible, conservé pour l'expliquer au client (optionnel). */
+  failureReason?: string;
+  /** Code technique d'échec (optionnel). */
+  failureCode?: string;
 }
 
 export type { PaymentMethod };

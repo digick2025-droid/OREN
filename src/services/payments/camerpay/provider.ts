@@ -2,8 +2,10 @@ import type {
   PaymentProvider,
   PaymentIntentInput,
   PaymentInitiation,
+  PaymentMethod,
+  ProviderTransactionStatus,
 } from "../types";
-import { normalizeStatus, pickString } from "./payload";
+import { isRecord, normalizeStatus, pickString } from "./payload";
 
 /**
  * Fournisseur CamerPay (Mobile Money Cameroun).
@@ -82,7 +84,11 @@ export class CamerPayProvider implements PaymentProvider {
       // Notre référence interne : CamerPay nous la renvoie telle quelle dans
       // le callback sous le nom `invoice_id`. C'est le lien init ⇆ confirmation.
       merchant_invoice_id: input.reference,
-      customer_phone: input.phone ? toLocalPhone(input.phone) : undefined,
+      // Le client a déjà choisi son moyen de paiement chez nous : on le
+      // transmet pour que la page CamerPay s'ouvre directement dessus au lieu
+      // de redemander (une étape de moins = un abandon de moins).
+      payment_method: toCamerPayMethod(input.method),
+      customer_phone: input.phone ? toE164Phone(input.phone) : undefined,
       customer_name: input.metadata?.customerName,
       customer_email: input.metadata?.customerEmail,
       source: "api",
@@ -174,18 +180,103 @@ export class CamerPayProvider implements PaymentProvider {
       redirectUrl,
     };
   }
+
+  /**
+   * Lit l'état réel d'une transaction : `GET /api/payment/{uuid}/status`.
+   *
+   * Filet de sécurité du webhook. Un callback qui n'arrive jamais (URL mal
+   * déclarée, notification perdue, endpoint indisponible au mauvais moment)
+   * laisserait une intention « pending » éternelle alors que le client a
+   * payé : c'est exactement ce que cette lecture rattrape, au retour du
+   * client sur `/paiement/retour`.
+   *
+   * Renvoie `null` dès que l'état n'est pas déterminable avec certitude —
+   * l'appelant ne doit alors rien trancher, surtout pas un échec.
+   */
+  async checkStatus(
+    providerReference: string,
+  ): Promise<ProviderTransactionStatus | null> {
+    if (!providerReference || !this.apiKey) return null;
+    const url = this.statusUrl(providerReference);
+    if (!url) return null;
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        cache: "no-store",
+      });
+    } catch {
+      return null;
+    }
+    if (!response.ok) return null;
+
+    let data: unknown;
+    try {
+      data = await response.json();
+    } catch {
+      return null;
+    }
+
+    // La transaction est imbriquée sous `transaction` ; on tolère aussi une
+    // réponse à plat, comme partout ailleurs dans l'intégration.
+    const tx = isRecord(data) && isRecord(data.transaction) ? data.transaction : data;
+    const rawStatus = pickString(tx, ["status"]);
+    if (!rawStatus) return null;
+
+    const amount = Number(pickString(tx, ["amount"]));
+    return {
+      status: normalizeStatus(rawStatus),
+      amount: Number.isFinite(amount) ? amount : undefined,
+      failureReason: pickString(tx, ["failure_reason"]),
+      failureCode: pickString(tx, ["failure_code"]),
+    };
+  }
+
+  /**
+   * Déduit l'URL de statut de l'URL d'initiation configurée :
+   *   …/api/payment/initiate  →  …/api/payment/{uuid}/status
+   * `CAMERPAY_STATUS_URL` (avec un `{uuid}`) permet de forcer la valeur si
+   * l'endpoint venait à bouger, sans redéployer de code.
+   */
+  private statusUrl(providerReference: string): string | null {
+    const uuid = encodeURIComponent(providerReference);
+    const override = process.env.CAMERPAY_STATUS_URL;
+    if (override) return override.replace("{uuid}", uuid);
+    if (!this.apiUrl) return null;
+    const base = this.apiUrl.replace(/\/payment\/initiate\/?$/, "");
+    // URL d'initiation non standard : on préfère ne pas deviner.
+    if (base === this.apiUrl) return null;
+    return `${base}/payment/${uuid}/status`;
+  }
+}
+
+/** Nos moyens de paiement → ceux de CamerPay (la carte passe par Stripe). */
+function toCamerPayMethod(method: PaymentMethod): string | undefined {
+  switch (method) {
+    case "orange_money":
+      return "orange_money";
+    case "mtn_momo":
+      return "mtn_momo";
+    case "card":
+      return "stripe";
+    default:
+      return undefined;
+  }
 }
 
 /**
- * Format attendu par CamerPay : 9 chiffres sans indicatif (« 699123456 »).
- * Nos numéros circulent en E.164 (« +237699123456 ») ; on retire donc
- * l'indicatif pays s'il est présent.
+ * Format documenté par CamerPay : `+237 6XX XX XX XX`. Nos numéros circulent
+ * déjà en E.164 (« +237699123456 ») ; un numéro saisi en local (« 699123456 »)
+ * est complété de l'indicatif camerounais.
  */
-function toLocalPhone(phone: string): string {
+function toE164Phone(phone: string): string {
   const digits = phone.replace(/[^\d]/g, "");
-  return digits.startsWith("237") && digits.length > 9
-    ? digits.slice(3)
-    : digits;
+  if (!digits) return "";
+  return digits.startsWith("237") ? `+${digits}` : `+237${digits}`;
 }
 
 /**
