@@ -66,6 +66,58 @@ self.addEventListener("activate", (event) => {
  * `src/lib/offline.ts` — Cache Storage est accessible des deux côtés, et la
  * page n'a alors pas besoin qu'un worker soit actif pour se nettoyer. */
 
+/* ------------------------------------------------------------------
+ * Relances push
+ * ------------------------------------------------------------------ */
+
+/* Un `push` reçu DOIT afficher une notification : les navigateurs révoquent
+ * la permission d'une application qui reçoit des push silencieux. En cas de
+ * charge utile illisible, on affiche donc un message générique plutôt que rien. */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = {};
+  }
+
+  const title = data.title || "OREN";
+  const options = {
+    body: data.body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    lang: data.lang || "fr",
+    /* Une relance chasse la précédente : deux rappels empilés dans le tiroir
+     * de notifications se lisent comme du harcèlement. */
+    tag: "oren-relance",
+    renotify: true,
+    data: { url: data.url || "/accueil" },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+/* Au clic : reprendre l'onglet OREN déjà ouvert plutôt que d'en empiler un
+ * nouveau — sur mobile, ouvrir un second onglet fait perdre le brouillon en
+ * cours de saisie dans le premier. */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const cible = (event.notification.data && event.notification.data.url) || "/accueil";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientsList) => {
+        for (const client of clientsList) {
+          if (new URL(client.url).origin === self.location.origin) {
+            return client.focus().then((c) => (c && c.navigate ? c.navigate(cible) : c));
+          }
+        }
+        return self.clients.openWindow(cible);
+      }),
+  );
+});
+
 function isCacheableStatic(url) {
   return (
     url.pathname.startsWith("/_next/static/") ||

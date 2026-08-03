@@ -35,6 +35,8 @@ export interface Profile {
   phone: string | null;
   full_name: string | null;
   language: string;
+  /** Dernière ouverture de l'application (migration 0031, relances push). */
+  last_seen_at: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -230,6 +232,35 @@ export interface Payment {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+/** Un appareil abonné aux relances push (migration 0031). */
+export interface PushSubscriptionRow {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  lang: string;
+  user_agent: string | null;
+  created_at: string;
+  last_success_at: string | null;
+  failure_count: number;
+}
+
+export type RelanceKindRow =
+  | "inactivite"
+  | "devis_en_attente"
+  | "facture_impayee"
+  | "compte_inacheve";
+
+/** Journal des relances envoyées — sert de garde-fou anti-répétition. */
+export interface RelanceLogRow {
+  id: string;
+  user_id: string;
+  kind: RelanceKindRow;
+  document_id: string | null;
+  sent_at: string;
 }
 
 export interface ActivityLog {

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { clearOfflineData } from "@/lib/offline";
+import { desactiverPush } from "@/lib/push";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,8 @@ export function AdminNav() {
   const supabase = createClient();
 
   const signOut = async () => {
+    // Avant signOut : le désabonnement push a besoin de la session (RLS).
+    await desactiverPush();
     await supabase.auth.signOut();
     await clearOfflineData();
     router.push("/");

@@ -57,3 +57,20 @@ describe("isPublic — service worker et repli hors-ligne", () => {
     expect(isPublic("/manifest.webmanifest")).toBe(true);
   });
 });
+
+/**
+ * Le cron Vercel appelle sans session. Redirigé vers /connexion, il renvoie un
+ * 200 en HTML : Vercel considère la tâche réussie et plus aucune relance ne
+ * part — la panne la plus discrète qui soit.
+ */
+describe("isPublic — tâches planifiées", () => {
+  it("laisse passer le cron des relances", () => {
+    expect(isPublic("/api/cron/relances")).toBe(true);
+  });
+
+  it("garde les routes d'abonnement push derrière la session", () => {
+    // Elles écrivent au nom de l'utilisateur connecté : jamais publiques.
+    expect(isPublic("/api/push/subscribe")).toBe(false);
+    expect(isPublic("/api/push/unsubscribe")).toBe(false);
+  });
+});

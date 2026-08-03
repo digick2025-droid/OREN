@@ -408,6 +408,15 @@ const fr = {
   set_logout: "Se déconnecter",
   app_version: "OREN · MVP 1.0",
 
+  // Relances push
+  push_title: "Rappels",
+  push_hint: "Devis sans réponse, factures impayées",
+  push_on: "Rappels activés",
+  push_off: "Rappels désactivés",
+  push_blocked: "Les notifications sont bloquées pour OREN dans votre navigateur.",
+  push_blocked_short: "Bloqué par le navigateur",
+  push_failed: "Impossible d'activer les rappels. Réessayez.",
+
   // Abonnement
   sub_title: "Abonnement",
   off_current: "Offre actuelle",
@@ -915,6 +924,14 @@ const en: Dict = {
   theme_system: "Auto",
   set_logout: "Sign out",
   app_version: "OREN · MVP 1.0",
+
+  push_title: "Reminders",
+  push_hint: "Unanswered quotes, unpaid invoices",
+  push_on: "Reminders on",
+  push_off: "Reminders off",
+  push_blocked: "Notifications are blocked for OREN in your browser.",
+  push_blocked_short: "Blocked by browser",
+  push_failed: "Couldn't turn reminders on. Try again.",
 
   sub_title: "Subscription",
   off_current: "Current plan",

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { LastSeenTracker } from "@/components/last-seen-tracker";
 import { CompanyProvider } from "@/features/company/company-context";
 import { createClient } from "@/lib/supabase/server";
 import type { Company } from "@/types/database";
@@ -24,6 +25,7 @@ export default async function AppLayout({
 
   return (
     <CompanyProvider company={company as Company}>
+      <LastSeenTracker />
       <AppShell>{children}</AppShell>
     </CompanyProvider>
   );
