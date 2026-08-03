@@ -521,6 +521,8 @@ const fr = {
   pwa_ios_hint:
     "Sur iPhone : touchez Partager puis « Sur l'écran d'accueil ».",
   offline_notice: "Hors connexion — vos données récentes restent consultables.",
+  // La page de repli hors-ligne est du HTML statique (public/hors-ligne.html) :
+  // ses textes y sont inclus, elle doit s'afficher sans le moindre chargement.
 
   // WhatsApp
   wa_hello: "Bonjour",

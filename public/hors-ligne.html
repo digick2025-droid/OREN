@@ -1,0 +1,165 @@
+<!doctype html>
+<!--
+  OREN · Page de repli hors-ligne.
+
+  Volontairement du HTML statique, hors du routeur Next. Une page React servie
+  ici serait affichée sous l'URL demandée (/documents, /clients…) : Next
+  hydraterait une charge RSC qui ne correspond pas à l'URL, l'error boundary
+  prendrait le dessus et l'utilisateur verrait « Une erreur est survenue » à la
+  place. Sans compter que ses chunks JS ne sont pas forcément en cache.
+
+  Aucune dépendance : ni script externe, ni police distante, ni appel réseau —
+  cette page doit s'afficher quand plus rien ne répond.
+-->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OREN — Hors connexion</title>
+    <link rel="icon" href="/icons/icon-192.png" />
+    <style>
+      :root {
+        --surface: #f8fafc;
+        --navy: #0f172a;
+        --coral: #ff6b57;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --card: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --surface: #0a0f1c;
+          --navy: #f8fafc;
+          --coral: #ff6b57;
+          --muted: #94a3b8;
+          --border: #1e293b;
+          --card: #131a2a;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--surface);
+        color: var(--navy);
+        text-align: center;
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+      }
+      main {
+        width: 100%;
+        max-width: 380px;
+      }
+      .icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .kicker {
+        margin: 24px 0 0;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--coral);
+      }
+      h1 {
+        margin: 8px 0 0;
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      p {
+        margin: 8px auto 0;
+        max-width: 20rem;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      a.retry {
+        display: block;
+        margin: 32px auto 0;
+        max-width: 20rem;
+        padding: 12px 20px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+        color: var(--navy);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="icon" aria-hidden="true">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 20h.01" />
+          <path d="M8.5 16.429a5 5 0 0 1 7 0" />
+          <path d="M5 12.859a10 10 0 0 1 5.17-2.69" />
+          <path d="M19 12.859a10 10 0 0 0-2.007-1.523" />
+          <path d="M2 8.82a15 15 0 0 1 4.177-2.643" />
+          <path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
+          <path d="m2 2 20 20" />
+        </svg>
+      </div>
+
+      <p class="kicker" data-fr="Hors connexion" data-en="Offline"></p>
+      <h1
+        data-fr="Cette page n'est pas encore disponible hors ligne"
+        data-en="This page isn't available offline yet"
+      ></h1>
+      <p
+        data-fr="Les pages déjà ouvertes restent consultables sans réseau, et vos brouillons sont conservés sur cet appareil. Celle-ci n'a pas encore été chargée."
+        data-en="Pages you have already opened stay available without a network, and your drafts are kept on this device. This one hasn't been loaded yet."
+      ></p>
+
+      <a
+        class="retry"
+        href="/accueil"
+        data-fr="Revenir à l'accueil"
+        data-en="Back to home"
+      ></a>
+    </main>
+
+    <script>
+      // Même cookie de langue que l'application (LANG_COOKIE), repli sur le
+      // français : le service worker sert ce fichier tel quel, le serveur n'a
+      // pas la main pour choisir la langue.
+      (function () {
+        var m = document.cookie.match(/(?:^|;\s*)digick_lang=(fr|en)/);
+        var lang = m ? m[1] : "fr";
+        document.documentElement.lang = lang;
+        var nodes = document.querySelectorAll("[data-fr]");
+        for (var i = 0; i < nodes.length; i++) {
+          nodes[i].textContent = nodes[i].getAttribute("data-" + lang);
+        }
+      })();
+    </script>
+  </body>
+</html>
