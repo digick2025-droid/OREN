@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronRight, CreditCard, Globe, LogOut, Palette, ShieldCheck } from "lucide-react";
+import { Bell, Building2, ChevronRight, CreditCard, Globe, LogOut, Palette, ShieldCheck } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { LanguageToggle } from "@/components/language-toggle";
+import { PushToggle } from "@/components/push-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
 import { clearOfflineData } from "@/lib/offline";
+import { desactiverPush } from "@/lib/push";
 import { createClient } from "@/lib/supabase/client";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUsage } from "@/hooks/use-usage";
@@ -23,6 +25,10 @@ export default function ReglagesPage() {
   const supabase = createClient();
 
   const signOut = async () => {
+    // Avant signOut : la suppression de l'abonnement push passe par la RLS,
+    // elle a besoin de la session. Après, l'appareil continuerait de recevoir
+    // les relances du compte qu'on vient de quitter.
+    await desactiverPush();
     await supabase.auth.signOut();
     await clearOfflineData();
     router.push("/");
@@ -82,6 +88,19 @@ export default function ReglagesPage() {
             {t.set_theme}
           </div>
           <ThemeToggle />
+        </Card>
+
+        <Card className="flex items-center gap-3 px-4 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-navy">
+            <Bell size={19} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-bold text-navy">{t.push_title}</div>
+            <div className="truncate text-[12.5px] text-muted-foreground">
+              {t.push_hint}
+            </div>
+          </div>
+          <PushToggle />
         </Card>
 
         <Card className="flex items-center gap-3 px-4 py-4">

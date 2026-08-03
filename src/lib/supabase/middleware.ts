@@ -23,6 +23,11 @@ const PUBLIC_PATHS = [
   // serait jamais confirmé. L'authenticité est vérifiée par signature HMAC
   // dans la route elle-même, jamais par la session.
   "/api/webhooks",
+  // Tâches planifiées Vercel. Le déclencheur n'a pas de session : sans cette
+  // entrée, le cron des relances serait redirigé vers /connexion et ne
+  // s'exécuterait jamais — en silence, comme un webhook perdu. La route se
+  // protège elle-même par CRON_SECRET.
+  "/api/cron",
   "/manifest.webmanifest",
   // Le service worker et sa page de repli. Sans session, le middleware
   // redirigeait /sw.js vers /connexion : le navigateur recevait du text/html
