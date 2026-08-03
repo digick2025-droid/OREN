@@ -11,9 +11,8 @@ import { Toaster } from "sonner";
 import { LanguageProvider } from "@/features/i18n/language-context";
 import { ThemeProvider } from "@/features/theme/theme-context";
 import type { Lang } from "@/lib/i18n/config";
+import { RQ_CACHE_KEY as CACHE_KEY } from "@/lib/offline";
 import type { Theme } from "@/lib/theme/config";
-
-const CACHE_KEY = "digick_rq_cache";
 
 export function Providers({
   initialLang,

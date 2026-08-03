@@ -17,12 +17,25 @@ const PUBLIC_PATHS = [
   "/design-system",
   "/paiement/retour",
   "/api/payments",
+  // Callbacks des passerelles de paiement. Une passerelle n'a pas de session :
+  // sans cette entrée, le middleware la redirige vers /connexion et la
+  // notification n'atteint jamais le handler — un paiement encaissé qui ne
+  // serait jamais confirmé. L'authenticité est vérifiée par signature HMAC
+  // dans la route elle-même, jamais par la session.
+  "/api/webhooks",
   "/manifest.webmanifest",
+  // Le service worker et sa page de repli. Sans session, le middleware
+  // redirigeait /sw.js vers /connexion : le navigateur recevait du text/html
+  // et refusait d'enregistrer le worker (« unsupported MIME type ») — donc
+  // aucun mode hors-ligne pour un visiteur dont le cookie a expiré.
+  "/sw.js",
+  "/hors-ligne",
   "/robots.txt",
   "/sitemap.xml",
 ];
 
-function isPublic(pathname: string): boolean {
+/** Exportée pour être éprouvée : une route publique oubliée est invisible. */
+export function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some(
     (p) => pathname === p || (p !== "/" && pathname.startsWith(`${p}/`)),
   );

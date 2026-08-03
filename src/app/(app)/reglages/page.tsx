@@ -9,6 +9,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
+import { clearOfflineData } from "@/lib/offline";
 import { createClient } from "@/lib/supabase/client";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUsage } from "@/hooks/use-usage";
@@ -23,6 +24,7 @@ export default function ReglagesPage() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    await clearOfflineData();
     router.push("/");
     router.refresh();
   };

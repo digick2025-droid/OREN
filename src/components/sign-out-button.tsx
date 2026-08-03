@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { clearOfflineData } from "@/lib/offline";
 import { createClient } from "@/lib/supabase/client";
 
 export function SignOutButton() {
@@ -11,6 +12,7 @@ export function SignOutButton() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    await clearOfflineData();
     router.push("/");
     router.refresh();
   };

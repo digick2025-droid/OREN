@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { clearOfflineData } from "@/lib/offline";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export function AdminNav() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    await clearOfflineData();
     router.push("/");
     router.refresh();
   };

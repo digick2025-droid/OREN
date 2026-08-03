@@ -6,7 +6,9 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "OREN",
     description:
       "Concentrez-vous sur votre métier. OREN s'occupe du reste. Devis et factures pros en quelques secondes.",
-    start_url: "/",
+    // L'application installée démarre sur l'app, pas sur la page vitrine :
+    // hors ligne, "/" ne mène nulle part d'utile pour un utilisateur connecté.
+    start_url: "/accueil",
     display: "standalone",
     // Cohérent avec le themeColor sombre déclaré dans layout.tsx (viewport).
     background_color: "#FFFFFF",

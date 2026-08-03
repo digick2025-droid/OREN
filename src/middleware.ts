@@ -18,7 +18,9 @@ export const config = {
   matcher: [
     /*
      * Tout sauf les fichiers statiques et images.
+     * `sw.js` est exclu ici en plus d'être public : le service worker est
+     * revérifié à chaque chargement, inutile de payer un aller-retour Supabase.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
