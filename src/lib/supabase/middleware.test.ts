@@ -50,7 +50,7 @@ describe("isPublic — service worker et repli hors-ligne", () => {
 
   it("sert la page de repli hors-ligne sans session", () => {
     // Elle doit pouvoir être préchargée par un visiteur déconnecté.
-    expect(isPublic("/hors-ligne")).toBe(true);
+    expect(isPublic("/hors-ligne.html")).toBe(true);
   });
 
   it("laisse le manifeste public", () => {

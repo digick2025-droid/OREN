@@ -1,7 +1,7 @@
 /*
  * Service worker OREN — hors-ligne « consultation + brouillons ».
  * - Statiques (_next/static, icônes) : cache-first.
- * - Navigations : network-first avec repli sur la page en cache, puis /hors-ligne.
+ * - Navigations : network-first, repli sur la page en cache puis sur OFFLINE_URL.
  * - Supabase / API : jamais mis en cache (données authentifiées, temps réel).
  *
  * Deux règles non négociables, chacune a déjà cassé le mode hors-ligne :
@@ -11,8 +11,11 @@
  *  2. On précharge un par un, jamais avec addAll : addAll est atomique, une
  *     seule URL en échec vidait tout le préchargement — en silence.
  */
-const CACHE = "oren-v2";
-const OFFLINE_URL = "/hors-ligne";
+const CACHE = "oren-v3";
+/* Fichier statique, pas une route Next : servi sous l'URL demandée, une page
+ * du routeur hydrate une charge RSC qui ne correspond pas à l'URL et l'error
+ * boundary affiche « Une erreur est survenue » à la place du repli. */
+const OFFLINE_URL = "/hors-ligne.html";
 
 /* Uniquement des ressources publiques : le SW peut s'installer déconnecté. */
 const PRECACHE = [

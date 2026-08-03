@@ -521,11 +521,8 @@ const fr = {
   pwa_ios_hint:
     "Sur iPhone : touchez Partager puis « Sur l'écran d'accueil ».",
   offline_notice: "Hors connexion — vos données récentes restent consultables.",
-  offline_page_kicker: "Hors connexion",
-  offline_page_title: "Cette page n'est pas encore disponible hors ligne",
-  offline_page_body:
-    "Les pages déjà ouvertes restent consultables sans réseau, et vos brouillons sont conservés sur cet appareil. Celle-ci n'a pas encore été chargée.",
-  offline_page_retry: "Revenir à l'accueil",
+  // La page de repli hors-ligne est du HTML statique (public/hors-ligne.html) :
+  // ses textes y sont inclus, elle doit s'afficher sans le moindre chargement.
 
   // WhatsApp
   wa_hello: "Bonjour",
@@ -1024,11 +1021,6 @@ const en: Dict = {
   pwa_later: "Later",
   pwa_ios_hint: "On iPhone: tap Share then “Add to Home Screen”.",
   offline_notice: "Offline — your recent data is still available.",
-  offline_page_kicker: "Offline",
-  offline_page_title: "This page isn't available offline yet",
-  offline_page_body:
-    "Pages you have already opened stay available without a network, and your drafts are kept on this device. This one hasn't been loaded yet.",
-  offline_page_retry: "Back to home",
 
   wa_hello: "Hello",
   wa_your_quote: "your quote",

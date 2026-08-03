@@ -29,7 +29,7 @@ const PUBLIC_PATHS = [
   // et refusait d'enregistrer le worker (« unsupported MIME type ») — donc
   // aucun mode hors-ligne pour un visiteur dont le cookie a expiré.
   "/sw.js",
-  "/hors-ligne",
+  "/hors-ligne.html",
   "/robots.txt",
   "/sitemap.xml",
 ];
