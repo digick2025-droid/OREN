@@ -3,7 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, Minus, Plus, Save, Search, Trash2, UserPlus, X } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Minus,
+  Plus,
+  Save,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,6 +59,11 @@ interface DraftLine {
   category: LineCategory;
   qty: string;
   unit_price: number;
+}
+
+/** Une ligne vide non touchée ne compte pas comme un vrai article. */
+function lineHasContent(line: Pick<DraftLine, "name" | "unit_price">): boolean {
+  return line.name.trim() !== "" || line.unit_price > 0;
 }
 
 interface SavedDraft {
@@ -98,14 +114,25 @@ export function DocumentBuilder({
   const [newClientPhone, setNewClientPhone] = useState("");
   const [search, setSearch] = useState("");
   const [lines, setLines] = useState<DraftLine[]>(() =>
-    (editItems ?? []).map((item) => ({
-      uid: uidCounter++,
-      name: item.name,
-      unit: item.unit,
-      category: item.category ?? "article",
-      qty: String(item.quantity),
-      unit_price: item.unit_price,
-    })),
+    editItems
+      ? editItems.map((item) => ({
+          uid: uidCounter++,
+          name: item.name,
+          unit: item.unit,
+          category: item.category ?? "article",
+          qty: String(item.quantity),
+          unit_price: item.unit_price,
+        }))
+      : [
+          {
+            uid: uidCounter++,
+            name: "",
+            unit: "unité",
+            category: "article",
+            qty: "1",
+            unit_price: 0,
+          },
+        ],
   );
   const [discount, setDiscount] = useState(
     editDoc && editDoc.discount > 0 ? String(editDoc.discount) : "",
@@ -116,6 +143,15 @@ export function DocumentBuilder({
   const [title, setTitle] = useState(editDoc?.title ?? "");
   const [note, setNote] = useState(editDoc?.note ?? "");
   const [conditions, setConditions] = useState(editDoc?.conditions ?? "");
+  const [showOptions, setShowOptions] = useState(
+    Boolean(
+      editDoc &&
+        (editDoc.discount > 0 ||
+          editDoc.advance_amount > 0 ||
+          editDoc.note ||
+          editDoc.conditions),
+    ),
+  );
   const [draftRestored, setDraftRestored] = useState(false);
   const restoredRef = useRef(false);
 
@@ -139,11 +175,12 @@ export function DocumentBuilder({
       const raw = localStorage.getItem(draftKey(type));
       if (!raw) return;
       const saved = JSON.parse(raw) as SavedDraft;
-      if (saved.lines?.length || saved.title) {
+      const savedLines = (saved.lines ?? []).filter(lineHasContent);
+      if (savedLines.length > 0 || saved.title) {
         setClientId(saved.clientId ?? null);
-        setLines(
-          (saved.lines ?? []).map((l) => ({ ...l, uid: uidCounter++ })),
-        );
+        if (savedLines.length > 0) {
+          setLines(savedLines.map((l) => ({ ...l, uid: uidCounter++ })));
+        }
         setDiscount(saved.discount ?? "");
         setAdvance(saved.advance ?? "");
         setTitle(saved.title ?? "");
@@ -167,7 +204,7 @@ export function DocumentBuilder({
       note,
       conditions,
     };
-    const empty = lines.length === 0 && !title && !note && !conditions;
+    const empty = !lines.some(lineHasContent) && !title && !note && !conditions;
     try {
       if (empty) localStorage.removeItem(draftKey(type));
       else localStorage.setItem(draftKey(type), JSON.stringify(payload));
@@ -316,7 +353,7 @@ export function DocumentBuilder({
   };
 
   const buildItems = () =>
-    lines.map((line) => ({
+    lines.filter(lineHasContent).map((line) => ({
       name: line.name || "—",
       unit: line.unit,
       category: line.category,
@@ -332,7 +369,8 @@ export function DocumentBuilder({
         : t.toast_devis_created;
 
   const submit = (asDraft: boolean) => {
-    if (lines.length === 0) {
+    const items = buildItems();
+    if (items.length === 0) {
       toast.error(t.toast_need_items);
       return;
     }
@@ -343,7 +381,7 @@ export function DocumentBuilder({
       conditions: conditions.trim(),
       discount: parseInt(discount, 10) || 0,
       advance_amount: isInvoice ? advanceValue : 0,
-      items: buildItems(),
+      items,
     };
 
     if (isEdit && editDoc) {
@@ -418,6 +456,17 @@ export function DocumentBuilder({
             {t.draft_restored}
           </div>
         )}
+
+        {/* ----- Intitulé ----- */}
+        <div>
+          <Label htmlFor="doc-title">{t.q_title}</Label>
+          <Input
+            id="doc-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t.q_title_ph}
+          />
+        </div>
 
         {/* ----- Client ----- */}
         <section>
@@ -541,7 +590,7 @@ export function DocumentBuilder({
           {catalogAccess.enabled &&
             search.trim() === "" &&
             favorites.length > 0 &&
-            lines.length === 0 && (
+            !lines.some(lineHasContent) && (
               <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
                 {favorites.map((item) => (
                   <button
@@ -668,81 +717,94 @@ export function DocumentBuilder({
           <p className="mt-1.5 text-[11.5px] text-muted-foreground/70">{t.q_qty_hint}</p>
         </section>
 
-        {/* ----- Détails ----- */}
-        <section className="space-y-4">
-          <div>
-            <Label htmlFor="doc-title">{t.q_title}</Label>
-            <Input
-              id="doc-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t.q_title_ph}
+        {/* ----- Options (remise, acompte, note, conditions) ----- */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowOptions((v) => !v)}
+            className="flex w-full items-center justify-between rounded-xl border-[1.5px] border-border bg-card px-4 py-3 text-[13.5px] font-semibold text-muted-foreground"
+          >
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal size={16} className="text-muted-foreground/70" />
+              {showOptions ? t.x_more_options_hide : t.x_more_options}
+            </span>
+            <ChevronDown
+              size={18}
+              className={cn(
+                "text-muted-foreground/70 transition-transform",
+                showOptions && "rotate-180",
+              )}
             />
-          </div>
-          <div>
-            <Label htmlFor="doc-discount">{t.q_discount}</Label>
-            <Input
-              id="doc-discount"
-              inputMode="numeric"
-              value={discount}
-              onChange={(e) =>
-                setDiscount(e.target.value.replace(/[^\d]/g, ""))
-              }
-              placeholder="0"
-            />
-          </div>
-          {isInvoice && (
-            <div>
-              <Label htmlFor="doc-advance">{t.q_advance}</Label>
-              <Input
-                id="doc-advance"
-                inputMode="numeric"
-                value={advance}
-                onChange={(e) =>
-                  setAdvance(e.target.value.replace(/[^\d]/g, ""))
-                }
-                placeholder="0"
-              />
-              <p className="mt-1 text-[11.5px] text-muted-foreground/70">
-                {t.q_advance_hint}
-              </p>
+          </button>
+
+          {showOptions && (
+            <div className="mt-3 space-y-4">
+              <div>
+                <Label htmlFor="doc-discount">{t.q_discount}</Label>
+                <Input
+                  id="doc-discount"
+                  inputMode="numeric"
+                  value={discount}
+                  onChange={(e) =>
+                    setDiscount(e.target.value.replace(/[^\d]/g, ""))
+                  }
+                  placeholder="0"
+                />
+              </div>
+              {isInvoice && (
+                <div>
+                  <Label htmlFor="doc-advance">{t.q_advance}</Label>
+                  <Input
+                    id="doc-advance"
+                    inputMode="numeric"
+                    value={advance}
+                    onChange={(e) =>
+                      setAdvance(e.target.value.replace(/[^\d]/g, ""))
+                    }
+                    placeholder="0"
+                  />
+                  <p className="mt-1 text-[11.5px] text-muted-foreground/70">
+                    {t.q_advance_hint}
+                  </p>
+                </div>
+              )}
+              <div>
+                <Label htmlFor="doc-note">{t.q_note}</Label>
+                <Textarea
+                  id="doc-note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder={t.q_note_ph}
+                />
+              </div>
+              <div>
+                <Label htmlFor="doc-conditions">{t.q_conditions}</Label>
+                <Textarea
+                  id="doc-conditions"
+                  value={conditions}
+                  onChange={(e) => setConditions(e.target.value)}
+                  placeholder={t.q_cond_ph}
+                />
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                  {t.cond_presets.map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() =>
+                        setConditions((current) =>
+                          current ? `${current}\n${preset}` : preset,
+                        )
+                      }
+                      className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-[12px] font-semibold text-muted-foreground"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-          <div>
-            <Label htmlFor="doc-note">{t.q_note}</Label>
-            <Textarea
-              id="doc-note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={t.q_note_ph}
-            />
-          </div>
-          <div>
-            <Label htmlFor="doc-conditions">{t.q_conditions}</Label>
-            <Textarea
-              id="doc-conditions"
-              value={conditions}
-              onChange={(e) => setConditions(e.target.value)}
-              placeholder={t.q_cond_ph}
-            />
-            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-              {t.cond_presets.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() =>
-                    setConditions((current) =>
-                      current ? `${current}\n${preset}` : preset,
-                    )
-                  }
-                  className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-[12px] font-semibold text-muted-foreground"
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
+        </div>
 
         {/* ----- Totaux ----- */}
         <Card className="space-y-1.5 p-4">
