@@ -71,7 +71,7 @@ export default function AdminTestimonialsPage() {
                   </TableCell>
                   <TableCell>{t.author_role ?? "—"}</TableCell>
                   <TableCell className="max-w-[240px] truncate text-muted-foreground">
-                    {t.quote}
+                    {t.quote ?? (t.image_url ? "(image seule)" : "—")}
                   </TableCell>
                   <TableCell>{t.display_order}</TableCell>
                   <TableCell>

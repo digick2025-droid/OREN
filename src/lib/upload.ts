@@ -24,7 +24,13 @@ export type AcceptedLogoMime = (typeof ACCEPTED_LOGO_MIME)[number];
 export const LOGO_ACCEPT_ATTR = ACCEPTED_LOGO_MIME.join(",");
 
 /** Côté le plus long de l'image après compression (px). */
-const MAX_DIMENSION = 512;
+const MAX_LOGO_DIMENSION = 512;
+/**
+ * Côté le plus long d'une capture d'écran de témoignage : plus grand
+ * qu'un logo, sinon le texte de la capture (message WhatsApp, avis…)
+ * devient illisible une fois compressé.
+ */
+const MAX_TESTIMONIAL_DIMENSION = 1280;
 /** Qualité JPEG/WebP à l'export (0–1). */
 const OUTPUT_QUALITY = 0.85;
 
@@ -35,9 +41,9 @@ export type LogoErrorCode =
   | "read_failed"
   | "decode_failed";
 
-/** Messages FR prêts à afficher (toast). */
+/** Messages FR prêts à afficher (toast). `too_large` est calculé par appelant (limite variable). */
 export const LOGO_ERROR_MESSAGES: Record<LogoErrorCode, string> = {
-  too_large: "Image trop lourde (2 Mo maximum).",
+  too_large: "Image trop lourde.",
   svg_forbidden: "Les fichiers SVG ne sont pas autorisés.",
   unsupported_type: "Format non pris en charge. Utilisez PNG, JPEG ou WebP.",
   read_failed: "Lecture du fichier impossible. Réessayez.",
@@ -48,8 +54,8 @@ export type PrepareLogoResult =
   | { ok: true; file: File }
   | { ok: false; code: LogoErrorCode; message: string };
 
-function fail(code: LogoErrorCode): PrepareLogoResult {
-  return { ok: false, code, message: LOGO_ERROR_MESSAGES[code] };
+function fail(code: LogoErrorCode, message?: string): PrepareLogoResult {
+  return { ok: false, code, message: message ?? LOGO_ERROR_MESSAGES[code] };
 }
 
 /**
@@ -89,7 +95,11 @@ async function sniffRealMime(file: File): Promise<string | null> {
  * Retombe sur le fichier d'origine si le canvas n'est pas disponible
  * ou si l'encodage échoue.
  */
-async function compressImage(file: File, mime: AcceptedLogoMime): Promise<File> {
+async function compressImage(
+  file: File,
+  mime: AcceptedLogoMime,
+  maxDimension: number,
+): Promise<File> {
   // Environnement sans DOM (SSR/test) : on ne compresse pas.
   if (typeof document === "undefined" || typeof createImageBitmap === "undefined") {
     return file;
@@ -103,7 +113,7 @@ async function compressImage(file: File, mime: AcceptedLogoMime): Promise<File> 
   }
 
   const { width, height } = bitmap;
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
+  const scale = Math.min(1, maxDimension / Math.max(width, height));
   const targetW = Math.max(1, Math.round(width * scale));
   const targetH = Math.max(1, Math.round(height * scale));
 
@@ -137,26 +147,57 @@ async function compressImage(file: File, mime: AcceptedLogoMime): Promise<File> 
   });
 }
 
-/**
- * Valide puis (si possible) compresse le logo choisi par l'utilisateur.
- * À appeler avant tout upload vers le stockage.
- */
-export async function prepareLogo(file: File): Promise<PrepareLogoResult> {
-  if (file.size > MAX_LOGO_BYTES) return fail("too_large");
+/** Contrôles communs (taille, MIME réel) partagés par tous les uploads d'image. */
+async function validate(
+  file: File,
+  maxBytes: number,
+): Promise<{ ok: true; mime: AcceptedLogoMime } | { ok: false; result: PrepareLogoResult }> {
+  if (file.size > maxBytes) {
+    const maxMo = Math.round(maxBytes / (1024 * 1024));
+    return { ok: false, result: fail("too_large", `Image trop lourde (${maxMo} Mo maximum).`) };
+  }
 
   let realMime: string | null;
   try {
     realMime = await sniffRealMime(file);
   } catch {
-    return fail("read_failed");
+    return { ok: false, result: fail("read_failed") };
   }
 
-  if (realMime === "image/svg+xml") return fail("svg_forbidden");
-  if (!realMime) return fail("decode_failed");
+  if (realMime === "image/svg+xml") return { ok: false, result: fail("svg_forbidden") };
+  if (!realMime) return { ok: false, result: fail("decode_failed") };
   if (!ACCEPTED_LOGO_MIME.includes(realMime as AcceptedLogoMime)) {
-    return fail("unsupported_type");
+    return { ok: false, result: fail("unsupported_type") };
   }
 
-  const compressed = await compressImage(file, realMime as AcceptedLogoMime);
+  return { ok: true, mime: realMime as AcceptedLogoMime };
+}
+
+/**
+ * Valide puis (si possible) compresse le logo choisi par l'utilisateur.
+ * À appeler avant tout upload vers le stockage.
+ */
+export async function prepareLogo(file: File): Promise<PrepareLogoResult> {
+  const check = await validate(file, MAX_LOGO_BYTES);
+  if (!check.ok) return check.result;
+  const compressed = await compressImage(file, check.mime, MAX_LOGO_DIMENSION);
+  return { ok: true, file: compressed };
+}
+
+/** Taille max d'une capture d'écran de témoignage, avant compression. */
+export const MAX_TESTIMONIAL_IMAGE_BYTES = 5 * 1024 * 1024; // 5 Mo
+
+/** Attribut `accept` à utiliser sur l'input file d'un témoignage. */
+export const TESTIMONIAL_IMAGE_ACCEPT_ATTR = ACCEPTED_LOGO_MIME.join(",");
+
+/**
+ * Valide puis (si possible) compresse la capture d'écran d'un témoignage.
+ * Même pipeline que le logo, mais avec une résolution de sortie plus
+ * grande : le texte de la capture doit rester lisible.
+ */
+export async function prepareTestimonialImage(file: File): Promise<PrepareLogoResult> {
+  const check = await validate(file, MAX_TESTIMONIAL_IMAGE_BYTES);
+  if (!check.ok) return check.result;
+  const compressed = await compressImage(file, check.mime, MAX_TESTIMONIAL_DIMENSION);
   return { ok: true, file: compressed };
 }

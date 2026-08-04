@@ -7,7 +7,8 @@ export interface Testimonial {
   id: string;
   author_name: string;
   author_role: string | null;
-  quote: string;
+  quote: string | null;
+  image_url: string | null;
   display_order: number;
   is_active: boolean;
   created_at: string;
@@ -51,7 +52,8 @@ export function useAdminTestimonial(id: string) {
 export interface SaveTestimonialInput {
   author_name: string;
   author_role: string | null;
-  quote: string;
+  quote: string | null;
+  image_url: string | null;
   display_order: number;
   is_active: boolean;
 }

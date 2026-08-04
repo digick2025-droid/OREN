@@ -41,7 +41,7 @@ export default async function LandingPage() {
 
   const { data: testimonials } = await supabase
     .from("testimonials")
-    .select("author_name, author_role, quote")
+    .select("id, author_name, author_role, quote, image_url")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 

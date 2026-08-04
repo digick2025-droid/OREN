@@ -1,10 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/landing/scroll-reveal";
+import { cn } from "@/lib/utils";
 
 export type LandingTestimonial = {
+  id: string;
   author_name: string;
   author_role: string | null;
-  quote: string;
+  quote: string | null;
+  image_url: string | null;
 };
 
 /* =============================================================
@@ -35,12 +38,22 @@ export function Testimonials({
 
         <div className="mt-5 space-y-3">
           {testimonials.map((t) => (
-            <ScrollReveal key={`${t.author_name}-${t.quote}`}>
-              <Card className="p-5">
-                <p className="text-[14.5px] leading-relaxed text-foreground">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <p className="mt-3 text-[13px] font-semibold text-navy">
+            <ScrollReveal key={t.id}>
+              <Card className="overflow-hidden p-5">
+                {t.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- capture d'écran à ratio libre (bucket public), pas d'intrinsic size fiable pour next/image
+                  <img
+                    src={t.image_url}
+                    alt=""
+                    className="-mx-5 -mt-5 mb-4 w-[calc(100%+2.5rem)] object-cover"
+                  />
+                ) : null}
+                {t.quote ? (
+                  <p className="text-[14.5px] leading-relaxed text-foreground">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                ) : null}
+                <p className={cn("text-[13px] font-semibold text-navy", t.quote && "mt-3")}>
                   {t.author_name}
                   {t.author_role ? (
                     <span className="font-normal text-muted-foreground">
