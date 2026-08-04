@@ -29,7 +29,6 @@ export default async function OffresPage() {
       .from("plans")
       .select("*")
       .eq("is_active", true)
-      .neq("key", "free")
       .order("sort_order"),
     supabase.auth.getUser(),
   ]);
@@ -111,14 +110,16 @@ export default async function OffresPage() {
                   >
                     <Link
                       href={
-                        plan.key === "express"
-                          ? "/express"
-                          : user
-                            ? `/paiement?plan=${plan.key}`
-                            : "/connexion"
+                        plan.key === "free"
+                          ? "/inscription"
+                          : plan.key === "express"
+                            ? "/express"
+                            : user
+                              ? `/paiement?plan=${plan.key}`
+                              : "/connexion"
                       }
                     >
-                      {t.off_choose}
+                      {plan.key === "free" ? t.land_cta_primary : t.off_choose}
                     </Link>
                   </Button>
                 )}
