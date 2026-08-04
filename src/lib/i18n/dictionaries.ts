@@ -49,6 +49,10 @@ const fr = {
   land_demo_caption:
     "Voilà ce que votre client reçoit. Propre, à votre nom, en 2 minutes.",
 
+  // Landing — témoignages
+  land_testimonials_kicker: "Ils utilisent OREN",
+  land_testimonials_title: "Des pros du terrain, pas des acteurs.",
+
   // Landing — bénéfices
   land_ben_kicker: "Pourquoi OREN",
   land_ben_title: "Vous ne vendez pas des devis. Vous gagnez des chantiers.",
@@ -588,6 +592,9 @@ const en: Dict = {
   land_demo_terms: "Quote valid 30 days · 50% deposit on order",
   land_demo_caption:
     "This is what your client receives. Clean, in your name, in 2 minutes.",
+
+  land_testimonials_kicker: "People using OREN",
+  land_testimonials_title: "Real pros in the field, not actors.",
 
   land_ben_kicker: "Why OREN",
   land_ben_title: "You don't sell quotes. You win jobs.",

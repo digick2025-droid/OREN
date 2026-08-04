@@ -13,6 +13,7 @@ import {
 import { Logo } from "@/components/brand/logo";
 import { ScrollReveal } from "@/components/landing/scroll-reveal";
 import { SocialProof } from "@/components/landing/social-proof";
+import { Testimonials } from "@/components/landing/testimonials";
 import { WhatsAppShowcase } from "@/components/landing/whatsapp-showcase";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,12 @@ export default async function LandingPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (user) redirect("/accueil");
+
+  const { data: testimonials } = await supabase
+    .from("testimonials")
+    .select("author_name, author_role, quote")
+    .eq("is_active", true)
+    .order("display_order", { ascending: true });
 
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(LANG_COOKIE)?.value);
@@ -215,6 +222,12 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+
+      <Testimonials
+        kicker={t.land_testimonials_kicker}
+        title={t.land_testimonials_title}
+        testimonials={testimonials ?? []}
+      />
 
       {/* ---------------- Comment ça marche ---------------- */}
       <section className="bg-surface py-14">

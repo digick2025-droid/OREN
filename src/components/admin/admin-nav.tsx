@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/admin/abonnements", label: "Abonnements" },
   { href: "/admin/promos", label: "Codes promo" },
   { href: "/admin/offres", label: "Offres" },
+  { href: "/admin/temoignages", label: "Témoignages" },
   { href: "/admin/paiements", label: "Paiements" },
 ];
 
