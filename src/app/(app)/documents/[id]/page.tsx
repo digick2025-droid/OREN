@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Copy, Download, Eye, FileText, Pencil, Send, Trash2 } from "lucide-react";
+import { PushInvite } from "@/components/push-invite";
 import { ScreenHeader } from "@/components/screen-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { computeCategoryTotals } from "@/lib/calculations";
 import { DOCUMENT_STATUSES, STATUS_SOLID, STATUS_VARIANT } from "@/lib/constants";
 import { formatAmount, formatDate } from "@/lib/format";
 import { statusLabel, typeLabel } from "@/lib/i18n/labels";
+import { noterProposition, peutProposer } from "@/lib/push-invite";
 import { cn } from "@/lib/utils";
 import {
   isQuotaError,
@@ -50,6 +52,7 @@ export default function DocumentDetailPage({
   const { enabled: premiumBranding } = usePlanFeature("logo");
   const [sharing, setSharing] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [invitePush, setInvitePush] = useState(false);
 
   if (isLoading || !data) {
     return (
@@ -108,6 +111,14 @@ export default function DocumentDetailPage({
       }
       if (doc.status === "brouillon") {
         updateStatus.mutate({ id: doc.id, status: "envoye" });
+
+        // Le document vient de partir : c'est le seul moment où la relance
+        // s'explique d'elle-même. Proposée à l'ouverture de l'application, la
+        // permission se fait refuser d'un réflexe — et un refus est définitif.
+        if (await peutProposer()) {
+          noterProposition();
+          setInvitePush(true);
+        }
       }
     } finally {
       setSharing(false);
@@ -346,6 +357,8 @@ export default function DocumentDetailPage({
           </Button>
         </section>
       </div>
+
+      <PushInvite open={invitePush} onClose={() => setInvitePush(false)} />
     </div>
   );
 }

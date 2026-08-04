@@ -416,6 +416,11 @@ const fr = {
   push_blocked: "Les notifications sont bloquées pour OREN dans votre navigateur.",
   push_blocked_short: "Bloqué par le navigateur",
   push_failed: "Impossible d'activer les rappels. Réessayez.",
+  push_invite_title: "Vous prévenir si personne ne répond ?",
+  push_invite_sub:
+    "OREN vous rappelle les devis restés sans réponse et les factures impayées. Rien d'autre.",
+  push_invite_yes: "Activer",
+  push_invite_later: "Plus tard",
 
   // Abonnement
   sub_title: "Abonnement",
@@ -932,6 +937,11 @@ const en: Dict = {
   push_blocked: "Notifications are blocked for OREN in your browser.",
   push_blocked_short: "Blocked by browser",
   push_failed: "Couldn't turn reminders on. Try again.",
+  push_invite_title: "Get a nudge if nobody replies?",
+  push_invite_sub:
+    "OREN reminds you about unanswered quotes and unpaid invoices. Nothing else.",
+  push_invite_yes: "Turn on",
+  push_invite_later: "Later",
 
   sub_title: "Subscription",
   off_current: "Current plan",
