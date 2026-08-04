@@ -137,7 +137,8 @@ describe("POST /api/payments/webhook", () => {
   });
 
   it("rejette un callback sans signature", async () => {
-    const { signature: _omis, ...body } = signedBody();
+    const body: Record<string, unknown> = signedBody();
+    delete body.signature;
     const response = await POST(post(body));
 
     expect(response.status).toBe(401);
