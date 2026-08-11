@@ -141,7 +141,7 @@ describe("KPayProvider.initiate", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("remonte le message d'erreur de l'API sur un refus", async () => {
+  it("remonte le code HTTP ET le message d'erreur de l'API sur un refus", async () => {
     vi.stubGlobal(
       "fetch",
       mockFetch(
@@ -153,7 +153,19 @@ describe("KPayProvider.initiate", () => {
     const result = await new KPayProvider().initiate(baseInput);
 
     expect(result.accepted).toBe(false);
-    expect(result.error).toBe("amount must not be less than 50");
+    // Le code HTTP en tete : c'est lui qui dit s'il faut corriger nos cles,
+    // notre charge utile ou attendre. Le message de l'API suit, pour le detail.
+    expect(result.error).toBe(
+      "PROVIDER_HTTP_400: amount must not be less than 50",
+    );
+  });
+
+  it("garde le code HTTP meme quand l'API ne joint aucun message", async () => {
+    vi.stubGlobal("fetch", mockFetch({ statusCode: 401 }, 401));
+
+    const result = await new KPayProvider().initiate(baseInput);
+
+    expect(result.error).toBe("PROVIDER_HTTP_401");
   });
 
   it("distingue un externalId deja utilise (409) d'un echec de paiement", async () => {

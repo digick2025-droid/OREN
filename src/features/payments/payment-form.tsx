@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/features/i18n/language-context";
+import { paymentErrorMessage } from "@/features/payments/errors";
 import { formatAmount } from "@/lib/format";
 import { isValidPhone } from "@/lib/phone";
 import type { PaymentMethod } from "@/types/database";
@@ -28,6 +29,7 @@ export interface PaymentFormProps {
     redirectUrl?: string | null;
     /** Référence de l'intention, pour suivre le paiement sans quitter la page. */
     reference?: string | null;
+    /** Code d'échec renvoyé par l'API (`INVALID_PHONE`, `PROVIDER_HTTP_401`…). */
     error?: string;
   }>;
   onSuccess: () => void;
@@ -79,7 +81,7 @@ export function PaymentForm({
     const result = await onPay({ method, phone });
     if (!result.ok) {
       setPhase({ kind: "form" });
-      toast.error(t.pay_failed);
+      toast.error(paymentErrorMessage(result.error, t));
       return;
     }
     if (result.status === "pending") {

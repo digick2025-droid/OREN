@@ -32,6 +32,23 @@ function isPaymentBody(value: unknown): value is PaymentBody {
 }
 
 /**
+ * Motif d'échec à consigner sur l'intention.
+ *
+ * Sans lui, une initiation refusée laissait en base une ligne `failed` muette :
+ * le payeur voyait « réessayez », nous ne voyions rien du tout, et il fallait
+ * les logs runtime (1 h de rétention) pour espérer comprendre. Le code de la
+ * passerelle est écrit noir sur blanc sur l'intention — le tableau de bord
+ * admin le montre, et il survit à l'incident.
+ */
+function failureOf(result: PaymentInitiation): {
+  failureReason?: string;
+  failureCode?: string;
+} {
+  if (!result.error) return {};
+  return { failureReason: result.error, failureCode: "INITIATION_REFUSED" };
+}
+
+/**
  * Traduit un échec d'initiation en réponse HTTP. `accepted === false` ⇒ la
  * passerelle a refusé (mauvais numéro, montant, indisponible…) → 402.
  */
@@ -124,7 +141,12 @@ export async function POST(request: NextRequest) {
     });
     if (!result.accepted || result.status === "failed") {
       await settlePaymentIntent(
-        { reference, providerReference: result.providerReference, status: "failed" },
+        {
+          reference,
+          providerReference: result.providerReference,
+          status: "failed",
+          ...failureOf(result),
+        },
         service,
       );
       return initiationError(result);
@@ -255,7 +277,12 @@ export async function POST(request: NextRequest) {
     });
     if (!result.accepted || result.status === "failed") {
       await settlePaymentIntent(
-        { reference, providerReference: result.providerReference, status: "failed" },
+        {
+          reference,
+          providerReference: result.providerReference,
+          status: "failed",
+          ...failureOf(result),
+        },
         service,
       );
       return initiationError(result);

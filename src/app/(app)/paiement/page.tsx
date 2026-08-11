@@ -147,7 +147,15 @@ export default function PaiementPage({
                     promoCode: promo?.code,
                   }),
                 });
-                if (!response.ok) return { ok: false };
+                if (!response.ok) {
+                  // Le code d'échec porte tout ce que le payeur peut corriger
+                  // (numéro, moyen, passerelle indisponible) : le jeter ici,
+                  // c'est le condamner à réessayer à l'identique.
+                  const failure = (await response
+                    .json()
+                    .catch(() => null)) as { error?: string } | null;
+                  return { ok: false, error: failure?.error };
+                }
                 const data = await response.json();
                 return {
                   ok: true,

@@ -10,6 +10,7 @@ import {
   toKPayPhone,
   toKPayProvider,
 } from "./payload";
+import { logInitiationRefusal } from "../log";
 
 /**
  * Fournisseur K-PAY — Mobile Money **sans quitter l'application**.
@@ -116,7 +117,8 @@ export class KPayProvider implements PaymentProvider {
         body: JSON.stringify(payload),
         cache: "no-store",
       });
-    } catch {
+    } catch (cause) {
+      logRefusal(input.reference, "réseau", String(cause));
       return failed("PROVIDER_UNREACHABLE");
     }
 
@@ -125,18 +127,28 @@ export class KPayProvider implements PaymentProvider {
       data = await response.json();
     } catch {
       // Corps illisible : seul le code HTTP nous renseigne encore.
-      if (!response.ok) return failed(`PROVIDER_HTTP_${response.status}`);
+      if (!response.ok) {
+        logRefusal(input.reference, `HTTP ${response.status}`, "corps illisible");
+        return failed(`PROVIDER_HTTP_${response.status}`);
+      }
+      logRefusal(input.reference, "réponse", "corps illisible");
       return failed("PROVIDER_BAD_RESPONSE");
     }
 
     if (!response.ok) {
+      const detail = errorMessage(data);
+      logRefusal(input.reference, `HTTP ${response.status}`, detail);
+
       // 409 = ce `externalId` a déjà servi. Ne jamais le traiter comme un
       // échec de paiement : la transaction d'origine existe et peut très bien
       // être en train d'aboutir. On laisse la réconciliation trancher.
       if (response.status === 409) return failed("DUPLICATE_REFERENCE");
-      return failed(
-        errorMessage(data) ?? `PROVIDER_HTTP_${response.status}`,
-      );
+
+      // Le code HTTP reste EN TÊTE même quand K-PAY joint un message : c'est
+      // lui qui dit s'il faut corriger nos clés (401/403), notre charge utile
+      // (400) ou attendre (5xx). Le message vient après, pour le détail.
+      const code = `PROVIDER_HTTP_${response.status}`;
+      return failed(detail ? `${code}: ${detail}` : code);
     }
 
     const body = (data ?? {}) as Record<string, unknown>;
@@ -209,6 +221,14 @@ export class KPayProvider implements PaymentProvider {
       failureCode: rawStatus.toUpperCase() === "CANCELLED" ? "CANCELLED" : undefined,
     };
   }
+}
+
+function logRefusal(
+  reference: string,
+  origin: string,
+  detail?: string,
+): void {
+  logInitiationRefusal("kpay", reference, origin, detail);
 }
 
 function asString(value: unknown): string | undefined {

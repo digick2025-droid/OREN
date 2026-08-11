@@ -67,7 +67,17 @@ export default function AdminPaiementsPage() {
 
   const exportCsv = () => {
     downloadCsv("paiements.csv", [
-      ["date", "reference", "entreprise", "objet", "montant", "reduction", "methode", "statut"],
+      [
+        "date",
+        "reference",
+        "entreprise",
+        "objet",
+        "montant",
+        "reduction",
+        "methode",
+        "statut",
+        "motif_echec",
+      ],
       ...filtered.map((i) => [
         i.created_at.slice(0, 19),
         i.reference,
@@ -77,6 +87,7 @@ export default function AdminPaiementsPage() {
         String(i.discount_fcfa),
         i.method,
         STATUS_LABEL[i.status] ?? i.status,
+        i.failure_reason ?? "",
       ]),
     ]);
   };
@@ -178,6 +189,14 @@ export default function AdminPaiementsPage() {
                     <Badge variant={STATUS_VARIANT[i.status] ?? "neutral"}>
                       {STATUS_LABEL[i.status] ?? i.status}
                     </Badge>
+                    {/* Un échec sans motif n'apprend rien : ici, on lit
+                        directement le refus de l'opérateur ou de la
+                        passerelle, sans passer par les logs. */}
+                    {i.failure_reason ? (
+                      <div className="mt-1 max-w-[220px] text-[12px] leading-snug text-muted-foreground">
+                        {i.failure_reason}
+                      </div>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))

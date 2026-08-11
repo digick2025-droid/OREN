@@ -459,6 +459,18 @@ const fr = {
   pay_wait: "Traitement en cours…",
   pay_secure: "Paiement Mobile Money sécurisé · résiliable à tout moment",
   pay_failed: "Le paiement a échoué. Réessayez.",
+  // Motifs d'échec à l'initiation : dire ce qui bloque vaut mieux qu'un
+  // « réessayez » que le client suivra dix fois sans que rien ne change.
+  pay_error_phone:
+    "Ce numéro n'est pas accepté par l'opérateur. Vérifiez-le et réessayez.",
+  pay_error_method: "Ce moyen de paiement n'est pas encore disponible.",
+  pay_error_config:
+    "Le paiement n'est pas encore activé sur ce compte. Contactez-nous.",
+  pay_error_unavailable:
+    "Le service de paiement est momentanément indisponible. Réessayez dans quelques minutes.",
+  pay_error_duplicate:
+    "Une demande est déjà en cours pour ce paiement. Vérifiez votre téléphone.",
+  pay_error_rate_limited: "Trop de tentatives. Patientez une minute.",
   pay_push_title: "Validez sur votre téléphone",
   pay_push_sub:
     "Une demande Mobile Money vient de vous être envoyée. Saisissez votre code secret pour confirmer — cette page se met à jour toute seule.",
@@ -979,6 +991,15 @@ const en: Dict = {
   pay_wait: "Processing…",
   pay_secure: "Secure Mobile Money payment · cancel anytime",
   pay_failed: "Payment failed. Try again.",
+  pay_error_phone:
+    "The carrier did not accept this number. Check it and try again.",
+  pay_error_method: "This payment method is not available yet.",
+  pay_error_config: "Payments are not enabled on this account yet. Contact us.",
+  pay_error_unavailable:
+    "The payment service is temporarily unavailable. Try again in a few minutes.",
+  pay_error_duplicate:
+    "A request is already running for this payment. Check your phone.",
+  pay_error_rate_limited: "Too many attempts. Wait a minute.",
   pay_push_title: "Approve on your phone",
   pay_push_sub:
     "A Mobile Money request was just sent to you. Enter your PIN to confirm — this page updates on its own.",

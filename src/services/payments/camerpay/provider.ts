@@ -6,6 +6,7 @@ import type {
   ProviderTransactionStatus,
 } from "../types";
 import { isRecord, normalizeStatus, pickString } from "./payload";
+import { logInitiationRefusal } from "../log";
 
 /**
  * Fournisseur CamerPay (Mobile Money Cameroun).
@@ -113,7 +114,8 @@ export class CamerPayProvider implements PaymentProvider {
         // Ne jamais mettre en cache un appel de paiement.
         cache: "no-store",
       });
-    } catch {
+    } catch (cause) {
+      logRefusal(input.reference, "réseau", String(cause));
       return {
         accepted: false,
         status: "failed",
@@ -122,19 +124,38 @@ export class CamerPayProvider implements PaymentProvider {
       };
     }
 
+    // Le corps est lu AVANT de trancher sur le code HTTP : c'est là que
+    // CamerPay explique son refus (« clé API invalide », « montant minimum »).
+    // Ne garder que le statut, c'était renvoyer un `PROVIDER_HTTP_401` nu et
+    // rouvrir l'enquête à chaque fois.
+    let data: unknown;
+    let unreadableBody = false;
+    try {
+      data = await response.json();
+    } catch {
+      unreadableBody = true;
+    }
+
     if (!response.ok) {
+      const detail = pickString(data, ["message", "error"]);
+      logRefusal(
+        input.reference,
+        `HTTP ${response.status}`,
+        detail ?? (unreadableBody ? "corps illisible" : undefined),
+      );
+      // Le code HTTP reste en tête : c'est lui qui dit s'il faut corriger nos
+      // clés (401/403), notre charge utile (400) ou attendre (5xx).
+      const code = `PROVIDER_HTTP_${response.status}`;
       return {
         accepted: false,
         status: "failed",
         providerReference: "",
-        error: `PROVIDER_HTTP_${response.status}`,
+        error: detail ? `${code}: ${detail}` : code,
       };
     }
 
-    let data: unknown;
-    try {
-      data = await response.json();
-    } catch {
+    if (unreadableBody) {
+      logRefusal(input.reference, "réponse", "corps illisible");
       return {
         accepted: false,
         status: "failed",
@@ -149,17 +170,19 @@ export class CamerPayProvider implements PaymentProvider {
       data !== null &&
       (data as Record<string, unknown>).success === false
     ) {
+      const detail = pickString(data, ["message", "error"]);
+      logRefusal(input.reference, "refus applicatif", detail);
       return {
         accepted: false,
         status: "failed",
         providerReference: "",
-        error:
-          pickString(data, ["message", "error"]) ?? "PROVIDER_REFUSED",
+        error: detail ?? "PROVIDER_REFUSED",
       };
     }
 
     const redirectUrl = pickString(data, ["pay_url"]);
     if (!redirectUrl) {
+      logRefusal(input.reference, "réponse", "aucune pay_url");
       // Sans URL de paiement le client n'a aucun moyen de payer : mieux vaut
       // un échec net qu'une intention laissée en attente pour toujours.
       return {
@@ -252,6 +275,14 @@ export class CamerPayProvider implements PaymentProvider {
     if (base === this.apiUrl) return null;
     return `${base}/payment/${uuid}/status`;
   }
+}
+
+function logRefusal(
+  reference: string,
+  origin: string,
+  detail?: string,
+): void {
+  logInitiationRefusal("camerpay", reference, origin, detail);
 }
 
 /** Nos moyens de paiement → ceux de CamerPay (la carte passe par Stripe). */

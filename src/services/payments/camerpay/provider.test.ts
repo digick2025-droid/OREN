@@ -115,3 +115,95 @@ describe("CamerPayProvider — URL de retour", () => {
     expect(body.merchant_return_url).toBe("not-a-valid-url");
   });
 });
+
+/**
+ * Un refus d'initiation doit dire POURQUOI : c'est ce motif qui est ensuite
+ * consigne sur l'intention (`failure_reason`). Un `PROVIDER_HTTP_401` nu
+ * obligeait a rouvrir l'enquete a chaque echec.
+ */
+describe("CamerPayProvider — motif d'un refus", () => {
+  const originalEnv: Record<string, string | undefined> = {};
+
+  beforeEach(() => {
+    for (const key of ENV_KEYS) originalEnv[key] = process.env[key];
+    process.env.CAMERPAY_API_URL = "https://camerpay.biz/api/payment/initiate";
+    process.env.CAMERPAY_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    for (const key of ENV_KEYS) {
+      if (originalEnv[key] === undefined) delete process.env[key];
+      else process.env[key] = originalEnv[key];
+    }
+    vi.unstubAllGlobals();
+  });
+
+  it("garde le code HTTP en tete et y joint le message de l'API", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: "Cle API invalide" }),
+      }),
+    );
+
+    const result = await new CamerPayProvider().initiate(baseInput);
+
+    expect(result.accepted).toBe(false);
+    expect(result.error).toBe("PROVIDER_HTTP_401: Cle API invalide");
+  });
+
+  it("garde le code HTTP meme quand le corps est illisible", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 502,
+        json: async () => {
+          throw new Error("not json");
+        },
+      }),
+    );
+
+    expect((await new CamerPayProvider().initiate(baseInput)).error).toBe(
+      "PROVIDER_HTTP_502",
+    );
+  });
+
+  it("distingue un 200 illisible d'un refus HTTP", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => {
+          throw new Error("not json");
+        },
+      }),
+    );
+
+    expect((await new CamerPayProvider().initiate(baseInput)).error).toBe(
+      "PROVIDER_BAD_RESPONSE",
+    );
+  });
+
+  it("remonte tel quel un refus applicatif renvoye en HTTP 200", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetchOnce({ success: false, message: "Montant minimum : 100 FCFA" }),
+    );
+
+    expect((await new CamerPayProvider().initiate(baseInput)).error).toBe(
+      "Montant minimum : 100 FCFA",
+    );
+  });
+
+  it("signale une passerelle injoignable", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+
+    expect((await new CamerPayProvider().initiate(baseInput)).error).toBe(
+      "PROVIDER_UNREACHABLE",
+    );
+  });
+});

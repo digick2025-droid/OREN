@@ -732,7 +732,12 @@ function ExpressFormContent() {
                     phone,
                   }),
                 });
-                if (!response.ok) return { ok: false };
+                if (!response.ok) {
+                  const failure = (await response
+                    .json()
+                    .catch(() => null)) as { error?: string } | null;
+                  return { ok: false, error: failure?.error };
+                }
                 const data = await response.json();
                 if (data.status === "pending" && data.redirectUrl) {
                   // Le client part payer sur CamerPay : l'état React ne
