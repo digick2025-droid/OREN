@@ -201,6 +201,13 @@ export interface Plan {
   /** Prix avant bascule "toutes les offres gratuites" — null si pas en promo. */
   promo_price_snapshot_fcfa: number | null;
   promo_per_doc_snapshot_fcfa: number | null;
+  /**
+   * Quota avant bascule "tout gratuit". `monthly_quota` null étant légitime
+   * (illimité), c'est le booléen — pas le snapshot — qui dit si l'offre est
+   * basculée.
+   */
+  promo_quota_snapshot: number | null;
+  promo_quota_snapshotted: boolean;
   created_at: string;
   updated_at: string;
 }

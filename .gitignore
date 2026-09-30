@@ -35,3 +35,6 @@ coverage
 # Secrets locaux — ne jamais versionner
 code de recuperation TWILIO.txt
 *.recovery.txt
+
+# Outils tiers locaux (Codex) — configuration de poste, pas du projet
+/.codex/

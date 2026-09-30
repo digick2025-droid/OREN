@@ -5,8 +5,11 @@
  *                                  validations (type, lignes vides).
  *   - convert_document_to_invoice: devis → facture, copie des lignes,
  *                                  refus sur une facture.
- *   - assert_quota               : quota « à vie » de l'offre gratuite (3),
- *                                  levée de QUOTA_EXCEEDED au dépassement.
+ *   - assert_quota               : plafond de l'offre active. Pendant le
+ *                                  lancement gratuit (FREE_LAUNCH), les quotas
+ *                                  sont levés en base par la migration 0036 et
+ *                                  le test vérifie l'inverse : plus aucun
+ *                                  QUOTA_EXCEEDED.
  *
  * Prérequis : instance Supabase + migrations + variables d'env
  * (voir tests/helpers/supabase-env.ts). Sinon la suite est ignorée.
@@ -14,6 +17,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { FREE_LAUNCH } from "@/lib/billing";
 import {
   adminClient,
   cleanupUsers,
@@ -176,38 +180,50 @@ describe.skipIf(!env)("RPC — create_document / convert / assert_quota", () => 
     });
   });
 
-  describe("assert_quota — offre gratuite (3 documents à vie)", () => {
-    it("bloque la création au-delà du quota à vie de l'offre gratuite", async () => {
-      // Entreprise neuve et isolée : quota gratuit = 3 documents au total.
-      const user = await createTestUser(testEnv, admin, createdUserIds, "quota");
-      const c = user.client;
-      const quotaCompany = await createCompany(c, "Entreprise Quota");
+  describe("assert_quota — plafond de l'offre active", () => {
+    it(
+      FREE_LAUNCH
+        ? "ne plafonne plus la création (lancement gratuit : quotas levés)"
+        : "bloque la création au-delà du quota à vie de l'offre gratuite",
+      async () => {
+        const user = await createTestUser(testEnv, admin, createdUserIds, "quota");
+        const c = user.client;
+        const quotaCompany = await createCompany(c, "Entreprise Quota");
 
-      const make = () =>
-        c.rpc("create_document", {
+        const make = () =>
+          c.rpc("create_document", {
+            p_company_id: quotaCompany,
+            p_payload: {
+              type: "devis",
+              items: [{ name: "x", quantity: 1, unit_price: 1000 }],
+            },
+          });
+
+        const r1 = await make();
+        const r2 = await make();
+        const r3 = await make();
+        expect(r1.error).toBeNull();
+        expect(r2.error).toBeNull();
+        expect(r3.error).toBeNull();
+
+        const r4 = await make();
+        const { error } = await c.rpc("assert_quota", {
           p_company_id: quotaCompany,
-          p_payload: {
-            type: "devis",
-            items: [{ name: "x", quantity: 1, unit_price: 1000 }],
-          },
         });
 
-      const r1 = await make();
-      const r2 = await make();
-      const r3 = await make();
-      expect(r1.error).toBeNull();
-      expect(r2.error).toBeNull();
-      expect(r3.error).toBeNull();
-
-      // 4ᵉ document → quota atteint.
-      const r4 = await make();
-      expect(r4.error?.message).toContain("QUOTA_EXCEEDED");
-
-      // assert_quota appelée directement lève aussi l'exception.
-      const { error } = await c.rpc("assert_quota", {
-        p_company_id: quotaCompany,
-      });
-      expect(error?.message).toContain("QUOTA_EXCEEDED");
-    }, 30_000);
+        if (FREE_LAUNCH) {
+          // La migration 0036 a mis `monthly_quota` à null sur toutes les
+          // offres : le 4ᵉ document passe, et assert_quota ne lève plus.
+          // Ce test est donc aussi le garde-fou de la migration : s'il
+          // échoue, c'est qu'elle n'a pas tourné sur la base visée.
+          expect(r4.error).toBeNull();
+          expect(error).toBeNull();
+        } else {
+          expect(r4.error?.message).toContain("QUOTA_EXCEEDED");
+          expect(error?.message).toContain("QUOTA_EXCEEDED");
+        }
+      },
+      30_000,
+    );
   });
 });

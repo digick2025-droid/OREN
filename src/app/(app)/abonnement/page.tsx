@@ -5,6 +5,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useI18n } from "@/features/i18n/language-context";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { formatDate } from "@/lib/format";
 import { useUsage } from "@/hooks/use-usage";
 
@@ -76,9 +77,20 @@ export default function AbonnementPage() {
           </>
         )}
 
-        <Button asChild className="w-full">
-          <Link href="/offres">{t.sub_change}</Link>
-        </Button>
+        {FREE_LAUNCH ? (
+          <Card className="border-coral/40 bg-accent/10 p-4">
+            <div className="text-[13.5px] font-extrabold text-navy">
+              {t.free_kicker} — {t.free_sub_title}
+            </div>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+              {t.free_later}
+            </p>
+          </Card>
+        ) : (
+          <Button asChild className="w-full">
+            <Link href="/offres">{t.sub_change}</Link>
+          </Button>
+        )}
       </div>
     </div>
   );

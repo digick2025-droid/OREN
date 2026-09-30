@@ -11,6 +11,7 @@ import {
   useRestorePlanPrices,
   useSetAllPlansFree,
 } from "@/hooks/use-admin-plans";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { formatAmount } from "@/lib/format";
 
 export default function AdminOffresPage() {
@@ -73,6 +74,17 @@ export default function AdminOffresPage() {
           </Button>
         )}
       </div>
+
+      {FREE_LAUNCH ? (
+        <div className="rounded-xl border-[1.5px] border-warning/40 bg-warning/10 px-4 py-3 text-[13px] text-warning-foreground">
+          <span className="font-bold">Lancement gratuit actif.</span>{" "}
+          L&rsquo;application ne présente plus aucun écran de paiement et
+          annonce l&rsquo;illimité (FREE_LAUNCH, src/lib/billing.ts).
+          Restaurer les prix ici remettrait aussi les quotas en base, alors que
+          l&rsquo;interface promet encore la gratuité : ne le faites qu&rsquo;en
+          même temps que le déploiement qui repasse FREE_LAUNCH à false.
+        </div>
+      ) : null}
 
       {inPromo ? (
         <div className="rounded-xl border-[1.5px] border-coral/30 bg-coral/10 px-4 py-3 text-[13px] font-semibold text-coral">

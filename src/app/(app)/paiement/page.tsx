@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Tag, X } from "lucide-react";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { PaymentForm } from "@/features/payments/payment-form";
 import { useI18n } from "@/features/i18n/language-context";
 import { usePlans } from "@/hooks/use-usage";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/client";
 import { formatAmount } from "@/lib/format";
 
@@ -49,6 +50,13 @@ export default function PaiementPage({
   const [promo, setPromo] = useState<{ code: string; preview: PromoPreview } | null>(
     null,
   );
+
+  // Aucun écran de paiement pendant le lancement gratuit. Plus rien ne mène
+  // ici, mais un favori ou un onglet ouvert avant le déploiement y arriverait
+  // encore : on renvoie vers /offres, qui explique la gratuité, au lieu
+  // d'afficher un formulaire de paiement mort. Placé APRÈS tous les hooks,
+  // pour ne pas en rendre l'appel conditionnel.
+  if (FREE_LAUNCH) redirect("/offres");
 
   const plan = (plans ?? []).find((p) => p.key === planKey);
 

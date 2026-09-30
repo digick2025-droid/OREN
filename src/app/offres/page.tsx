@@ -4,6 +4,8 @@ import { Check } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FREE_LAUNCH } from "@/lib/billing";
+import { APP_NAME } from "@/lib/constants";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict, type Dict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
@@ -23,6 +25,72 @@ export default async function OffresPage() {
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(LANG_COOKIE)?.value);
   const t = getDict(lang);
+
+  // Pendant le lancement gratuit il n'y a plus d'offre à comparer : la page
+  // reste en place (elle est liée depuis la home et le footer) mais dit
+  // simplement que tout est offert. On évite donc les requêtes `plans` et
+  // `subscriptions`, inutiles ici.
+  if (FREE_LAUNCH) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    return (
+      <div className="mx-auto min-h-dvh w-full max-w-md bg-surface pb-10">
+        <ScreenHeader
+          title={t.off_title}
+          backHref={user ? "/abonnement" : "/"}
+        />
+        <p className="px-4 pt-4 text-[14px] leading-relaxed text-muted-foreground">
+          {t.free_lead}
+        </p>
+
+        <div className="mt-4 px-4">
+          <Card className="relative border-2 border-coral p-5">
+            <span className="absolute -top-2.5 left-5 rounded-full bg-accent px-2.5 py-1 text-[11px] font-extrabold text-accent-foreground">
+              {t.free_badge}
+            </span>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[16px] font-extrabold text-navy">
+                {APP_NAME}
+              </span>
+              <span className="shrink-0 text-[20px] font-extrabold tabular-nums text-navy">
+                {t.free_price}{" "}
+                <small className="text-[12px] font-semibold text-muted-foreground">
+                  {t.free_price_unit}
+                </small>
+              </span>
+            </div>
+
+            <ul className="mt-4 space-y-2">
+              {[t.free_f1, t.free_f2, t.free_f3, t.free_f4].map((item) => (
+                <li
+                  key={item}
+                  className="flex items-start gap-2 text-[13.5px] leading-snug text-muted-foreground"
+                >
+                  <Check size={15} className="mt-[2px] shrink-0 text-success" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <Button asChild variant="accent" className="mt-5 w-full">
+              <Link href={user ? "/accueil" : "/inscription"}>
+                {user ? t.free_cta_app : t.land_cta_primary}
+              </Link>
+            </Button>
+            <p className="mt-2 text-center text-[11.5px] text-muted-foreground/70">
+              {t.free_note}
+            </p>
+          </Card>
+
+          <p className="mt-5 text-[12.5px] leading-relaxed text-muted-foreground/80">
+            {t.free_later}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const [{ data: plansData }, authResult] = await Promise.all([
     supabase

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 import {
   createServiceClient,
@@ -103,6 +104,13 @@ export async function POST(request: NextRequest) {
 
   // ---- Express : 500 FCFA par document, sans compte ----
   if (body.purpose === "express_document") {
+    // Lancement gratuit : le document Express n'est plus payant, le formulaire
+    // ne passe plus par ici. Un appel qui arrive quand même (onglet resté
+    // ouvert avant le déploiement, client bricolé) ne doit surtout pas créer
+    // une intention ni pousser une demande de paiement sur un téléphone.
+    if (FREE_LAUNCH) {
+      return NextResponse.json({ error: "PAYMENTS_DISABLED" }, { status: 409 });
+    }
     const { data: plan } = await supabase
       .from("plans")
       .select("per_document_price_fcfa, is_active")
@@ -211,7 +219,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "INVALID_PLAN" }, { status: 400 });
   }
 
-  if (plan.price_fcfa > 0) {
+  // Pendant le lancement gratuit, l'offre est appliquée directement quel que
+  // soit le prix en base : le prix affiché vient de `plans`, et une base où la
+  // migration 0036 n'a pas encore tourné ne doit pas se mettre à réclamer de
+  // l'argent alors que toute l'interface promet la gratuité.
+  if (!FREE_LAUNCH && plan.price_fcfa > 0) {
     // Code promo optionnel : revalidé ici (authoritatif), jamais le montant
     // envoyé tel quel par le client — même RPC que l'aperçu côté formulaire.
     let amount = plan.price_fcfa;

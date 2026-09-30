@@ -13,14 +13,18 @@
  *   - Un serveur OREN joignable sur E2E_BASE_URL (défaut http://127.0.0.1:3000).
  *     Les étapes 1–2 (création + génération PDF) tournent avec un simple
  *     `next dev`, sans Supabase.
- *   - L'étape 3 (paiement Express simulé puis partage) requiert en plus un
- *     backend complet (Supabase + PAYMENT_PROVIDER=simulated). Elle n'est
- *     jouée que si E2E_FULL=1, sinon elle est ignorée proprement.
+ *   - L'étape 3 (partage) requiert en plus un backend complet (Supabase).
+ *     Elle n'est jouée que si E2E_FULL=1, sinon elle est ignorée proprement.
+ *     Pendant le lancement gratuit (FREE_LAUNCH) elle ne traverse plus
+ *     d'écran de paiement ; sinon elle règle via PAYMENT_PROVIDER=simulated.
  *
  * Sans serveur joignable, toute la suite est ignorée (skip), pas d'échec.
  */
 
 import { expect, test, type Page } from "@playwright/test";
+// Chemin relatif volontaire : les specs Playwright ne passent pas par les
+// alias `@/` du tsconfig au même titre que le bundle Next.
+import { FREE_LAUNCH } from "../../src/lib/billing";
 
 const baseURL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3000";
 const runShareStep = process.env.E2E_FULL === "1";
@@ -109,10 +113,22 @@ test("parcours complet création → PDF → partage WhatsApp", async ({ page })
   await fillExpressQuote(page);
   await page.getByRole("button", { name: /aperçu|preview|voir/i }).first().click();
 
-  // Passe au paiement (Express) puis règle via le fournisseur simulé.
-  await page.getByRole("button", { name: /payer|pay/i }).first().click();
-  await page.getByLabel(/tel|phone|téléphone/i).first().fill("690000000");
-  await page.getByRole("button", { name: /confirmer|payer|pay/i }).first().click();
+  if (FREE_LAUNCH) {
+    // Lancement gratuit : l'aperçu mène directement au téléchargement, il n'y
+    // a plus d'étape de paiement à traverser.
+    await page
+      .getByRole("button", { name: /télécharger|download/i })
+      .first()
+      .click();
+  } else {
+    // Passe au paiement (Express) puis règle via le fournisseur simulé.
+    await page.getByRole("button", { name: /payer|pay/i }).first().click();
+    await page.getByLabel(/tel|phone|téléphone/i).first().fill("690000000");
+    await page
+      .getByRole("button", { name: /confirmer|payer|pay/i })
+      .first()
+      .click();
+  }
 
   // Écran final : partage WhatsApp.
   const shareBtn = page.getByRole("button", { name: /whatsapp|partag|envoyer|send/i });

@@ -18,7 +18,8 @@ import { WhatsAppShowcase } from "@/components/landing/whatsapp-showcase";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { SUPPORT_WHATSAPP } from "@/lib/constants";
+import { FREE_LAUNCH } from "@/lib/billing";
+import { APP_NAME, SUPPORT_WHATSAPP } from "@/lib/constants";
 import { formatAmountShort } from "@/lib/format";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict } from "@/lib/i18n/dictionaries";
@@ -71,11 +72,13 @@ export default async function LandingPage() {
   ];
 
   // Statut réel des briques produit — ne pas « promouvoir » à la légère.
+  // « Paiements » repasse en BIENTÔT pendant le lancement gratuit : aucune
+  // passerelle n'encaisse, l'annoncer disponible serait faux.
   const modules = [
     { label: t.land_plat_docs, live: true },
     { label: t.land_plat_clients, live: true },
     { label: t.land_plat_catalog, live: true },
-    { label: t.land_plat_payments, live: true },
+    { label: t.land_plat_payments, live: !FREE_LAUNCH },
     { label: t.land_plat_reports, live: true },
     { label: t.land_plat_treasury, live: false },
     { label: t.land_plat_stock, live: false },
@@ -337,10 +340,75 @@ export default async function LandingPage() {
       <section className="bg-surface py-14">
         <div className={COL}>
           <ScrollReveal>
-            <span className={KICKER}>{t.land_price_kicker}</span>
-            <h2 className={SECTION_TITLE}>{t.land_price_title}</h2>
+            <span className={KICKER}>
+              {FREE_LAUNCH ? t.free_kicker : t.land_price_kicker}
+            </span>
+            <h2 className={SECTION_TITLE}>
+              {FREE_LAUNCH ? t.free_title : t.land_price_title}
+            </h2>
           </ScrollReveal>
 
+          {FREE_LAUNCH ? (
+            <>
+              <ScrollReveal>
+                <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+                  {t.free_lead}
+                </p>
+              </ScrollReveal>
+
+              <ScrollReveal className="mt-7">
+                <Card className="relative border-2 border-coral p-[18px]">
+                  <span className="absolute -top-2.5 left-[18px] rounded-full bg-accent px-2.5 py-1 text-[11px] font-extrabold text-accent-foreground">
+                    {t.free_badge}
+                  </span>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[16.5px] font-extrabold">
+                      {APP_NAME}
+                    </span>
+                    <span className="shrink-0 text-[22px] font-extrabold tabular-nums">
+                      {t.free_price}{" "}
+                      <small className="text-[12px] font-semibold text-muted-foreground">
+                        {t.free_price_unit}
+                      </small>
+                    </span>
+                  </div>
+
+                  <ul className="mt-4 space-y-2.5">
+                    {[t.free_f1, t.free_f2, t.free_f3, t.free_f4].map(
+                      (item) => (
+                        <li
+                          key={item}
+                          className="flex items-start gap-2.5 text-[14px] leading-snug text-muted-foreground"
+                        >
+                          <Check className="mt-[3px] h-[15px] w-[15px] shrink-0 text-success" />
+                          {item}
+                        </li>
+                      ),
+                    )}
+                  </ul>
+
+                  <Button
+                    asChild
+                    variant="accent"
+                    size="lg"
+                    className="mt-5 w-full"
+                  >
+                    <Link href="/inscription">{t.land_cta_primary}</Link>
+                  </Button>
+                  <p className="mt-2.5 text-center text-[11.5px] text-muted-foreground/70">
+                    {t.free_note}
+                  </p>
+                </Card>
+              </ScrollReveal>
+
+              <ScrollReveal>
+                <p className="mt-5 text-[13px] leading-relaxed text-muted-foreground/80">
+                  {t.free_later}
+                </p>
+              </ScrollReveal>
+            </>
+          ) : (
+            <>
           <div className="mt-6 space-y-3.5">
             {plans.map((plan) => (
               <ScrollReveal key={plan.name}>
@@ -385,6 +453,8 @@ export default async function LandingPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </ScrollReveal>
+            </>
+          )}
         </div>
       </section>
 

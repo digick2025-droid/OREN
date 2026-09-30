@@ -33,6 +33,7 @@ import {
   remainingToPay,
   type LineCategory,
 } from "@/lib/calculations";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { METIERS, type Metier } from "@/lib/catalog-templates";
 import { DEFAULT_COMPANY_COLOR } from "@/lib/constants";
 import { formatAmount } from "@/lib/format";
@@ -686,22 +687,36 @@ function ExpressFormContent() {
                 srcDoc={buildHtml()}
                 className="pointer-events-none h-[420px] w-full origin-top"
               />
-              <div className="absolute inset-x-0 bottom-0 flex h-28 items-end justify-center bg-gradient-to-t from-white to-transparent pb-4">
-                <span className="flex items-center gap-1.5 rounded-full bg-brand-navy px-4 py-2 text-[12.5px] font-bold text-white">
-                  <Lock size={13} /> {t.xpdf_lock}{" "}
-                  {formatAmount(EXPRESS_PRICE)}
-                </span>
-              </div>
+              {/* Pendant le lancement gratuit il n'y a rien à déverrouiller :
+                  ni voile de fin d'aperçu, ni prix. */}
+              {FREE_LAUNCH ? null : (
+                <div className="absolute inset-x-0 bottom-0 flex h-28 items-end justify-center bg-gradient-to-t from-white to-transparent pb-4">
+                  <span className="flex items-center gap-1.5 rounded-full bg-brand-navy px-4 py-2 text-[12.5px] font-bold text-white">
+                    <Lock size={13} /> {t.xpdf_lock}{" "}
+                    {formatAmount(EXPRESS_PRICE)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <Button
               variant="accent"
               size="lg"
               className="w-full"
-              onClick={() => setStep("pay")}
+              onClick={() => setStep(FREE_LAUNCH ? "done" : "pay")}
             >
-              {isFacture ? t.xpdf_pay_f : t.xpdf_pay}{" "}
-              {formatAmount(EXPRESS_PRICE)}
+              {FREE_LAUNCH ? (
+                isFacture ? (
+                  t.free_x_download_f
+                ) : (
+                  t.free_x_download
+                )
+              ) : (
+                <>
+                  {isFacture ? t.xpdf_pay_f : t.xpdf_pay}{" "}
+                  {formatAmount(EXPRESS_PRICE)}
+                </>
+              )}
             </Button>
 
             <p className="text-center text-[12.5px] text-muted-foreground/70">
@@ -715,7 +730,10 @@ function ExpressFormContent() {
         </>
       )}
 
-      {step === "pay" && (
+      {/* Étape paiement — inatteignable pendant le lancement gratuit
+          (l'aperçu mène directement au téléchargement). Conservée telle
+          quelle pour le retour des offres payantes. */}
+      {!FREE_LAUNCH && step === "pay" && (
         <>
           <ScreenHeader title={t.pay_title} onBack={() => setStep("preview")} />
           <div className="px-4 pt-4">

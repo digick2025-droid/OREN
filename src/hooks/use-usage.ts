@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useCompanyOrNull } from "@/features/company/company-context";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/client";
 import type { Plan, PlanFeature, Usage } from "@/types/database";
 
@@ -30,12 +31,17 @@ export function useUsage() {
 /**
  * Vérifie si l'offre active donne accès à une fonctionnalité.
  * Retourne aussi loading pour éviter d'afficher le verrou avant de savoir.
+ *
+ * Pendant le lancement gratuit, tout est ouvert sans consulter l'offre : la
+ * réponse ne dépend donc pas de `plans.features` en base, que la migration
+ * 0036 laisse volontairement intacte (elle est éditable par l'admin).
  */
 export function usePlanFeature(feature: PlanFeature): {
   enabled: boolean;
   loading: boolean;
 } {
   const { data: usage, isLoading } = useUsage();
+  if (FREE_LAUNCH) return { enabled: true, loading: false };
   return {
     enabled: usage?.features.includes(feature) ?? false,
     loading: isLoading,
