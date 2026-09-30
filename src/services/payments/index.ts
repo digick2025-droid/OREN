@@ -1,6 +1,7 @@
 import { SimulatedPaymentProvider } from "./simulated";
 import { CamerPayProvider } from "./camerpay/provider";
 import { KPayProvider } from "./kpay/provider";
+import { MonetbilProvider } from "./monetbil/provider";
 import type { PaymentProvider } from "./types";
 
 /**
@@ -8,6 +9,7 @@ import type { PaymentProvider } from "./types";
  *   - "simulated" (défaut MVP) : règle de façon synchrone.
  *   - "kpay"                   : Mobile Money SANS quitter l'application
  *                                (demande poussée sur le téléphone du client).
+ *   - "monetbil"               : Mobile Money par redirection Monetbil.
  *   - "camerpay"               : Mobile Money par redirection vers leur page.
  *
  * La bascule est une simple variable d'environnement : les intentions déjà
@@ -19,6 +21,8 @@ export function getPaymentProvider(): PaymentProvider {
   switch (provider) {
     case "kpay":
       return new KPayProvider();
+    case "monetbil":
+      return new MonetbilProvider();
     case "camerpay":
       return new CamerPayProvider();
     case "simulated":
