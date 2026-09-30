@@ -22,7 +22,7 @@ const fr = {
     "Créez un devis professionnel en 2 minutes, envoyez-le sur WhatsApp, et donnez à vos clients l'image sérieuse qui fait la différence.",
   land_cta_primary: "Commencer gratuitement",
   land_cta_secondary: "Créer un devis rapide",
-  land_cta_note: "Entièrement gratuit · sans carte bancaire",
+  land_cta_note: "Gratuit pendant le lancement · sans carte bancaire",
   land_proof_title: "Conçu au Cameroun, pour les pros du terrain",
   land_proof_note:
     "Pensé pour le chantier, pas pour le bureau : ça marche sur votre téléphone.",
@@ -137,10 +137,10 @@ const fr = {
   // (src/lib/billing.ts). Les clés land_price_* ci-dessus restent en place
   // pour le jour où les offres payantes reviennent.
   free_kicker: "Offre de lancement",
-  free_title: "Tout OREN, gratuitement.",
+  free_title: "Tout OREN, gratuit pendant le lancement.",
   free_lead:
-    "Le temps de brancher un moyen de paiement vraiment adapté au terrain, OREN est entièrement gratuit. Pas d'essai limité, pas de carte bancaire : toutes les fonctions, pour tout le monde.",
-  free_badge: "Gratuit",
+    "Le temps de brancher un moyen de paiement vraiment adapté au terrain, OREN est entièrement gratuit : toutes les fonctions, aucun plafond, sans carte bancaire. C'est une période, pas un tarif définitif — et vous saurez quand elle se termine.",
+  free_badge: "Gratuit pendant le lancement",
   free_price: "0",
   free_price_unit: "FCFA / mois",
   free_f1: "Devis, proformas et factures illimités",
@@ -160,7 +160,7 @@ const fr = {
   land_final_sub:
     "Créez votre premier devis maintenant. C'est gratuit, et ça prend 2 minutes.",
   land_final_note:
-    "Entièrement gratuit · sans carte bancaire · sans engagement",
+    "Gratuit pendant le lancement · sans carte bancaire · sans engagement",
   land_foot_support: "Support WhatsApp :",
   land_foot_note:
     "OREN — une marque DIGICK · Conçu pour les professionnels d'Afrique.",
@@ -550,7 +550,7 @@ const fr = {
   xdl_wa: "Envoyer sur WhatsApp",
   xdl_acc_title: "Gardez tous vos devis au même endroit",
   xdl_acc_sub:
-    "Créez un compte gratuit : vos devis restent enregistrés, vous retrouvez tous vos documents et vos clients au même endroit, sans limite.",
+    "Créez un compte gratuit : vos devis restent enregistrés, et vous retrouvez tous vos documents et vos clients au même endroit.",
   xdl_create: "Créer mon compte gratuit",
   xdl_another: "Créer un autre devis",
   x_need_company: "Entrez le nom de votre entreprise",
@@ -602,7 +602,7 @@ const en: Dict = {
     "Create a professional quote in 2 minutes, send it on WhatsApp, and give your clients the serious image that makes the difference.",
   land_cta_primary: "Start for free",
   land_cta_secondary: "Create a quick quote",
-  land_cta_note: "Completely free · no bank card",
+  land_cta_note: "Free during launch · no bank card",
   land_proof_title: "Built in Cameroon, for pros in the field",
   land_proof_note:
     "Designed for the job site, not the office: it works on your phone.",
@@ -706,10 +706,10 @@ const en: Dict = {
   land_price_compare: "Compare plans in detail",
 
   free_kicker: "Launch offer",
-  free_title: "All of OREN, free.",
+  free_title: "All of OREN, free during launch.",
   free_lead:
-    "While we hook up a payment method that truly fits the field, OREN is completely free. No limited trial, no bank card: every feature, for everyone.",
-  free_badge: "Free",
+    "While we hook up a payment method that truly fits the field, OREN is completely free: every feature, no cap, no bank card. It's a period, not a permanent price — and you'll know when it ends.",
+  free_badge: "Free during launch",
   free_price: "0",
   free_price_unit: "FCFA / mo",
   free_f1: "Unlimited quotes, proformas and invoices",
@@ -727,7 +727,7 @@ const en: Dict = {
   land_final_title: "Ready to win your next job?",
   land_final_sub:
     "Create your first quote now. It's free, and it takes 2 minutes.",
-  land_final_note: "Completely free · no bank card · no commitment",
+  land_final_note: "Free during launch · no bank card · no commitment",
   land_foot_support: "WhatsApp support:",
   land_foot_note:
     "OREN — a DIGICK brand · Built for professionals across Africa.",
