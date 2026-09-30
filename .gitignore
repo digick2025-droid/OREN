@@ -38,3 +38,6 @@ code de recuperation TWILIO.txt
 
 # Outils tiers locaux (Codex) — configuration de poste, pas du projet
 /.codex/
+
+# Scratch de la CLI Supabase
+/supabase/.temp/
