@@ -85,7 +85,7 @@ export default async function LandingPage() {
     { label: t.land_plat_ai, live: false },
   ];
 
-  // Tarifs alignés sur la table `plans` (express 500/doc, pro 3 000, startup 5 000).
+  // Tarifs alignés sur la table `plans` (express 500/doc, pro 2 900, startup 4 900).
   const plans = [
     {
       name: t.land_price_free_name,
@@ -105,7 +105,7 @@ export default async function LandingPage() {
     },
     {
       name: t.land_price_pro_name,
-      price: 3000,
+      price: 2900,
       unit: t.land_price_unit_month,
       desc: t.land_price_pro_desc,
       href: "/offres",
@@ -113,7 +113,7 @@ export default async function LandingPage() {
     },
     {
       name: t.land_price_startup_name,
-      price: 5000,
+      price: 4900,
       unit: t.land_price_unit_month,
       desc: t.land_price_startup_desc,
       href: "/offres",

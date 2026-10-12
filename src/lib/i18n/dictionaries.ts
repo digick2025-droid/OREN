@@ -22,7 +22,7 @@ const fr = {
     "Créez un devis professionnel en 2 minutes, envoyez-le sur WhatsApp, et donnez à vos clients l'image sérieuse qui fait la différence.",
   land_cta_primary: "Commencer gratuitement",
   land_cta_secondary: "Créer un devis rapide",
-  land_cta_note: "Gratuit pendant le lancement · sans carte bancaire",
+  land_cta_note: "3 documents offerts · sans carte bancaire",
   land_proof_title: "Conçu au Cameroun, pour les pros du terrain",
   land_proof_note:
     "Pensé pour le chantier, pas pour le bureau : ça marche sur votre téléphone.",
@@ -94,13 +94,13 @@ const fr = {
     "Vos documents et vos clients vous appartiennent. Protégés, jamais revendus, accessibles uniquement par vous.",
   land_obj4_q: "« Ça coûte combien ? »",
   land_obj4_a:
-    "Rien, pour le moment : OREN est entièrement gratuit pendant le lancement, sans carte bancaire et sans plafond. Les offres payantes viendront plus tard, et vous serez prévenu à l'avance.",
+    "Gratuit pour commencer : 3 documents offerts, sans carte bancaire. Vous ne payez que si OREN vous fait gagner de l'argent.",
 
   // Landing — plateforme
   land_plat_kicker: "Une vraie plateforme",
   land_plat_title: "Pas juste des devis. Toute votre activité.",
   land_plat_lead:
-    "Clients, catalogue, rapports : OREN gère déjà l'essentiel de votre entreprise. Paiements, trésorerie, stocks et intelligence artificielle arrivent.",
+    "Clients, catalogue, paiements, rapports : OREN gère déjà l'essentiel de votre entreprise. Trésorerie, stocks et intelligence artificielle arrivent.",
   land_plat_live: "DISPO",
   land_plat_soon: "BIENTÔT",
   land_plat_docs: "Devis & factures",
@@ -159,8 +159,7 @@ const fr = {
   land_final_title: "Prêt à décrocher votre prochain chantier ?",
   land_final_sub:
     "Créez votre premier devis maintenant. C'est gratuit, et ça prend 2 minutes.",
-  land_final_note:
-    "Gratuit pendant le lancement · sans carte bancaire · sans engagement",
+  land_final_note: "3 documents offerts · sans carte bancaire · sans engagement",
   land_foot_support: "Support WhatsApp :",
   land_foot_note:
     "OREN — une marque DIGICK · Conçu pour les professionnels d'Afrique.",
@@ -543,14 +542,14 @@ const fr = {
   xpdf_pay: "Télécharger ce devis ·",
   xpdf_or: "ou",
   xpdf_create: "créez votre compte gratuit",
-  xpdf_gift: "— vos documents restent enregistrés, à retrouver à tout moment",
+  xpdf_gift: "— 3 devis offerts, à retrouver à tout moment",
   xdl_title: "Votre devis est prêt",
   xdl_sub: "Téléchargez-le ou envoyez-le directement à votre client.",
   xdl_download: "Télécharger le PDF",
   xdl_wa: "Envoyer sur WhatsApp",
   xdl_acc_title: "Gardez tous vos devis au même endroit",
   xdl_acc_sub:
-    "Créez un compte gratuit : vos devis restent enregistrés, et vous retrouvez tous vos documents et vos clients au même endroit.",
+    "Créez un compte gratuit : vos 3 prochains devis seront offerts, et vous retrouverez tous vos documents et clients au même endroit.",
   xdl_create: "Créer mon compte gratuit",
   xdl_another: "Créer un autre devis",
   x_need_company: "Entrez le nom de votre entreprise",
@@ -602,7 +601,7 @@ const en: Dict = {
     "Create a professional quote in 2 minutes, send it on WhatsApp, and give your clients the serious image that makes the difference.",
   land_cta_primary: "Start for free",
   land_cta_secondary: "Create a quick quote",
-  land_cta_note: "Free during launch · no bank card",
+  land_cta_note: "3 free documents · no bank card",
   land_proof_title: "Built in Cameroon, for pros in the field",
   land_proof_note:
     "Designed for the job site, not the office: it works on your phone.",
@@ -668,12 +667,12 @@ const en: Dict = {
     "Your documents and your clients belong to you. Protected, never resold, accessible only by you.",
   land_obj4_q: "“How much does it cost?”",
   land_obj4_a:
-    "Nothing, for now: OREN is completely free during launch, no bank card and no cap. Paid plans will come later, and you'll be told well in advance.",
+    "Free to start: 3 documents on us, no bank card. You only pay if OREN makes you money.",
 
   land_plat_kicker: "A real platform",
   land_plat_title: "Not just quotes. Your whole business.",
   land_plat_lead:
-    "Clients, catalog, reports: OREN already runs the essentials of your business. Payments, cash flow, stock and artificial intelligence are coming.",
+    "Clients, catalog, payments, reports: OREN already runs the essentials of your business. Cash flow, stock and artificial intelligence are coming.",
   land_plat_live: "LIVE",
   land_plat_soon: "SOON",
   land_plat_docs: "Quotes & invoices",
@@ -727,7 +726,7 @@ const en: Dict = {
   land_final_title: "Ready to win your next job?",
   land_final_sub:
     "Create your first quote now. It's free, and it takes 2 minutes.",
-  land_final_note: "Free during launch · no bank card · no commitment",
+  land_final_note: "3 free documents · no bank card · no commitment",
   land_foot_support: "WhatsApp support:",
   land_foot_note:
     "OREN — a DIGICK brand · Built for professionals across Africa.",
@@ -1089,7 +1088,7 @@ const en: Dict = {
   xpdf_pay: "Download this quote ·",
   xpdf_or: "or",
   xpdf_create: "Create an account",
-  xpdf_gift: "— your documents stay saved, available anytime",
+  xpdf_gift: "— get 3 free documents",
   xdl_title: "Your quote is ready",
   xdl_sub: "Download it or send it straight to your client.",
   xdl_download: "Download PDF",

@@ -26,4 +26,4 @@
  * les vérifier — elles pourriraient sans bruit jusqu'au jour où on les
  * rallume.
  */
-export const FREE_LAUNCH: boolean = true;
+export const FREE_LAUNCH: boolean = false;
