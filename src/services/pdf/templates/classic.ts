@@ -63,15 +63,22 @@ export const classicTemplate: PdfTemplate = {
     const net = doc.subtotal - doc.discount;
     const remaining = Math.max(doc.total - doc.advanceAmount, 0);
 
-    const logoSize = branded ? 64 : 52;
+    // Logo en image de fond « contain » : html2canvas (export PDF) ignore
+    // object-fit et étirerait un logo non carré.
+    const logoBg = company.logoUrl
+      ? `background:url('${esc(company.logoUrl).replace(/'/g, "%27")}') center/contain no-repeat`
+      : "";
+
     const logo = company.logoUrl
-      ? `<img src="${esc(company.logoUrl)}" alt="" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;border-radius:12px${branded ? `;padding:5px;background:#fff;border:1px solid ${softBorder};box-shadow:0 1px 4px rgba(15,23,42,.06)` : ""}" />`
-      : `<div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,${color},${tint(color, "CC")});color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${esc((company.name || "D").charAt(0).toUpperCase())}</div>`;
+      ? branded
+        ? `<div style="width:64px;height:64px;flex-shrink:0;padding:5px;border-radius:12px;background:#fff;border:1px solid ${softBorder};box-shadow:0 1px 4px rgba(15,23,42,.06)"><div style="width:100%;height:100%;${logoBg}"></div></div>`
+        : `<div style="width:52px;height:52px;flex-shrink:0;${logoBg}"></div>`
+      : `<div style="width:52px;height:52px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,${color},${tint(color, "CC")});color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${esc((company.name || "D").charAt(0).toUpperCase())}</div>`;
 
     // Filigrane Pro : le logo en très grand, à peine visible, centré
     const watermark = branded
       ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none">
-           <img src="${esc(company.logoUrl)}" alt="" style="width:105mm;max-height:105mm;object-fit:contain;opacity:.045" />
+           <div style="width:105mm;height:105mm;opacity:.045;${logoBg}"></div>
          </div>`
       : "";
 
@@ -193,7 +200,7 @@ export const classicTemplate: PdfTemplate = {
     const footer = branded
       ? `<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E2E8F0;margin-top:18px;padding-top:10px">
            <div style="display:flex;align-items:center;gap:8px">
-             <img src="${esc(company.logoUrl)}" alt="" style="width:18px;height:18px;object-fit:contain;border-radius:4px" />
+             <div style="width:18px;height:18px;${logoBg}"></div>
              <span style="font-size:9.5px;font-weight:700;color:#0F172A">${esc(company.name)}</span>
              ${company.slogan ? `<span style="font-size:9px;color:#94A3B8">· ${esc(company.slogan)}</span>` : ""}
            </div>
@@ -219,7 +226,8 @@ export const classicTemplate: PdfTemplate = {
   body { font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif; background: #fff; color: #0F172A; }
   .page { width: 210mm; min-height: 297mm; padding: 16mm 15mm 12mm; margin: 0 auto; position: relative; }
   .content { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: calc(297mm - 28mm); }
-  @media print { .page { width: auto; min-height: auto; } .content { min-height: calc(297mm - 28mm); } }
+  tr { break-inside: avoid; page-break-inside: avoid; }
+  @media print { .page { width: auto; min-height: auto; } .content { min-height: calc(297mm - 30mm); } }
 </style>
 </head>
 <body>
@@ -283,7 +291,7 @@ export const classicTemplate: PdfTemplate = {
   ${conditions}
   ${note}
 
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:34px;gap:20px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:26px;gap:20px">
     <div style="flex:1;font-size:9.5px;color:#94A3B8;line-height:1.6">
       <div>${legalNote}</div>
       ${legalBits ? `<div style="margin-top:4px;font-weight:600;color:#64748B">${legalBits}</div>` : ""}
