@@ -665,6 +665,12 @@ const fr = {
   off_per_doc: "{n} F le document",
   buydoc_pro_hint: "Dès {n} documents par mois, Pro est moins cher : {quota} documents pour {price}, soit {per} le document.",
   buydoc_pro_cta: "Voir Pro",
+  pay_monthly: "Mensuel",
+  pay_annual: "Annuel",
+  pay_annual_gift: "2 mois offerts",
+  pay_annual_note: "12 mois pour {total}, soit {monthly} par mois. Votre quota reste mensuel.",
+  pay_error_promo_monthly: "Les codes promo s'appliquent au paiement mensuel.",
+  off_annual: "Ou {price} F à l'année · 2 mois offerts",
 };
 
 export type Dict = typeof fr;
@@ -1289,6 +1295,12 @@ const en: Dict = {
   off_per_doc: "{n} F per document",
   buydoc_pro_hint: "From {n} documents a month, Pro costs less: {quota} documents for {price}, i.e. {per} per document.",
   buydoc_pro_cta: "See Pro",
+  pay_monthly: "Monthly",
+  pay_annual: "Yearly",
+  pay_annual_gift: "2 months free",
+  pay_annual_note: "12 months for {total}, i.e. {monthly} a month. Your quota stays monthly.",
+  pay_error_promo_monthly: "Promo codes apply to monthly billing.",
+  off_annual: "Or {price} F per year · 2 months free",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };

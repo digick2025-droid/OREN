@@ -10,7 +10,7 @@ import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict, type Dict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
 import { formatAmountShort } from "@/lib/format";
-import { pricePerDay, pricePerDocument } from "@/lib/pricing";
+import { annualPrice, pricePerDay, pricePerDocument } from "@/lib/pricing";
 import type { Plan } from "@/types/database";
 
 function planPrice(t: Dict, plan: Plan): string {
@@ -218,6 +218,23 @@ export default async function OffresPage() {
                   </Button>
                 )}
               </div>
+              {/* Annuel : proposé en second, jamais imposé. */}
+              {!FREE_LAUNCH &&
+              !isCurrent &&
+              !plan.per_document_price_fcfa &&
+              plan.price_fcfa > 0 ? (
+                <Link
+                  href={
+                    user
+                      ? `/paiement?plan=${plan.key}&periode=annuel`
+                      : `/connexion?next=${encodeURIComponent(`/paiement?plan=${plan.key}&periode=annuel`)}`
+                  }
+                  className="mt-2.5 block text-center text-[13px] font-semibold text-navy underline"
+                >
+                  {t.off_annual
+                    .replace("{price}", formatAmountShort(annualPrice(plan.price_fcfa)))}
+                </Link>
+              ) : null}
               <p className="mt-2 text-center text-[11.5px] text-muted-foreground/70">
                 {content.audience}
               </p>

@@ -245,7 +245,12 @@ export default function AdminPaiementsPage() {
                     )}
                   </TableCell>
                   <TableCell>{i.company_name ?? "—"}</TableCell>
-                  <TableCell>{PURPOSE_LABEL[i.purpose] ?? i.purpose}</TableCell>
+                  <TableCell>
+                    {PURPOSE_LABEL[i.purpose] ?? i.purpose}
+                    {i.purpose === "subscription" && i.billing_months === 12
+                      ? " · annuel"
+                      : null}
+                  </TableCell>
                   <TableCell className="font-semibold text-navy">
                     {formatAmount(i.amount - i.discount_fcfa)}
                     {i.discount_fcfa > 0 ? (

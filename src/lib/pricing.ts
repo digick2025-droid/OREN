@@ -26,3 +26,10 @@ export function breakEvenDocuments(monthlyFcfa: number, unitFcfa: number): numbe
   if (unitFcfa <= 0) return Infinity;
   return Math.floor(monthlyFcfa / unitFcfa) + 1;
 }
+
+/** Abonnement annuel : 12 mois pour le prix de 10 (2 mois offerts). */
+export const ANNUAL_PAID_MONTHS = 10;
+
+export function annualPrice(monthlyFcfa: number): number {
+  return monthlyFcfa * ANNUAL_PAID_MONTHS;
+}
