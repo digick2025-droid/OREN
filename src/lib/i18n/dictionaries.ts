@@ -486,11 +486,11 @@ const fr = {
 
   // Parrainage
   set_referral: "Parrainage",
-  set_referral_hint: "1 document offert pour chaque ami parrainé",
+  set_referral_hint: "Documents et mois offerts pour chaque ami parrainé",
   referral_title: "Parrainage",
-  referral_pitch_title: "Parrainez, gagnez des documents.",
+  referral_pitch_title: "Parrainez, gagnez des documents et des mois offerts.",
   referral_pitch_sub:
-    "Vous gagnez 1 document offert chaque fois qu'un ami inscrit avec votre lien envoie son premier document. Sans limite.",
+    "1 document offert quand un ami inscrit avec votre lien envoie son premier document, et 1 mois d'abonnement offert quand il s'abonne. Sans limite. Votre lien figure aussi en bas de vos devis gratuits.",
   referral_your_code: "Votre code",
   referral_copy: "Copier le lien",
   referral_share: "Partager",
@@ -501,7 +501,7 @@ const fr = {
   referral_stat_rewarded: "Récompensés",
   referral_stat_credits: "Documents offerts",
   referral_rules:
-    "Un document offert s'utilise une fois votre quota atteint. Le parrainage est réservé aux nouveaux comptes.",
+    "Un document offert s'utilise une fois votre quota atteint. Le mois offert prolonge votre abonnement, ou vous fait passer en Pro pendant un mois ; il est accordé une fois le paiement de votre ami vérifié. Le parrainage est réservé aux nouveaux comptes.",
   pay_sub_prefix: "Abonnement",
   pay_amount: "Montant à payer",
   pay_method: "Opérateur Mobile Money",
@@ -1126,11 +1126,11 @@ const en: Dict = {
 
   // Referral
   set_referral: "Referral",
-  set_referral_hint: "1 free document for every friend you refer",
+  set_referral_hint: "Free documents and months for every friend you refer",
   referral_title: "Referral",
-  referral_pitch_title: "Refer friends, earn documents.",
+  referral_pitch_title: "Refer friends, earn documents and free months.",
   referral_pitch_sub:
-    "You earn 1 free document each time a friend who signed up with your link sends their first document. No limit.",
+    "1 free document when a friend who signed up with your link sends their first document, and 1 free month when they subscribe. No limit. Your link also appears at the bottom of your free quotes.",
   referral_your_code: "Your code",
   referral_copy: "Copy link",
   referral_share: "Share",
@@ -1141,7 +1141,7 @@ const en: Dict = {
   referral_stat_rewarded: "Rewarded",
   referral_stat_credits: "Free documents",
   referral_rules:
-    "A free document is used once your quota is reached. Referrals are for new accounts only.",
+    "A free document is used once your quota is reached. The free month extends your subscription, or gives you Pro for a month; it is granted once your friend's payment is verified. Referrals are for new accounts only.",
   pay_sub_prefix: "Subscription",
   pay_amount: "Amount to pay",
   pay_method: "Mobile Money operator",

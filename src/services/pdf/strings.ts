@@ -30,7 +30,8 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
     latePenalty:
       "Tout retard de paiement entraîne des pénalités au taux légal en vigueur (art. OHADA).",
     regime: "Régime",
-    footer: "Généré avec OREN",
+    footer: "Créé avec OREN",
+    footerCta: "Devis et factures pro en 2 minutes, gratuitement :",
   },
   en: {
     quote: "QUOTE",
@@ -61,6 +62,7 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
     latePenalty:
       "Late payment incurs penalties at the applicable legal rate (OHADA).",
     regime: "Regime",
-    footer: "Generated with OREN",
+    footer: "Created with OREN",
+    footerCta: "Pro quotes and invoices in 2 minutes, for free:",
   },
 };

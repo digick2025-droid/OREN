@@ -169,7 +169,15 @@ export const classicTemplate: PdfTemplate = {
 
     const legalNote = doc.type === "facture" ? s.latePenalty : s.quoteValidity;
 
-    // Pied de page : branding entreprise en Startup, sinon mention OREN centrée
+    // Pied de page. Offre avec logo : à l'image de l'entreprise, sans aucune
+    // mention OREN (avantage payant). Sinon : « Créé avec OREN » et le lien
+    // d'inscription — chaque devis envoyé au client fait connaître OREN, et
+    // le lien de parrainage récompense l'artisan qui l'a envoyé.
+    const signupUrl = (company.signupUrl ?? "").replace(/^https?:\/\//, "");
+    const orenMention = `<div style="text-align:center;border-top:1px solid #E2E8F0;margin-top:18px;padding-top:10px;line-height:1.5">
+           <div style="font-size:10px;font-weight:700;color:#475569">${s.footer}</div>
+           ${signupUrl ? `<div style="font-size:9.5px;color:#64748B">${s.footerCta} <span style="font-weight:700;color:${color}">${esc(signupUrl)}</span></div>` : ""}
+         </div>`;
     const footer = branded
       ? `<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E2E8F0;margin-top:18px;padding-top:10px">
            <div style="display:flex;align-items:center;gap:8px">
@@ -177,9 +185,10 @@ export const classicTemplate: PdfTemplate = {
              <span style="font-size:9.5px;font-weight:700;color:#0F172A">${esc(company.name)}</span>
              ${company.slogan ? `<span style="font-size:9px;color:#94A3B8">· ${esc(company.slogan)}</span>` : ""}
            </div>
-           <div style="font-size:8.5px;color:#CBD5E1">${s.footer}</div>
          </div>`
-      : `<div style="text-align:center;font-size:9px;color:#94A3B8;border-top:1px solid #E2E8F0;margin-top:18px;padding-top:10px">${s.footer}</div>`;
+      : company.premiumBranding
+        ? ""
+        : orenMention;
 
     const slogan = company.slogan
       ? branded

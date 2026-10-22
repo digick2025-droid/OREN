@@ -38,7 +38,9 @@ import {
   useDocument,
   useUpdateDocumentStatus,
 } from "@/hooks/use-documents";
+import { useReferralInfo } from "@/hooks/use-referral";
 import { usePlanFeature, useUsage } from "@/hooks/use-usage";
+import { buildReferralLink } from "@/lib/referral";
 import {
   downloadPdf as downloadPdfFile,
   previewDocument,
@@ -66,6 +68,10 @@ export default function DocumentDetailPage({
   // Branding Startup : la fonctionnalité « logo » débloque le PDF personnalisé
   const { enabled: premiumBranding } = usePlanFeature("logo");
   const { data: usage } = useUsage();
+  // Lien de parrainage dans la mention « Créé avec OREN » des PDF gratuits :
+  // un client de l'artisan qui s'inscrit par là le fait récompenser. Sans
+  // code (chargement, migration absente), simple lien d'inscription.
+  const { data: referral } = useReferralInfo();
   const [sharing, setSharing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [invitePush, setInvitePush] = useState(false);
@@ -88,7 +94,12 @@ export default function DocumentDetailPage({
   const buildDocHtml = () =>
     renderDocumentHtml(
       toPdfData(doc, items),
-      toPdfCompany(company, { premiumBranding }),
+      toPdfCompany(company, {
+        premiumBranding,
+        signupUrl: referral?.code
+          ? buildReferralLink(window.location.origin, referral.code)
+          : `${window.location.origin}/inscription`,
+      }),
       lang,
     );
 

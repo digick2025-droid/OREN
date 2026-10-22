@@ -19,6 +19,13 @@ export interface PdfCompany {
   taxRegime: string;
   /** Offre Startup : branding complet (filigrane, pied de page à l'image de l'entreprise) */
   premiumBranding: boolean;
+  /**
+   * Lien d'inscription affiché dans la mention « Créé avec OREN » des
+   * documents gratuits — le lien de parrainage de l'entreprise quand il est
+   * connu. Vide : mention sans lien. Ignoré en branding premium (aucune
+   * mention OREN).
+   */
+  signupUrl?: string;
 }
 
 export type PdfLineCategory = "article" | "main_oeuvre" | "transport";
@@ -85,6 +92,7 @@ export interface PdfStrings {
   latePenalty: string;
   regime: string;
   footer: string;
+  footerCta: string;
 }
 
 export interface PdfTemplate {

@@ -265,6 +265,7 @@ function ExpressFormContent() {
         nif: "",
         taxRegime: "",
         premiumBranding: false,
+        signupUrl: `${window.location.origin}/inscription`,
       },
       lang,
     );
