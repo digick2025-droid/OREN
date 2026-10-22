@@ -27,3 +27,17 @@
  * rallume.
  */
 export const FREE_LAUNCH: boolean = false;
+
+/**
+ * Paiement manuel — le client envoie lui-même l'argent au numéro marchand
+ * (Orange Money / MTN MoMo) puis saisit la référence reçue par SMS.
+ *
+ * Ce qui est payé est débloqué immédiatement ; l'admin contrôle ensuite la
+ * référence dans /admin/paiements et annule une fausse déclaration
+ * (migration 0039). Prend le pas sur PAYMENT_PROVIDER tant qu'aucune
+ * passerelle n'encaisse de façon fiable.
+ *
+ * Constante de code, comme FREE_LAUNCH, pour la même raison : l'état du
+ * paiement part avec le commit qui l'a décidé.
+ */
+export const MANUAL_PAYMENT: boolean = true;

@@ -40,6 +40,8 @@ export interface PaymentIntentInput {
   purpose: PaymentPurpose;
   /** Clé de l'offre (abonnement). */
   planKey?: string;
+  /** Paiement manuel : référence de transaction recopiée du SMS. */
+  transactionRef?: string;
   metadata?: Record<string, string>;
 }
 

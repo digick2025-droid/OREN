@@ -24,7 +24,11 @@ export type FunnelEvent =
   | "express_started"
   | "express_preview"
   | "express_done"
-  | "express_to_signup";
+  | "express_to_signup"
+  | "paywall_view"
+  | "payment_started"
+  | "payment_succeeded"
+  | "payment_failed";
 
 type Props = Record<string, string | number | boolean>;
 

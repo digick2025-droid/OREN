@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Search } from "lucide-react";
+import { toast } from "sonner";
+import { Check, Download, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAdminPaymentIntents } from "@/hooks/use-admin-payment-intents";
+import {
+  useAdminPaymentIntents,
+  useReviewManualPayment,
+} from "@/hooks/use-admin-payment-intents";
 import { formatAmount, formatDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
 
@@ -32,6 +36,12 @@ const STATUS_LABEL: Record<string, string> = {
   failed: "Échoué",
 };
 
+const REVIEW_LABEL: Record<string, string> = {
+  to_review: "À vérifier",
+  confirmed: "Vérifié",
+  rejected: "Annulé",
+};
+
 const PURPOSE_LABEL: Record<string, string> = {
   subscription: "Abonnement",
   express_document: "Express",
@@ -40,6 +50,30 @@ const PURPOSE_LABEL: Record<string, string> = {
 
 export default function AdminPaiementsPage() {
   const { data: intents, isLoading } = useAdminPaymentIntents();
+  const review = useReviewManualPayment();
+  const toReviewCount = (intents ?? []).filter(
+    (i) => i.review_status === "to_review",
+  ).length;
+
+  const decide = (reference: string, decision: "confirmed" | "rejected") => {
+    // L'annulation retire l'abonnement ou les documents : jamais d'un clic.
+    if (
+      decision === "rejected" &&
+      !window.confirm(
+        "Annuler ce paiement ? L'abonnement repassera en gratuit, ou les documents achetés seront retirés.",
+      )
+    ) {
+      return;
+    }
+    review.mutate(
+      { reference, decision },
+      {
+        onSuccess: () =>
+          toast.success(decision === "confirmed" ? "Paiement vérifié" : "Paiement annulé"),
+        onError: () => toast.error("Action impossible. Réessayez."),
+      },
+    );
+  };
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [from, setFrom] = useState("");
@@ -54,11 +88,17 @@ export default function AdminPaiementsPage() {
       if (
         q &&
         !i.reference.toLowerCase().includes(q) &&
+        !(i.transaction_ref ?? "").toLowerCase().includes(q) &&
+        !(i.phone ?? "").includes(q) &&
         !(i.company_name ?? "").toLowerCase().includes(q)
       ) {
         return false;
       }
-      if (statusFilter !== "all" && i.status !== statusFilter) return false;
+      if (statusFilter === "to_review") {
+        if (i.review_status !== "to_review") return false;
+      } else if (statusFilter !== "all" && i.status !== statusFilter) {
+        return false;
+      }
       const createdTime = new Date(i.created_at).getTime();
       if (fromTime !== null && createdTime < fromTime) return false;
       if (toTime !== null && createdTime >= toTime) return false;
@@ -78,6 +118,9 @@ export default function AdminPaiementsPage() {
         "methode",
         "statut",
         "motif_echec",
+        "reference_sms",
+        "telephone",
+        "verification",
       ],
       ...filtered.map((i) => [
         i.created_at.slice(0, 19),
@@ -89,6 +132,9 @@ export default function AdminPaiementsPage() {
         i.method,
         STATUS_LABEL[i.status] ?? i.status,
         i.failure_reason ?? "",
+        i.transaction_ref ?? "",
+        i.phone ?? "",
+        i.review_status ? (REVIEW_LABEL[i.review_status] ?? "") : "",
       ]),
     ]);
   };
@@ -107,6 +153,18 @@ export default function AdminPaiementsPage() {
         </Button>
       </div>
 
+      {toReviewCount > 0 && statusFilter !== "to_review" ? (
+        <button
+          type="button"
+          onClick={() => setStatusFilter("to_review")}
+          className="w-full rounded-xl border border-coral/40 bg-accent/10 px-4 py-3 text-left text-[13.5px] font-semibold text-navy"
+        >
+          {toReviewCount} paiement{toReviewCount > 1 ? "s" : ""} manuel
+          {toReviewCount > 1 ? "s" : ""} à vérifier : comparez la référence SMS
+          avec vos relevés Orange Money / MTN MoMo. Afficher →
+        </button>
+      ) : null}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search
@@ -116,13 +174,14 @@ export default function AdminPaiementsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par référence ou entreprise…"
+            placeholder="Référence, référence SMS, téléphone ou entreprise…"
             className="pl-10"
           />
         </div>
         <div className="sm:w-44">
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="all">Tous les statuts</option>
+            <option value="to_review">À vérifier (manuel)</option>
             <option value="pending">En attente</option>
             <option value="succeeded">Réussi</option>
             <option value="failed">Échoué</option>
@@ -173,7 +232,17 @@ export default function AdminPaiementsPage() {
                 <TableRow key={i.id}>
                   <TableCell>{formatDate(i.created_at)}</TableCell>
                   <TableCell className="font-mono text-[12.5px] text-muted-foreground">
-                    {i.reference}
+                    {i.transaction_ref ? (
+                      <>
+                        <div className="font-semibold text-navy">
+                          SMS : {i.transaction_ref}
+                        </div>
+                        {i.phone ? <div>{i.phone}</div> : null}
+                        <div className="text-[11px]">{i.reference}</div>
+                      </>
+                    ) : (
+                      i.reference
+                    )}
                   </TableCell>
                   <TableCell>{i.company_name ?? "—"}</TableCell>
                   <TableCell>{PURPOSE_LABEL[i.purpose] ?? i.purpose}</TableCell>
@@ -196,6 +265,31 @@ export default function AdminPaiementsPage() {
                     {i.failure_reason ? (
                       <div className="mt-1 max-w-[220px] text-[12px] leading-snug text-muted-foreground">
                         {i.failure_reason}
+                      </div>
+                    ) : null}
+                    {i.review_status && i.review_status !== "to_review" ? (
+                      <div className="mt-1 text-[12px] text-muted-foreground">
+                        {REVIEW_LABEL[i.review_status]}
+                      </div>
+                    ) : null}
+                    {i.review_status === "to_review" ? (
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={review.isPending}
+                          onClick={() => decide(i.reference, "confirmed")}
+                        >
+                          <Check size={14} /> Confirmer
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={review.isPending}
+                          onClick={() => decide(i.reference, "rejected")}
+                        >
+                          <X size={14} /> Annuler
+                        </Button>
                       </div>
                     ) : null}
                   </TableCell>

@@ -13,6 +13,7 @@ import { useI18n } from "@/features/i18n/language-context";
 import { usePlans, useUsage } from "@/hooks/use-usage";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { formatAmount } from "@/lib/format";
+import { breakEvenDocuments, pricePerDocument } from "@/lib/pricing";
 
 const MAX_QUANTITY = 10;
 /** Repli si le plan « express » n'a pas de prix en base (même défaut que l'API). */
@@ -36,6 +37,10 @@ export default function PaiementDocumentPage() {
   const unitPrice =
     plans?.find((p) => p.key === "express")?.per_document_price_fcfa ||
     DEFAULT_UNIT_PRICE;
+  const proPlan = plans?.find((p) => p.key === "pro" && p.price_fcfa > 0);
+  const proPerDoc = proPlan
+    ? pricePerDocument(proPlan.price_fcfa, proPlan.monthly_quota)
+    : null;
 
   return (
     <div>
@@ -77,6 +82,22 @@ export default function PaiementDocumentPage() {
           </div>
         </Card>
 
+        {/* Comparaison qui rend le forfait évident, sans rien bloquer : le
+            document à l'unité reste le chemin le plus court. */}
+        {proPlan && proPerDoc !== null ? (
+          <Link
+            href="/paiement?plan=pro"
+            className="block rounded-xl border border-dashed border-border px-4 py-3 text-[13px] text-muted-foreground hover:border-navy"
+          >
+            {t.buydoc_pro_hint
+              .replace("{n}", String(breakEvenDocuments(proPlan.price_fcfa, unitPrice)))
+              .replace("{quota}", String(proPlan.monthly_quota))
+              .replace("{price}", formatAmount(proPlan.price_fcfa))
+              .replace("{per}", formatAmount(proPerDoc))}{" "}
+            <span className="font-semibold text-navy underline">{t.buydoc_pro_cta}</span>
+          </Link>
+        ) : null}
+
         {usage && usage.credits > 0 ? (
           <p className="text-[12.5px] text-muted-foreground/70">
             {t.buydoc_balance.replace("{n}", String(usage.credits))}
@@ -85,7 +106,8 @@ export default function PaiementDocumentPage() {
 
         <PaymentForm
           amount={unitPrice * quantity}
-          onPay={async ({ method, phone }) => {
+          purpose="document_credit"
+          onPay={async ({ method, phone, transactionRef }) => {
             const response = await fetch("/api/payments", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -94,6 +116,7 @@ export default function PaiementDocumentPage() {
                 quantity,
                 method,
                 phone,
+                transactionRef,
               }),
             });
             if (!response.ok) {

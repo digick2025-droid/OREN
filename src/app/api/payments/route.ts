@@ -7,6 +7,7 @@ import {
   getPaymentProvider,
   settlePaymentIntent,
 } from "@/services/payments";
+import { normalizeTransactionRef } from "@/lib/manual-payment";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PaymentInitiation } from "@/services/payments";
@@ -21,6 +22,8 @@ interface PaymentBody {
   planKey?: string;
   /** Code promo (abonnement uniquement) — revalidé authoritativement ici. */
   promoCode?: string;
+  /** Paiement manuel : référence de transaction recopiée du SMS. */
+  transactionRef?: string;
 }
 
 function isPaymentBody(value: unknown): value is PaymentBody {
@@ -51,6 +54,17 @@ function failureOf(result: PaymentInitiation): {
 } {
   if (!result.error) return {};
   return { failureReason: result.error, failureCode: "INITIATION_REFUSED" };
+}
+
+/**
+ * Échec d'écriture de l'intention. Une violation d'unicité vient de l'index
+ * sur `transaction_ref` (0039) : cette référence a déjà servi.
+ */
+function intentInsertError(error: { code?: string }): NextResponse {
+  if (error.code === "23505") {
+    return NextResponse.json({ error: "TRANSACTION_REF_USED" }, { status: 409 });
+  }
+  return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
 }
 
 /**
@@ -93,6 +107,19 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const provider = getPaymentProvider();
 
+  // Paiement manuel : la référence est validée AVANT d'écrire l'intention,
+  // puis enregistrée pour le contrôle admin et l'unicité (0039). Exigée
+  // seulement là où l'on encaisse : un passage à l'offre gratuite n'en a pas.
+  const manualRef = normalizeTransactionRef(body.transactionRef);
+  const manualFields: { transaction_ref?: string; review_status?: "to_review" } =
+    provider.name === "manual" && manualRef
+      ? { transaction_ref: manualRef, review_status: "to_review" }
+      : {};
+  const missingManualRef = () =>
+    provider.name === "manual" && !manualRef
+      ? NextResponse.json({ error: "INVALID_TRANSACTION_REF" }, { status: 400 })
+      : null;
+
   // Les intentions de paiement sont écrites avec le service role : elles ne
   // doivent jamais être créées ni modifiées depuis le navigateur (un payeur
   // express est d'ailleurs anonyme et n'a aucune session).
@@ -125,6 +152,9 @@ export async function POST(request: NextRequest) {
     }
     const amount = plan.per_document_price_fcfa ?? 500;
 
+    const refError = missingManualRef();
+    if (refError) return refError;
+
     const reference = `OREN-EXP-${randomUUID()}`;
     // L'intention est persistée AVANT l'appel passerelle : si le webhook
     // arrive avant que `initiate()` ne rende la main, la référence existe déjà.
@@ -138,9 +168,10 @@ export async function POST(request: NextRequest) {
         currency: "XAF",
         method: body.method,
         phone: body.phone ?? null,
+        ...manualFields,
       });
     if (intentError) {
-      return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
+      return intentInsertError(intentError);
     }
 
     const result = await provider.initiate({
@@ -149,6 +180,7 @@ export async function POST(request: NextRequest) {
       currency: "XAF",
       method: body.method,
       phone: body.phone,
+      transactionRef: body.transactionRef,
       purpose: "express_document",
     });
     if (!result.accepted || result.status === "failed") {
@@ -236,6 +268,9 @@ export async function POST(request: NextRequest) {
     const unitPrice = unitPlan.per_document_price_fcfa || 500;
     const amount = unitPrice * quantity;
 
+    const refError = missingManualRef();
+    if (refError) return refError;
+
     const reference = `OREN-DOC-${randomUUID()}`;
     const { error: intentError } = await service
       .from("payment_intents")
@@ -249,9 +284,10 @@ export async function POST(request: NextRequest) {
         currency: "XAF",
         method: body.method,
         phone: body.phone ?? null,
+        ...manualFields,
       });
     if (intentError) {
-      return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
+      return intentInsertError(intentError);
     }
 
     const result = await provider.initiate({
@@ -260,6 +296,7 @@ export async function POST(request: NextRequest) {
       currency: "XAF",
       method: body.method,
       phone: body.phone,
+      transactionRef: body.transactionRef,
       purpose: "document_credit",
     });
     if (!result.accepted || result.status === "failed") {
@@ -362,6 +399,9 @@ export async function POST(request: NextRequest) {
       discountFcfa = preview.discount_fcfa ?? 0;
     }
 
+    const refError = missingManualRef();
+    if (refError) return refError;
+
     const reference = `OREN-SUB-${randomUUID()}`;
     const { error: intentError } = await service
       .from("payment_intents")
@@ -377,9 +417,10 @@ export async function POST(request: NextRequest) {
         phone: body.phone ?? null,
         promo_code_id: promoCodeId,
         discount_fcfa: discountFcfa,
+        ...manualFields,
       });
     if (intentError) {
-      return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
+      return intentInsertError(intentError);
     }
 
     const result = await provider.initiate({
@@ -388,6 +429,7 @@ export async function POST(request: NextRequest) {
       currency: "XAF",
       method: body.method,
       phone: body.phone,
+      transactionRef: body.transactionRef,
       purpose: "subscription",
       planKey: plan.key,
     });

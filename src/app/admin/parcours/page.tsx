@@ -7,6 +7,7 @@ import { useAdminFunnel } from "@/hooks/use-admin-funnel";
 import {
   ACCOUNT_FUNNEL,
   EXPRESS_FUNNEL,
+  PAYMENT_FUNNEL,
   buildFunnel,
   formatDuration,
   type FunnelRow,
@@ -167,6 +168,10 @@ export default function AdminParcoursPage() {
                 title="Parcours Express"
                 rows={buildFunnel(EXPRESS_FUNNEL, stats.steps)}
               />
+              <FunnelCard
+                title="Paiement"
+                rows={buildFunnel(PAYMENT_FUNNEL, stats.steps)}
+              />
               <Card>
                 <CardContent className="space-y-2 p-5 text-[13.5px]">
                   <div className="flex justify-between">
@@ -179,10 +184,10 @@ export default function AdminParcoursPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
-                      Bloqués par le quota
+                      Paiements échoués
                     </span>
                     <span className="font-semibold text-navy tabular-nums">
-                      {stats.steps.quota_blocked ?? 0}
+                      {stats.steps.payment_failed ?? 0}
                     </span>
                   </div>
                 </CardContent>

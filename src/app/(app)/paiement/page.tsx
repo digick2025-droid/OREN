@@ -143,7 +143,8 @@ export default function PaiementPage({
 
             <PaymentForm
               amount={amount}
-              onPay={async ({ method, phone }) => {
+              purpose="subscription"
+              onPay={async ({ method, phone, transactionRef }) => {
                 const response = await fetch("/api/payments", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -152,6 +153,7 @@ export default function PaiementPage({
                     planKey: plan.key,
                     method,
                     phone,
+                    transactionRef,
                     promoCode: promo?.code,
                   }),
                 });

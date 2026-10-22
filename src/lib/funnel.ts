@@ -27,6 +27,13 @@ export const ACCOUNT_FUNNEL: FunnelStep[] = [
   { event: "document_shared", label: "Document envoyé" },
 ];
 
+export const PAYMENT_FUNNEL: FunnelStep[] = [
+  { event: "quota_blocked", label: "Quota atteint" },
+  { event: "paywall_view", label: "Page de paiement vue" },
+  { event: "payment_started", label: "Paiement envoyé" },
+  { event: "payment_succeeded", label: "Paiement réussi" },
+];
+
 export const EXPRESS_FUNNEL: FunnelStep[] = [
   { event: "express_started", label: "Express ouvert" },
   { event: "express_preview", label: "Aperçu affiché" },

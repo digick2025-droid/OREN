@@ -800,7 +800,8 @@ function ExpressFormContent() {
             <PaymentForm
               amount={EXPRESS_PRICE}
               buttonLabel={`${t.pay_confirm} ${formatAmount(EXPRESS_PRICE)}`}
-              onPay={async ({ method, phone }) => {
+              purpose="express_document"
+              onPay={async ({ method, phone, transactionRef }) => {
                 const response = await fetch("/api/payments", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -808,6 +809,7 @@ function ExpressFormContent() {
                     purpose: "express_document",
                     method,
                     phone,
+                    transactionRef,
                   }),
                 });
                 if (!response.ok) {

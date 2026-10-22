@@ -1,3 +1,5 @@
+import { MANUAL_PAYMENT } from "@/lib/billing";
+import { ManualPaymentProvider } from "./manual";
 import { SimulatedPaymentProvider } from "./simulated";
 import { CamerPayProvider } from "./camerpay/provider";
 import { KPayProvider } from "./kpay/provider";
@@ -17,6 +19,9 @@ import type { PaymentProvider } from "./types";
  * réconciliation refuse d'interroger une passerelle qui n'est pas la leur.
  */
 export function getPaymentProvider(): PaymentProvider {
+  // Paiement manuel (billing.ts) : prioritaire tant qu'aucune passerelle
+  // n'encaisse de façon fiable.
+  if (MANUAL_PAYMENT) return new ManualPaymentProvider();
   const provider = process.env.PAYMENT_PROVIDER ?? "simulated";
   switch (provider) {
     case "kpay":
