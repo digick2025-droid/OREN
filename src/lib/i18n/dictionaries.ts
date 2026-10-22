@@ -596,6 +596,17 @@ const fr = {
   first_step2: "Ajoutez vos prestations et leurs prix",
   first_step3: "Envoyez le PDF sur WhatsApp",
   first_cta: "Créer mon premier devis",
+  cat_type_label: "Type",
+  q_unit_price: "Prix unitaire",
+  q_more_options: "Intitulé, remise, acompte, conditions",
+  quota_reached_lifetime: "Vos documents gratuits sont utilisés",
+  quota_reached_month: "Limite du mois atteinte",
+  quota_reached_sub: "Votre saisie est gardée sur ce téléphone : choisissez une offre pour générer ce document.",
+  quota_last_one: "C'est votre dernier document gratuit.",
+  quota_see_offers: "Voir les offres pour générer",
+  created_title: "Votre document est prêt",
+  created_sub: "Envoyez-le maintenant à votre client sur WhatsApp.",
+  created_nudge: "Ajoutez votre téléphone : il apparaîtra sur vos PDF",
 };
 
 export type Dict = typeof fr;
@@ -1151,6 +1162,17 @@ const en: Dict = {
   first_step2: "Add your services and prices",
   first_step3: "Send the PDF on WhatsApp",
   first_cta: "Create my first quote",
+  cat_type_label: "Type",
+  q_unit_price: "Unit price",
+  q_more_options: "Title, discount, deposit, terms",
+  quota_reached_lifetime: "Your free documents are used up",
+  quota_reached_month: "Monthly limit reached",
+  quota_reached_sub: "Your input is kept on this phone: pick a plan to generate this document.",
+  quota_last_one: "This is your last free document.",
+  quota_see_offers: "See plans to generate",
+  created_title: "Your document is ready",
+  created_sub: "Send it to your client on WhatsApp now.",
+  created_nudge: "Add your phone number: it will appear on your PDFs",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };

@@ -1,9 +1,20 @@
 "use client";
 
 import { use, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Download, Eye, FileText, Pencil, Send, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronRight,
+  Copy,
+  Download,
+  Eye,
+  FileText,
+  Pencil,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { markDocumentShared } from "@/components/install-prompt";
 import { PushInvite } from "@/components/push-invite";
 import { ScreenHeader } from "@/components/screen-header";
@@ -43,6 +54,7 @@ export default function DocumentDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const justCreated = useSearchParams().get("created") === "1";
   const company = useCompany();
   const { t, lang } = useI18n();
   const { data, isLoading } = useDocument(id);
@@ -163,6 +175,18 @@ export default function DocumentDetailPage({
       <ScreenHeader title={doc.number} backHref="/documents" />
 
       <div className="space-y-5 px-4 pb-10 pt-5">
+        {justCreated && doc.status === "brouillon" && (
+          <div className="rounded-xl bg-success/10 px-4 py-3">
+            <div className="flex items-center gap-2 text-[15px] font-extrabold text-navy">
+              <CheckCircle2 size={18} className="text-success" />
+              {t.created_title}
+            </div>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              {t.created_sub}
+            </p>
+          </div>
+        )}
+
         <Card className="p-4">
           <div className="flex items-start justify-between">
             <div>
@@ -322,6 +346,17 @@ export default function DocumentDetailPage({
           >
             <Send size={18} /> {sharing ? t.pdf_generating : t.wa_send}
           </Button>
+          {/* Un PDF sans numéro de contact fait amateur : on le signale au
+              moment où le document part, avec un accès direct au profil. */}
+          {justCreated && !company.phone && (
+            <Link
+              href="/entreprise"
+              className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border px-3.5 py-2.5 text-[12.5px] font-semibold text-muted-foreground hover:border-navy hover:text-navy"
+            >
+              {t.created_nudge}
+              <ChevronRight size={16} className="shrink-0" />
+            </Link>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <Button variant="outline" onClick={openPdf}>
               <Eye size={17} /> {t.doc_preview}
