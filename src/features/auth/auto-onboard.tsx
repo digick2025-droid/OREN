@@ -44,7 +44,8 @@ export function AutoOnboard() {
         console.error("[auto-onboard] company insert failed:", error);
         return;
       }
-      router.replace("/accueil");
+      // Compte tout neuf : direction le premier devis, la promesse du produit.
+      router.replace("/nouveau?type=devis");
       router.refresh();
     }
 

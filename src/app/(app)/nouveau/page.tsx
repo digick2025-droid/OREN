@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DocumentBuilder } from "@/features/documents/document-builder";
 import { useI18n } from "@/features/i18n/language-context";
+import { useDocument } from "@/hooks/use-documents";
 import { usePlanFeature } from "@/hooks/use-usage";
 import type { DocumentType } from "@/types/database";
 
@@ -20,9 +21,9 @@ function parseType(value: string | undefined): DocumentType {
 export default function NouveauDocumentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; from?: string }>;
 }) {
-  const { type } = use(searchParams);
+  const { type, from } = use(searchParams);
   const { t } = useI18n();
   const docType = parseType(type);
   const proformaAccess = usePlanFeature("proforma");
@@ -49,5 +50,27 @@ export default function NouveauDocumentPage({
     );
   }
 
+  if (from) return <DuplicateBuilder type={docType} sourceId={from} />;
   return <DocumentBuilder type={docType} />;
+}
+
+/**
+ * « Dupliquer » : la création part d'une copie du document source (client,
+ * lignes, options). Un nouveau numéro est attribué à la génération.
+ */
+function DuplicateBuilder({
+  type,
+  sourceId,
+}: {
+  type: DocumentType;
+  sourceId: string;
+}) {
+  const { t } = useI18n();
+  const { data, isError } = useDocument(sourceId);
+
+  // Source introuvable (supprimée, lien abîmé) : un devis vierge plutôt
+  // qu'un écran bloqué.
+  if (isError) return <DocumentBuilder type={type} />;
+  if (!data) return <ScreenHeader title={t.doc_duplicate} backHref="/documents" />;
+  return <DocumentBuilder type={type} source={data} />;
 }

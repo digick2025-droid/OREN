@@ -19,6 +19,42 @@ export default function AccueilPage() {
   const proformaAccess = usePlanFeature("proforma");
 
   const recent = (documents ?? []).slice(0, 3);
+  // Compte sans aucun document : un seul chemin, le premier devis. Les
+  // raccourcis facture / proforma / client viendront quand ils auront un sens.
+  const firstRun = documents !== undefined && documents.length === 0;
+
+  if (firstRun) {
+    const steps = [t.first_step1, t.first_step2, t.first_step3];
+    return (
+      <div className="px-4 pt-6">
+        <p className="text-[14px] text-muted-foreground">{t.home_hello}</p>
+        <h1 className="text-[24px] font-extrabold text-navy">
+          {company.owner_name || company.name}
+        </h1>
+
+        <Card className="mt-5 p-5">
+          <h2 className="text-[18px] font-extrabold text-navy">
+            {t.first_title}
+          </h2>
+          <ol className="mt-4 space-y-3">
+            {steps.map((step, index) => (
+              <li key={step} className="flex items-center gap-3 text-[14px]">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-[13px] font-extrabold text-primary-foreground">
+                  {index + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          <Button asChild variant="accent" size="lg" className="mt-5 w-full">
+            <Link href="/nouveau?type=devis">
+              <Plus size={19} /> {t.first_cta}
+            </Link>
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-6">

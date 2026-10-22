@@ -1,9 +1,21 @@
 "use client";
 
 import { use, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Download, Eye, FileText, Pencil, Send, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronRight,
+  Copy,
+  Download,
+  Eye,
+  FileText,
+  Pencil,
+  Send,
+  Trash2,
+} from "lucide-react";
+import { markDocumentShared } from "@/components/install-prompt";
 import { PushInvite } from "@/components/push-invite";
 import { ScreenHeader } from "@/components/screen-header";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +37,7 @@ import {
   useDocument,
   useUpdateDocumentStatus,
 } from "@/hooks/use-documents";
-import { usePlanFeature } from "@/hooks/use-usage";
+import { usePlanFeature, useUsage } from "@/hooks/use-usage";
 import {
   downloadPdf as downloadPdfFile,
   previewDocument,
@@ -43,6 +55,7 @@ export default function DocumentDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const justCreated = useSearchParams().get("created") === "1";
   const company = useCompany();
   const { t, lang } = useI18n();
   const { data, isLoading } = useDocument(id);
@@ -51,6 +64,7 @@ export default function DocumentDetailPage({
   const deleteDocument = useDeleteDocument();
   // Branding Startup : la fonctionnalité « logo » débloque le PDF personnalisé
   const { enabled: premiumBranding } = usePlanFeature("logo");
+  const { data: usage } = useUsage();
   const [sharing, setSharing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [invitePush, setInvitePush] = useState(false);
@@ -110,6 +124,7 @@ export default function DocumentDetailPage({
         // Appareil sans partage de fichier (desktop) : lien wa.me texte court.
         window.open(buildDocumentShareLink(doc, company.name, lang), "_blank");
       }
+      markDocumentShared();
       if (doc.status === "brouillon") {
         updateStatus.mutate({ id: doc.id, status: "envoye" });
 
@@ -134,7 +149,9 @@ export default function DocumentDetailPage({
       },
       onError: (error) => {
         if (isQuotaError(error)) {
-          toast.error(t.toast_limit);
+          toast.error(
+            usage?.quota_lifetime ? t.toast_limit_lifetime : t.toast_limit,
+          );
           router.push(FREE_LAUNCH ? "/offres" : "/paiement/document");
           return;
         }
@@ -144,6 +161,7 @@ export default function DocumentDetailPage({
   };
 
   const remove = () => {
+    if (!window.confirm(t.doc_delete_confirm)) return;
     deleteDocument.mutate(doc.id, {
       onSuccess: () => {
         toast.success(t.toast_deleted);
@@ -158,6 +176,18 @@ export default function DocumentDetailPage({
       <ScreenHeader title={doc.number} backHref="/documents" />
 
       <div className="space-y-5 px-4 pb-10 pt-5">
+        {justCreated && doc.status === "brouillon" && (
+          <div className="rounded-xl bg-success/10 px-4 py-3">
+            <div className="flex items-center gap-2 text-[15px] font-extrabold text-navy">
+              <CheckCircle2 size={18} className="text-success" />
+              {t.created_title}
+            </div>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              {t.created_sub}
+            </p>
+          </div>
+        )}
+
         <Card className="p-4">
           <div className="flex items-start justify-between">
             <div>
@@ -304,26 +334,43 @@ export default function DocumentDetailPage({
           </Card>
         )}
 
+        {/* La promesse produit, c'est l'envoi WhatsApp : il passe en premier.
+            Le reste (aperçu, PDF, modifications) vient ensuite, la
+            suppression tout en bas, derrière une confirmation. */}
         <section className="space-y-3">
           <Button
-            className="w-full"
-            onClick={() => void downloadPdf()}
-            disabled={downloading}
-          >
-            <Download size={17} />{" "}
-            {downloading ? t.pdf_generating : t.doc_download}
-          </Button>
-          <Button variant="outline" className="w-full" onClick={openPdf}>
-            <Eye size={17} /> {t.doc_preview}
-          </Button>
-          <Button
             variant="whatsapp"
+            size="lg"
             className="w-full"
             onClick={() => void shareWhatsApp()}
             disabled={sharing}
           >
-            <Send size={17} /> {sharing ? t.pdf_generating : t.wa_send}
+            <Send size={18} /> {sharing ? t.pdf_generating : t.wa_send}
           </Button>
+          {/* Un PDF sans numéro de contact fait amateur : on le signale au
+              moment où le document part, avec un accès direct au profil. */}
+          {justCreated && !company.phone && (
+            <Link
+              href="/entreprise"
+              className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border px-3.5 py-2.5 text-[12.5px] font-semibold text-muted-foreground hover:border-navy hover:text-navy"
+            >
+              {t.created_nudge}
+              <ChevronRight size={16} className="shrink-0" />
+            </Link>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="outline" onClick={openPdf}>
+              <Eye size={17} /> {t.doc_preview}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void downloadPdf()}
+              disabled={downloading}
+            >
+              <Download size={17} />{" "}
+              {downloading ? t.pdf_generating : t.doc_download_short}
+            </Button>
+          </div>
           <Button
             variant="outline"
             className="w-full"
@@ -344,18 +391,18 @@ export default function DocumentDetailPage({
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => router.push(`/nouveau?type=${doc.type}`)}
+            onClick={() => router.push(`/nouveau?type=${doc.type}&from=${doc.id}`)}
           >
             <Copy size={17} /> {t.doc_duplicate}
           </Button>
-          <Button
-            variant="destructive"
-            className="w-full"
+          <button
+            type="button"
+            className="flex w-full items-center justify-center gap-1.5 py-2 text-[13px] font-semibold text-danger disabled:opacity-50"
             onClick={remove}
             disabled={deleteDocument.isPending}
           >
-            <Trash2 size={17} /> {t.doc_delete}
-          </Button>
+            <Trash2 size={15} /> {t.doc_delete}
+          </button>
         </section>
       </div>
 

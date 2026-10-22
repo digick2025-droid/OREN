@@ -82,8 +82,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    // La page demandée est conservée dans `next` : après connexion,
+    // l'utilisateur revient là où il allait au lieu de repartir de l'accueil.
     const url = request.nextUrl.clone();
+    const requested = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     url.pathname = "/connexion";
+    url.search = "";
+    if (requested !== "/accueil") url.searchParams.set("next", requested);
     return NextResponse.redirect(url);
   }
 

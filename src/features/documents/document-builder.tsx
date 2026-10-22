@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   Check,
   ChevronDown,
+  Lock,
   Minus,
   Plus,
-  Save,
   Search,
   SlidersHorizontal,
   Trash2,
@@ -40,7 +41,7 @@ import {
   useUpdateDocument,
 } from "@/hooks/use-documents";
 import { useSetMetier } from "@/hooks/use-metier";
-import { usePlanFeature } from "@/hooks/use-usage";
+import { usePlanFeature, useUsage } from "@/hooks/use-usage";
 import type { Metier } from "@/lib/catalog-templates";
 import type {
   DocumentItem,
@@ -87,10 +88,13 @@ export function DocumentBuilder({
   type: createType,
   document: editDoc,
   items: editItems,
+  source,
 }: {
   type?: DocumentType;
   document?: DocumentRow;
   items?: DocumentItem[];
+  /** Document à dupliquer : sert de point de départ à une création. */
+  source?: { document: DocumentRow; items: DocumentItem[] };
 }) {
   const router = useRouter();
   const company = useCompany();
@@ -102,21 +106,25 @@ export function DocumentBuilder({
   const updateDocument = useUpdateDocument();
   const catalogAccess = usePlanFeature("catalog");
   const setMetier = useSetMetier();
+  const { data: usage } = useUsage();
 
   const isEdit = Boolean(editDoc);
+  // Valeurs de départ : le document modifié, sinon celui que l'on duplique.
+  const seedDoc = editDoc ?? source?.document;
+  const seedItems = editItems ?? source?.items;
   const type: DocumentType = editDoc?.type ?? createType ?? "devis";
   const isInvoice = type === "facture";
 
   const [clientId, setClientId] = useState<string | null>(
-    editDoc?.client_id ?? null,
+    seedDoc?.client_id ?? null,
   );
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
   const [search, setSearch] = useState("");
   const [lines, setLines] = useState<DraftLine[]>(() =>
-    editItems
-      ? editItems.map((item) => ({
+    seedItems
+      ? seedItems.map((item) => ({
           uid: uidCounter++,
           name: item.name,
           unit: item.unit,
@@ -136,21 +144,24 @@ export function DocumentBuilder({
         ],
   );
   const [discount, setDiscount] = useState(
-    editDoc && editDoc.discount > 0 ? String(editDoc.discount) : "",
+    seedDoc && seedDoc.discount > 0 ? String(seedDoc.discount) : "",
   );
   const [advance, setAdvance] = useState(
-    editDoc && editDoc.advance_amount > 0 ? String(editDoc.advance_amount) : "",
+    seedDoc && seedDoc.advance_amount > 0 ? String(seedDoc.advance_amount) : "",
   );
-  const [title, setTitle] = useState(editDoc?.title ?? "");
-  const [note, setNote] = useState(editDoc?.note ?? "");
-  const [conditions, setConditions] = useState(editDoc?.conditions ?? "");
+  const [title, setTitle] = useState(seedDoc?.title ?? "");
+  const [note, setNote] = useState(seedDoc?.note ?? "");
+  const [conditions, setConditions] = useState(seedDoc?.conditions ?? "");
+  // L'intitulé est rangé dans les options : facultatif, il passait avant le
+  // client et les articles, les deux seules saisies vraiment nécessaires.
   const [showOptions, setShowOptions] = useState(
     Boolean(
-      editDoc &&
-        (editDoc.discount > 0 ||
-          editDoc.advance_amount > 0 ||
-          editDoc.note ||
-          editDoc.conditions),
+      seedDoc &&
+        (seedDoc.discount > 0 ||
+          seedDoc.advance_amount > 0 ||
+          seedDoc.title ||
+          seedDoc.note ||
+          seedDoc.conditions),
     ),
   );
   const [draftRestored, setDraftRestored] = useState(false);
@@ -170,7 +181,7 @@ export function DocumentBuilder({
 
   // ---- Autosave local (création uniquement) : reprise + hors-ligne ----
   useEffect(() => {
-    if (isEdit || restoredRef.current) return;
+    if (isEdit || source || restoredRef.current) return;
     restoredRef.current = true;
     try {
       const raw = localStorage.getItem(draftKey(type));
@@ -192,7 +203,7 @@ export function DocumentBuilder({
     } catch {
       // brouillon illisible : on ignore
     }
-  }, [isEdit, type]);
+  }, [isEdit, source, type]);
 
   useEffect(() => {
     if (isEdit) return;
@@ -254,6 +265,16 @@ export function DocumentBuilder({
   // en dessous, pour le cas (largement majoritaire) où tout est "article".
   const hasCategorySplit =
     categoryTotals.main_oeuvre > 0 || categoryTotals.transport > 0;
+
+  // Quota connu dès l'ouverture : mieux vaut le dire avant la saisie qu'au
+  // moment de « Générer », quand tout le devis est déjà rempli.
+  // Les crédits (achetés ou gagnés par parrainage) prennent le relais du
+  // quota : ils comptent dans ce qu'il reste à générer.
+  const quota = !isEdit && usage?.quota ? usage.quota : null;
+  const remainingDocs =
+    quota !== null ? quota - (usage?.used ?? 0) + (usage?.credits ?? 0) : null;
+  const quotaReached = remainingDocs !== null && remainingDocs <= 0;
+  const lastFreeDocument = remainingDocs === 1;
 
   const advanceValue = parseInt(advance, 10) || 0;
   const remaining = remainingToPay(totals.total, advanceValue);
@@ -369,7 +390,7 @@ export function DocumentBuilder({
         ? t.toast_proforma_created
         : t.toast_devis_created;
 
-  const submit = (asDraft: boolean) => {
+  const submit = () => {
     const items = buildItems();
     if (items.length === 0) {
       toast.error(t.toast_need_items);
@@ -404,12 +425,14 @@ export function DocumentBuilder({
       {
         onSuccess: (doc) => {
           clearDraft();
-          toast.success(asDraft ? t.toast_draft_saved : createdToast());
-          router.push(`/documents/${doc.id}`);
+          toast.success(createdToast());
+          router.push(`/documents/${doc.id}?created=1`);
         },
         onError: (error) => {
           if (isQuotaError(error)) {
-            toast.error(t.toast_limit);
+            toast.error(
+              usage?.quota_lifetime ? t.toast_limit_lifetime : t.toast_limit,
+            );
             router.push(FREE_LAUNCH ? "/offres" : "/paiement/document");
             return;
           }
@@ -454,23 +477,26 @@ export function DocumentBuilder({
         backHref={isEdit && editDoc ? `/documents/${editDoc.id}` : "/accueil"}
       />
 
-      <div className="space-y-6 px-4 pb-10 pt-5">
+      <div className="space-y-6 px-4 pb-6 pt-5">
         {draftRestored && (
           <div className="rounded-xl bg-warning-surface px-3 py-2 text-[12.5px] font-semibold text-warning-foreground">
             {t.draft_restored}
           </div>
         )}
 
-        {/* ----- Intitulé ----- */}
-        <div>
-          <Label htmlFor="doc-title">{t.q_title}</Label>
-          <Input
-            id="doc-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={t.q_title_ph}
-          />
-        </div>
+        {quotaReached ? (
+          <div className="rounded-xl border border-coral/40 bg-accent/10 px-3.5 py-3 text-[13px] text-navy">
+            <div className="flex items-center gap-1.5 font-bold">
+              <Lock size={14} />
+              {usage?.quota_lifetime ? t.quota_reached_lifetime : t.quota_reached_month}
+            </div>
+            <p className="mt-1 text-muted-foreground">{t.quota_reached_sub}</p>
+          </div>
+        ) : lastFreeDocument ? (
+          <div className="rounded-xl bg-warning-surface px-3 py-2 text-[12.5px] font-semibold text-warning-foreground">
+            {t.quota_last_one}
+          </div>
+        ) : null}
 
         {/* ----- Client ----- */}
         <section>
@@ -685,7 +711,9 @@ export function DocumentBuilder({
                       <Input
                         className="h-9 w-24 rounded-lg px-2 text-right text-[14px] font-semibold"
                         inputMode="numeric"
-                        value={String(line.unit_price)}
+                        aria-label={t.q_unit_price}
+                        placeholder="0"
+                        value={line.unit_price > 0 ? String(line.unit_price) : ""}
                         onChange={(e) =>
                           updateLine(line.uid, {
                             unit_price:
@@ -730,7 +758,7 @@ export function DocumentBuilder({
           >
             <span className="flex items-center gap-2">
               <SlidersHorizontal size={16} className="text-muted-foreground/70" />
-              {showOptions ? t.x_more_options_hide : t.x_more_options}
+              {showOptions ? t.x_more_options_hide : t.q_more_options}
             </span>
             <ChevronDown
               size={18}
@@ -743,6 +771,15 @@ export function DocumentBuilder({
 
           {showOptions && (
             <div className="mt-3 space-y-4">
+              <div>
+                <Label htmlFor="doc-title">{t.q_title}</Label>
+                <Input
+                  id="doc-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t.q_title_ph}
+                />
+              </div>
               <div>
                 <Label htmlFor="doc-discount">{t.q_discount}</Label>
                 <Input
@@ -872,25 +909,34 @@ export function DocumentBuilder({
             </>
           )}
         </Card>
+      </div>
 
-        <Button
-          variant="accent"
-          size="lg"
-          className="w-full"
-          onClick={() => submit(false)}
-          disabled={pending}
-        >
-          {pending ? t.generating : primaryLabel}
-        </Button>
-
-        {!isEdit && (
+      {/* Barre collée en bas : le total et l'action restent visibles pendant
+          toute la saisie, sans devoir descendre au bout du formulaire. */}
+      <div className="sticky bottom-0 z-30 border-t border-border bg-card/95 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 backdrop-blur">
+        <div className="mb-2 flex items-baseline justify-between text-navy">
+          <span className="text-[13px] font-semibold text-muted-foreground">
+            {totals.vatRate > 0 ? t.total_ttc : t.total_final}
+          </span>
+          <span className="text-[18px] font-extrabold tabular-nums">
+            {formatAmount(totals.total)}
+          </span>
+        </div>
+        {quotaReached ? (
+          <Button asChild variant="accent" size="lg" className="w-full">
+            <Link href={FREE_LAUNCH ? "/offres" : "/paiement/document"}>
+              {FREE_LAUNCH ? t.quota_see_offers : t.quota_buy_document}
+            </Link>
+          </Button>
+        ) : (
           <Button
-            variant="outline"
+            variant="accent"
+            size="lg"
             className="w-full"
-            onClick={() => submit(true)}
+            onClick={submit}
             disabled={pending}
           >
-            <Save size={16} /> {t.save_draft}
+            {pending ? t.generating : primaryLabel}
           </Button>
         )}
       </div>

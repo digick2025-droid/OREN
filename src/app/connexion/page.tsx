@@ -7,10 +7,12 @@ import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/features/i18n/language-context";
 import { mapAuthError } from "@/lib/auth/errors";
 import { isValidEmail } from "@/lib/auth/validation";
+import { safeNextPath } from "@/lib/auth/next-path";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ConnexionPage() {
@@ -66,7 +68,8 @@ export default function ConnexionPage() {
     }
 
     toast.success(t.auth_login_ok);
-    router.push("/accueil");
+    const next = new URLSearchParams(window.location.search).get("next");
+    router.push(safeNextPath(next) ?? "/accueil");
     router.refresh();
   };
 
@@ -107,9 +110,10 @@ export default function ConnexionPage() {
                 {t.login_forgot}
               </Link>
             </div>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
+              showLabel={t.auth_show_password}
+              hideLabel={t.auth_hide_password}
               autoComplete="current-password"
               placeholder="••••••••"
               value={password}
