@@ -31,6 +31,7 @@ import {
   remainingToPay,
   type LineCategory,
 } from "@/lib/calculations";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { formatAmount } from "@/lib/format";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useClients, useSaveClient } from "@/hooks/use-clients";
@@ -267,10 +268,13 @@ export function DocumentBuilder({
 
   // Quota connu dès l'ouverture : mieux vaut le dire avant la saisie qu'au
   // moment de « Générer », quand tout le devis est déjà rempli.
+  // Les crédits (achetés ou gagnés par parrainage) prennent le relais du
+  // quota : ils comptent dans ce qu'il reste à générer.
   const quota = !isEdit && usage?.quota ? usage.quota : null;
-  const used = usage?.used ?? 0;
-  const quotaReached = quota !== null && used >= quota;
-  const lastFreeDocument = quota !== null && quota - used === 1;
+  const remainingDocs =
+    quota !== null ? quota - (usage?.used ?? 0) + (usage?.credits ?? 0) : null;
+  const quotaReached = remainingDocs !== null && remainingDocs <= 0;
+  const lastFreeDocument = remainingDocs === 1;
 
   const advanceValue = parseInt(advance, 10) || 0;
   const remaining = remainingToPay(totals.total, advanceValue);
@@ -429,10 +433,13 @@ export function DocumentBuilder({
             toast.error(
               usage?.quota_lifetime ? t.toast_limit_lifetime : t.toast_limit,
             );
-            router.push("/offres");
+            router.push(FREE_LAUNCH ? "/offres" : "/paiement/document");
             return;
           }
-          toast.error(t.toast_create_error);
+          // Le code d'erreur de la base (SUSPENDED, FORBIDDEN…) aide le support
+          // à diagnostiquer sans accès au compte du client.
+          const code = error instanceof Error ? error.message.slice(0, 80) : "";
+          toast.error(code ? `${t.toast_create_error} (${code})` : t.toast_create_error);
         },
       },
     );
@@ -917,7 +924,9 @@ export function DocumentBuilder({
         </div>
         {quotaReached ? (
           <Button asChild variant="accent" size="lg" className="w-full">
-            <Link href="/offres">{t.quota_see_offers}</Link>
+            <Link href={FREE_LAUNCH ? "/offres" : "/paiement/document"}>
+              {FREE_LAUNCH ? t.quota_see_offers : t.quota_buy_document}
+            </Link>
           </Button>
         ) : (
           <Button

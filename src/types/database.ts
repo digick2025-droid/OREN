@@ -290,6 +290,17 @@ export interface Usage {
   features: PlanFeature[];
   quota_lifetime: boolean;
   period_end: string | null;
+  /** Documents offerts ou achetés, consommés une fois le quota atteint. */
+  credits: number;
+}
+
+/** Retour de la RPC get_referral_info */
+export interface ReferralInfo {
+  code: string;
+  credits: number;
+  referred_count: number;
+  rewarded_count: number;
+  was_referred: boolean;
 }
 
 export interface DocumentLineInput {

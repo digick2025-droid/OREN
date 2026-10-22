@@ -18,7 +18,10 @@
 
 import type { PaymentMethod } from "@/types/database";
 
-export type PaymentPurpose = "subscription" | "express_document";
+export type PaymentPurpose =
+  | "subscription"
+  | "express_document"
+  | "document_credit";
 
 /** État normalisé d'une transaction, indépendant du fournisseur. */
 export type PaymentStatus = "pending" | "succeeded" | "failed";

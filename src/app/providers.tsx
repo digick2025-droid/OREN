@@ -9,6 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { LanguageProvider } from "@/features/i18n/language-context";
+import { ReferralCapture } from "@/features/referral/referral-capture";
 import { ThemeProvider } from "@/features/theme/theme-context";
 import type { Lang } from "@/lib/i18n/config";
 import { RQ_CACHE_KEY as CACHE_KEY } from "@/lib/offline";
@@ -71,6 +72,7 @@ export function Providers({
     <QueryClientProvider client={queryClient}>
       <ThemeProvider initialTheme={initialTheme}>
         <LanguageProvider initialLang={initialLang}>
+          <ReferralCapture />
           {children}
           <Toaster position="bottom-center" richColors theme={initialTheme} />
         </LanguageProvider>

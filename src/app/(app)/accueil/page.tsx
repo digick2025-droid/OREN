@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { useDocuments } from "@/hooks/use-documents";
 import { usePlanFeature, useUsage } from "@/hooks/use-usage";
 
@@ -90,8 +91,22 @@ export default function AccueilPage() {
             usage.quota > 0 &&
             usage.used >= usage.quota && (
               <p className="mt-2 text-[12.5px] font-semibold text-coral">
-                {t.counter_limit}
+                {usage.credits > 0
+                  ? t.counter_credits.replace("{n}", String(usage.credits))
+                  : t.counter_limit}
               </p>
+            )}
+          {!FREE_LAUNCH &&
+            usage.quota !== null &&
+            usage.quota > 0 &&
+            usage.used >= usage.quota &&
+            usage.credits === 0 && (
+              <Link
+                href="/paiement/document"
+                className="mt-2 inline-block text-[12.5px] font-bold text-navy underline"
+              >
+                {t.buy_doc_cta}
+              </Link>
             )}
         </Card>
       ) : null}

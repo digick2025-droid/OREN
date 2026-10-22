@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { computeCategoryTotals } from "@/lib/calculations";
 import { DOCUMENT_STATUSES, STATUS_SOLID, STATUS_VARIANT } from "@/lib/constants";
 import { formatAmount, formatDate } from "@/lib/format";
@@ -151,7 +152,7 @@ export default function DocumentDetailPage({
           toast.error(
             usage?.quota_lifetime ? t.toast_limit_lifetime : t.toast_limit,
           );
-          router.push("/offres");
+          router.push(FREE_LAUNCH ? "/offres" : "/paiement/document");
           return;
         }
         toast.error(t.toast_convert_error);

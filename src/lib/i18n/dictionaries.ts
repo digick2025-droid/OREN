@@ -469,6 +469,39 @@ const fr = {
 
   // Paiement
   pay_title: "Paiement",
+  retour_succeeded_sub_credit: "Votre document est ajouté à votre compte.",
+
+  // Documents à l'unité
+  buydoc_title: "Document supplémentaire",
+  buydoc_sub:
+    "Votre quota est atteint. Achetez des documents à l'unité pour continuer, sans changer d'offre.",
+  buydoc_qty: "Nombre de documents",
+  buydoc_unit: "document",
+  buydoc_balance: "Il vous reste {n} document(s) offert(s) ou acheté(s).",
+  buydoc_success: "Paiement reçu — votre document est disponible.",
+  buydoc_free_title: "Envie d'un document gratuit ?",
+  buydoc_free_sub: "Parrainez un ami : vous gagnez 1 document offert à chaque inscription.",
+  counter_credits: "{n} document(s) en réserve",
+  buy_doc_cta: "Acheter un document",
+
+  // Parrainage
+  set_referral: "Parrainage",
+  set_referral_hint: "1 document offert pour chaque ami parrainé",
+  referral_title: "Parrainage",
+  referral_pitch_title: "Parrainez, gagnez des documents.",
+  referral_pitch_sub:
+    "Vous gagnez 1 document offert chaque fois qu'un ami inscrit avec votre lien envoie son premier document. Sans limite.",
+  referral_your_code: "Votre code",
+  referral_copy: "Copier le lien",
+  referral_share: "Partager",
+  referral_copied: "Lien copié",
+  referral_share_text:
+    "Je fais mes devis et factures avec OREN, c'est simple et rapide. Inscris-toi avec mon lien :",
+  referral_stat_invited: "Inscrits",
+  referral_stat_rewarded: "Récompensés",
+  referral_stat_credits: "Documents offerts",
+  referral_rules:
+    "Un document offert s'utilise une fois votre quota atteint. Le parrainage est réservé aux nouveaux comptes.",
   pay_sub_prefix: "Abonnement",
   pay_amount: "Montant à payer",
   pay_method: "Opérateur Mobile Money",
@@ -601,8 +634,8 @@ const fr = {
   q_more_options: "Intitulé, remise, acompte, conditions",
   quota_reached_lifetime: "Vos documents gratuits sont utilisés",
   quota_reached_month: "Limite du mois atteinte",
-  quota_reached_sub: "Votre saisie est gardée sur ce téléphone : choisissez une offre pour générer ce document.",
-  quota_last_one: "C'est votre dernier document gratuit.",
+  quota_reached_sub: "Votre saisie est gardée sur ce téléphone : débloquez ce document ou choisissez une offre pour le générer.",
+  quota_last_one: "C'est votre dernier document disponible.",
   quota_see_offers: "Voir les offres pour générer",
   created_title: "Votre document est prêt",
   created_sub: "Envoyez-le maintenant à votre client sur WhatsApp.",
@@ -610,6 +643,7 @@ const fr = {
   x_price_notice: "Sans compte, par document :",
   x_price_or: "ou",
   x_price_account: "compte gratuit, 3 documents offerts",
+  quota_buy_document: "Débloquer ce document",
 };
 
 export type Dict = typeof fr;
@@ -1048,6 +1082,39 @@ const en: Dict = {
   price_free: "Free",
 
   pay_title: "Payment",
+  retour_succeeded_sub_credit: "Your document has been added to your account.",
+
+  // Pay per document
+  buydoc_title: "Extra document",
+  buydoc_sub:
+    "You've reached your quota. Buy documents one by one to keep going, without changing plan.",
+  buydoc_qty: "Number of documents",
+  buydoc_unit: "document",
+  buydoc_balance: "You have {n} free or purchased document(s) left.",
+  buydoc_success: "Payment received — your document is available.",
+  buydoc_free_title: "Want a free document?",
+  buydoc_free_sub: "Refer a friend: you earn 1 free document for each sign-up.",
+  counter_credits: "{n} document(s) in reserve",
+  buy_doc_cta: "Buy a document",
+
+  // Referral
+  set_referral: "Referral",
+  set_referral_hint: "1 free document for every friend you refer",
+  referral_title: "Referral",
+  referral_pitch_title: "Refer friends, earn documents.",
+  referral_pitch_sub:
+    "You earn 1 free document each time a friend who signed up with your link sends their first document. No limit.",
+  referral_your_code: "Your code",
+  referral_copy: "Copy link",
+  referral_share: "Share",
+  referral_copied: "Link copied",
+  referral_share_text:
+    "I make my quotes and invoices with OREN, it's simple and fast. Sign up with my link:",
+  referral_stat_invited: "Signed up",
+  referral_stat_rewarded: "Rewarded",
+  referral_stat_credits: "Free documents",
+  referral_rules:
+    "A free document is used once your quota is reached. Referrals are for new accounts only.",
   pay_sub_prefix: "Subscription",
   pay_amount: "Amount to pay",
   pay_method: "Mobile Money operator",
@@ -1170,8 +1237,8 @@ const en: Dict = {
   q_more_options: "Title, discount, deposit, terms",
   quota_reached_lifetime: "Your free documents are used up",
   quota_reached_month: "Monthly limit reached",
-  quota_reached_sub: "Your input is kept on this phone: pick a plan to generate this document.",
-  quota_last_one: "This is your last free document.",
+  quota_reached_sub: "Your input is kept on this phone: unlock this document or pick a plan to generate it.",
+  quota_last_one: "This is your last available document.",
   quota_see_offers: "See plans to generate",
   created_title: "Your document is ready",
   created_sub: "Send it to your client on WhatsApp now.",
@@ -1179,6 +1246,7 @@ const en: Dict = {
   x_price_notice: "No account, per document:",
   x_price_or: "or",
   x_price_account: "free account, 3 documents included",
+  quota_buy_document: "Unlock this document",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };

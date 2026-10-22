@@ -19,7 +19,7 @@ import { useI18n } from "@/features/i18n/language-context";
  * entreprise) : un payeur de document express est anonyme.
  */
 
-type Purpose = "subscription" | "express_document";
+type Purpose = "subscription" | "express_document" | "document_credit";
 
 type PollState =
   | { kind: "invalid" }
@@ -104,6 +104,8 @@ function RetourContent() {
   const goToSuccess = (purpose: Purpose) => {
     if (purpose === "express_document" && reference) {
       router.push(`/express?paid=${encodeURIComponent(reference)}`);
+    } else if (purpose === "document_credit") {
+      router.push("/nouveau?type=devis");
     } else {
       router.push("/accueil");
     }
@@ -115,6 +117,8 @@ function RetourContent() {
     const { purpose, planKey } = meta.current;
     if (purpose === "express_document") {
       router.push("/express");
+    } else if (purpose === "document_credit") {
+      router.push("/paiement/document");
     } else if (purpose === "subscription") {
       router.push(planKey ? `/paiement?plan=${encodeURIComponent(planKey)}` : "/offres");
     } else {
@@ -161,7 +165,9 @@ function RetourContent() {
             <p className="text-[13.5px] text-muted-foreground">
               {state.purpose === "subscription"
                 ? t.retour_succeeded_sub_sub
-                : t.retour_succeeded_sub_express}
+                : state.purpose === "document_credit"
+                  ? t.retour_succeeded_sub_credit
+                  : t.retour_succeeded_sub_express}
             </p>
             <Button
               variant="accent"

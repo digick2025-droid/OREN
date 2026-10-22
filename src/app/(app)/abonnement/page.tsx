@@ -74,6 +74,18 @@ export default function AbonnementPage() {
                   {t.limit_notice_sub}
                 </Card>
               )}
+
+            {usage.credits > 0 && (
+              <p className="text-[12.5px] font-semibold text-navy">
+                {t.counter_credits.replace("{n}", String(usage.credits))}
+              </p>
+            )}
+
+            {!FREE_LAUNCH && (
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/paiement/document">{t.buy_doc_cta}</Link>
+              </Button>
+            )}
           </>
         )}
 
