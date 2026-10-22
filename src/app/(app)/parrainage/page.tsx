@@ -1,10 +1,11 @@
 "use client";
 
 import { toast } from "sonner";
-import { Check, Copy, Gift, Share2 } from "lucide-react";
+import { AlertCircle, Check, Copy, Gift, RotateCw, Share2 } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/features/i18n/language-context";
 import { useReferralInfo } from "@/hooks/use-referral";
 import {
@@ -15,7 +16,7 @@ import {
 
 export default function ParrainagePage() {
   const { t } = useI18n();
-  const { data: info, isLoading } = useReferralInfo();
+  const { data: info, isLoading, isError, refetch, isFetching } = useReferralInfo();
 
   const link = info ? buildReferralLink(window.location.origin, info.code) : "";
 
@@ -51,7 +52,27 @@ export default function ParrainagePage() {
           </p>
         </Card>
 
-        {isLoading || !info ? null : (
+        {/* Jamais d'écran vide : on montre le chargement, ou l'échec avec
+            un moyen de réessayer, plutôt que de laisser l'utilisateur
+            chercher un lien qui n'apparaîtra pas. */}
+        {isLoading ? (
+          <Skeleton className="h-[168px] w-full" />
+        ) : isError || !info?.code ? (
+          <Card className="p-5 text-center">
+            <AlertCircle size={22} className="mx-auto text-coral" />
+            <p className="mt-2 text-[14px] font-semibold text-navy">
+              {t.referral_load_error}
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+            >
+              <RotateCw size={16} /> {t.pay_retry}
+            </Button>
+          </Card>
+        ) : (
           <>
             <Card className="p-5 text-center">
               <div className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/70">
@@ -59,6 +80,12 @@ export default function ParrainagePage() {
               </div>
               <div className="mt-1 select-all text-[26px] font-extrabold tracking-wider text-navy">
                 {info.code}
+              </div>
+              <div className="mt-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {t.referral_your_link}
+              </div>
+              <div className="mt-1 select-all break-all rounded-lg bg-muted px-3 py-2 text-[13px] font-semibold text-navy">
+                {link}
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <Button variant="outline" onClick={() => void copy()}>

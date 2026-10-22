@@ -26,6 +26,7 @@ import { useI18n } from "@/features/i18n/language-context";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { computeCategoryTotals } from "@/lib/calculations";
 import { DOCUMENT_STATUSES, STATUS_SOLID, STATUS_VARIANT } from "@/lib/constants";
+import { track } from "@/lib/analytics";
 import { formatAmount, formatDate } from "@/lib/format";
 import { statusLabel, typeLabel } from "@/lib/i18n/labels";
 import { noterProposition, peutProposer } from "@/lib/push-invite";
@@ -37,7 +38,9 @@ import {
   useDocument,
   useUpdateDocumentStatus,
 } from "@/hooks/use-documents";
+import { useReferralInfo } from "@/hooks/use-referral";
 import { usePlanFeature, useUsage } from "@/hooks/use-usage";
+import { buildReferralLink } from "@/lib/referral";
 import {
   downloadPdf as downloadPdfFile,
   previewDocument,
@@ -65,6 +68,10 @@ export default function DocumentDetailPage({
   // Branding Startup : la fonctionnalité « logo » débloque le PDF personnalisé
   const { enabled: premiumBranding } = usePlanFeature("logo");
   const { data: usage } = useUsage();
+  // Lien de parrainage dans la mention « Créé avec OREN » des PDF gratuits :
+  // un client de l'artisan qui s'inscrit par là le fait récompenser. Sans
+  // code (chargement, migration absente), simple lien d'inscription.
+  const { data: referral } = useReferralInfo();
   const [sharing, setSharing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [invitePush, setInvitePush] = useState(false);
@@ -87,7 +94,12 @@ export default function DocumentDetailPage({
   const buildDocHtml = () =>
     renderDocumentHtml(
       toPdfData(doc, items),
-      toPdfCompany(company, { premiumBranding }),
+      toPdfCompany(company, {
+        premiumBranding,
+        signupUrl: referral?.code
+          ? buildReferralLink(window.location.origin, referral.code)
+          : `${window.location.origin}/inscription`,
+      }),
       lang,
     );
 
@@ -125,6 +137,12 @@ export default function DocumentDetailPage({
         window.open(buildDocumentShareLink(doc, company.name, lang), "_blank");
       }
       markDocumentShared();
+      track("document_shared", {
+        type: doc.type,
+        channel: result === "unsupported" ? "link" : "file",
+        first_share: doc.status === "brouillon",
+        since_created_ms: Math.max(0, Date.now() - Date.parse(doc.created_at)),
+      });
       if (doc.status === "brouillon") {
         updateStatus.mutate({ id: doc.id, status: "envoye" });
 

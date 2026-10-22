@@ -10,6 +10,7 @@ import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict, type Dict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
 import { formatAmountShort } from "@/lib/format";
+import { annualPrice, pricePerDay, pricePerDocument } from "@/lib/pricing";
 import type { Plan } from "@/types/database";
 
 function planPrice(t: Dict, plan: Plan): string {
@@ -127,6 +128,11 @@ export default async function OffresPage() {
     <div className="mx-auto min-h-dvh w-full max-w-md bg-surface pb-10">
       <ScreenHeader title={t.off_title} backHref={user ? "/abonnement" : "/"} />
       <p className="px-4 pt-4 text-[14px] text-muted-foreground">{t.off_sub}</p>
+      {FREE_LAUNCH ? null : (
+        <p className="px-4 pt-1.5 text-[13.5px] font-semibold text-navy">
+          {t.off_value}
+        </p>
+      )}
 
       <div className="mt-4 space-y-4 px-4">
         {plans.map((plan) => {
@@ -148,8 +154,28 @@ export default async function OffresPage() {
                     {content.tag}
                   </div>
                 </div>
-                <div className="text-right text-[15px] font-extrabold text-navy">
-                  {planPrice(t, plan)}
+                <div className="text-right">
+                  <div className="text-[15px] font-extrabold text-navy">
+                    {planPrice(t, plan)}
+                  </div>
+                  {/* Le prix ramené à la journée et au document : c'est en
+                      gain, pas en abonnement, que l'artisan décide. */}
+                  {!FREE_LAUNCH && !plan.per_document_price_fcfa && plan.price_fcfa > 0 ? (
+                    <div className="text-[11.5px] text-muted-foreground">
+                      {t.off_per_day.replace(
+                        "{n}",
+                        formatAmountShort(pricePerDay(plan.price_fcfa)),
+                      )}
+                      {pricePerDocument(plan.price_fcfa, plan.monthly_quota) !== null
+                        ? ` · ${t.off_per_doc.replace(
+                            "{n}",
+                            formatAmountShort(
+                              pricePerDocument(plan.price_fcfa, plan.monthly_quota) ?? 0,
+                            ),
+                          )}`
+                        : null}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -192,6 +218,23 @@ export default async function OffresPage() {
                   </Button>
                 )}
               </div>
+              {/* Annuel : proposé en second, jamais imposé. */}
+              {!FREE_LAUNCH &&
+              !isCurrent &&
+              !plan.per_document_price_fcfa &&
+              plan.price_fcfa > 0 ? (
+                <Link
+                  href={
+                    user
+                      ? `/paiement?plan=${plan.key}&periode=annuel`
+                      : `/connexion?next=${encodeURIComponent(`/paiement?plan=${plan.key}&periode=annuel`)}`
+                  }
+                  className="mt-2.5 block text-center text-[13px] font-semibold text-navy underline"
+                >
+                  {t.off_annual
+                    .replace("{price}", formatAmountShort(annualPrice(plan.price_fcfa)))}
+                </Link>
+              ) : null}
               <p className="mt-2 text-center text-[11.5px] text-muted-foreground/70">
                 {content.audience}
               </p>

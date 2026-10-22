@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { TrackView } from "@/components/analytics/track-view";
 import { ScrollReveal } from "@/components/landing/scroll-reveal";
 import { SocialProof } from "@/components/landing/social-proof";
 import { Testimonials } from "@/components/landing/testimonials";
@@ -138,6 +139,7 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-dvh bg-background">
+      <TrackView event="landing_view" />
       {/* ---------------- Barre du haut ---------------- */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-brand-navy/80 backdrop-blur-md">
         <div className={cn(COL, "flex h-16 items-center justify-between")}>

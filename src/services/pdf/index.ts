@@ -62,7 +62,7 @@ export function toPdfData(
 
 export function toPdfCompany(
   company: Company,
-  options?: { premiumBranding?: boolean },
+  options?: { premiumBranding?: boolean; signupUrl?: string },
 ): PdfCompany {
   return {
     name: company.name,
@@ -78,6 +78,7 @@ export function toPdfCompany(
     nif: company.nif ?? "",
     taxRegime: company.tax_regime,
     premiumBranding: options?.premiumBranding ?? false,
+    signupUrl: options?.signupUrl ?? "",
   };
 }
 

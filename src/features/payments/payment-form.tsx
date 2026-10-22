@@ -2,22 +2,42 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Clock, CreditCard, Loader2, ShieldCheck, Smartphone } from "lucide-react";
+import {
+  Clock,
+  Copy,
+  CreditCard,
+  Loader2,
+  MessageCircle,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/features/i18n/language-context";
 import { paymentErrorMessage } from "@/features/payments/errors";
+import { track } from "@/lib/analytics";
+import { MANUAL_PAYMENT } from "@/lib/billing";
+import { SUPPORT_WHATSAPP } from "@/lib/constants";
 import { formatAmount } from "@/lib/format";
+import { MANUAL_ACCOUNTS, normalizeTransactionRef } from "@/lib/manual-payment";
 import { isValidPhone } from "@/lib/phone";
 import type { PaymentMethod } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { buildWhatsAppLink } from "@/services/whatsapp";
 
 export interface PaymentFormProps {
   amount: number;
   buttonLabel?: string;
-  onPay: (input: { method: PaymentMethod; phone: string }) => Promise<{
+  /** Ce qui est payé, pour le suivi du parcours (analytics). */
+  purpose: "subscription" | "express_document" | "document_credit";
+  onPay: (input: {
+    method: PaymentMethod;
+    phone: string;
+    /** Paiement manuel : référence recopiée du SMS de l'opérateur. */
+    transactionRef?: string;
+  }) => Promise<{
     ok: boolean;
     /** "pending" = passerelle réelle, confirmation différée. */
     status?: "succeeded" | "pending";
@@ -49,15 +69,21 @@ type Phase =
 export function PaymentForm({
   amount,
   buttonLabel,
+  purpose,
   onPay,
   onSuccess,
 }: PaymentFormProps) {
   const { t } = useI18n();
   const [method, setMethod] = useState<PaymentMethod>("orange_money");
   const [phone, setPhone] = useState("");
+  const [transactionRef, setTransactionRef] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "form" });
 
-  const methods: Array<{
+  useEffect(() => {
+    track("paywall_view", { purpose, amount, manual: MANUAL_PAYMENT });
+  }, [purpose, amount]);
+
+  const allMethods: Array<{
     key: PaymentMethod;
     label: string;
     available: boolean;
@@ -66,6 +92,10 @@ export function PaymentForm({
     { key: "mtn_momo", label: "MTN MoMo", available: true },
     { key: "card", label: t.pay_card, available: false },
   ];
+  // Paiement manuel : seulement les deux opérateurs Mobile Money.
+  const methods = allMethods.filter((m) => !(MANUAL_PAYMENT && m.key === "card"));
+  const manualAccount =
+    MANUAL_PAYMENT && method !== "card" ? MANUAL_ACCOUNTS[method] : null;
 
   // Gardée dans une ref : la boucle d'attente ne doit pas redémarrer parce
   // que le parent a re-rendu et changé l'identité de la fonction.
@@ -73,14 +103,24 @@ export function PaymentForm({
   onSuccessRef.current = onSuccess;
 
   const pay = async () => {
+    if (MANUAL_PAYMENT && !normalizeTransactionRef(transactionRef)) {
+      toast.error(t.pay_error_transaction_ref);
+      return;
+    }
     if (method !== "card" && !isValidPhone(phone)) {
       toast.error(t.pay_need_phone);
       return;
     }
     setPhase({ kind: "submitting" });
-    const result = await onPay({ method, phone });
+    track("payment_started", { purpose, amount, method });
+    const result = await onPay({
+      method,
+      phone,
+      transactionRef: MANUAL_PAYMENT ? transactionRef : undefined,
+    });
     if (!result.ok) {
       setPhase({ kind: "form" });
+      track("payment_failed", { purpose, method, error: result.error ?? "unknown" });
       toast.error(paymentErrorMessage(result.error, t));
       return;
     }
@@ -105,6 +145,7 @@ export function PaymentForm({
       return;
     }
     setPhase({ kind: "form" });
+    track("payment_succeeded", { purpose, amount, method });
     onSuccess();
   };
 
@@ -132,12 +173,14 @@ export function PaymentForm({
           };
           if (cancelled) return;
           if (data.status === "succeeded") {
+            track("payment_succeeded", { purpose, amount, method });
             onSuccessRef.current();
             return;
           }
           if (data.status === "failed") {
             // Le motif vient de l'opérateur (« Solde insuffisant », « PIN
             // incorrect ») : c'est lui qui dit au client quoi refaire.
+            track("payment_failed", { purpose, method, error: "operator" });
             toast.error(data.failureReason || t.pay_failed);
             setPhase({ kind: "form" });
             return;
@@ -159,7 +202,7 @@ export function PaymentForm({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [phase, t.pay_failed]);
+  }, [phase, t.pay_failed, purpose, amount, method]);
 
   const amountCard = (
     <Card className="p-4 text-center">
@@ -260,9 +303,62 @@ export function PaymentForm({
         </div>
       </div>
 
+      {manualAccount && (
+        <Card className="space-y-3 p-4">
+          <div className="flex gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-[12px] font-extrabold text-primary-foreground">
+              1
+            </span>
+            <div className="min-w-0 flex-1 text-[13.5px] text-navy">
+              {t.pay_manual_send}{" "}
+              <span className="font-extrabold">{formatAmount(amount)}</span>{" "}
+              {t.pay_manual_to}
+              <div className="mt-1.5 flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2">
+                <span className="select-all text-[17px] font-extrabold tracking-wide tabular-nums">
+                  {manualAccount.display}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(manualAccount.number)
+                      .then(() => toast.success(t.pay_manual_copied))
+                      .catch(() => undefined);
+                  }}
+                  className="flex items-center gap-1 text-[12.5px] font-semibold text-coral"
+                >
+                  <Copy size={14} /> {t.pay_manual_copy}
+                </button>
+              </div>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                {manualAccount.label} · {t.pay_manual_ussd} {manualAccount.ussd}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-[12px] font-extrabold text-primary-foreground">
+              2
+            </span>
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="pay-ref">{t.pay_manual_ref}</Label>
+              <Input
+                id="pay-ref"
+                autoComplete="off"
+                autoCapitalize="characters"
+                value={transactionRef}
+                onChange={(e) => setTransactionRef(e.target.value)}
+                placeholder={t.pay_manual_ref_ph}
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+
       {method !== "card" && (
         <div>
-          <Label htmlFor="pay-phone">{t.pay_phone}</Label>
+          <Label htmlFor="pay-phone">
+            {MANUAL_PAYMENT ? t.pay_manual_phone : t.pay_phone}
+          </Label>
           <Input
             id="pay-phone"
             inputMode="tel"
@@ -290,11 +386,29 @@ export function PaymentForm({
           className="w-full"
           onClick={() => void pay()}
         >
-          {buttonLabel ?? t.pay_confirm}
+          {MANUAL_PAYMENT ? t.pay_manual_confirm : (buttonLabel ?? t.pay_confirm)}
         </Button>
       )}
 
-      {secureNote}
+      {MANUAL_PAYMENT ? (
+        <div className="space-y-1.5 text-center">
+          <p className="flex items-center justify-center gap-1.5 text-[11.5px] text-muted-foreground/80">
+            <ShieldCheck size={13} />
+            {t.pay_manual_trust}
+          </p>
+          <a
+            href={buildWhatsAppLink(SUPPORT_WHATSAPP, t.pay_manual_help_msg)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground underline"
+          >
+            <MessageCircle size={13} className="text-whatsapp" />
+            {t.pay_manual_help} {SUPPORT_WHATSAPP}
+          </a>
+        </div>
+      ) : (
+        secureNote
+      )}
     </div>
   );
 }

@@ -19,6 +19,13 @@ export interface PdfCompany {
   taxRegime: string;
   /** Offre Startup : branding complet (filigrane, pied de page à l'image de l'entreprise) */
   premiumBranding: boolean;
+  /**
+   * Lien d'inscription affiché dans la mention « Créé avec OREN » des
+   * documents gratuits — le lien de parrainage de l'entreprise quand il est
+   * connu. Vide : mention sans lien. Ignoré en branding premium (aucune
+   * mention OREN).
+   */
+  signupUrl?: string;
 }
 
 export type PdfLineCategory = "article" | "main_oeuvre" | "transport";
@@ -57,6 +64,8 @@ export type PdfLang = "fr" | "en";
 
 /** Libellés du document — le moteur reste indépendant de l'app */
 export interface PdfStrings {
+  /** Langue des libellés (montant en toutes lettres). */
+  locale: PdfLang;
   quote: string;
   invoice: string;
   proforma: string;
@@ -85,6 +94,13 @@ export interface PdfStrings {
   latePenalty: string;
   regime: string;
   footer: string;
+  footerCta: string;
+  /** « Arrêté le présent devis à la somme de », selon le type. */
+  amountStatementQuote: string;
+  amountStatementProforma: string;
+  amountStatementInvoice: string;
+  /** Devise en toutes lettres : « francs CFA ». */
+  currencyWords: string;
 }
 
 export interface PdfTemplate {

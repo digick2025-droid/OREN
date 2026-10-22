@@ -29,6 +29,12 @@ export function paymentErrorMessage(
       return t.pay_error_duplicate;
     case "RATE_LIMITED":
       return t.pay_error_rate_limited;
+    case "INVALID_TRANSACTION_REF":
+      return t.pay_error_transaction_ref;
+    case "TRANSACTION_REF_USED":
+      return t.pay_error_ref_used;
+    case "PROMO_MONTHLY_ONLY":
+      return t.pay_error_promo_monthly;
     case "PROVIDER_UNREACHABLE":
     case "PROVIDER_BAD_RESPONSE":
       return t.pay_error_unavailable;

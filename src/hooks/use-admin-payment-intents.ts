@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 
 export interface AdminPaymentIntentListItem {
@@ -19,6 +19,13 @@ export interface AdminPaymentIntentListItem {
   failure_reason: string | null;
   settled_at: string | null;
   created_at: string;
+  /** Paiement manuel : référence recopiée du SMS et numéro payeur. */
+  transaction_ref: string | null;
+  phone: string | null;
+  /** Paiement manuel : contrôle a posteriori par l'admin (0039). */
+  review_status: "to_review" | "confirmed" | "rejected" | null;
+  /** Durée payée : 1 (mensuel) ou 12 (annuel, 0040). */
+  billing_months: number;
 }
 
 export function useAdminPaymentIntents() {
@@ -30,7 +37,7 @@ export function useAdminPaymentIntents() {
       const { data, error } = await supabase
         .from("payment_intents")
         .select(
-          "id, reference, provider, purpose, company_id, plan_key, amount, discount_fcfa, method, status, failure_reason, settled_at, created_at, companies(name)",
+          "id, reference, provider, purpose, company_id, plan_key, amount, discount_fcfa, method, status, failure_reason, settled_at, created_at, transaction_ref, phone, review_status, billing_months, companies(name)",
         )
         .order("created_at", { ascending: false })
         .limit(500);
@@ -45,6 +52,32 @@ export function useAdminPaymentIntents() {
         ...rest,
         company_name: companies?.name ?? null,
       }));
+    },
+  });
+}
+
+/**
+ * Confirme ou annule un paiement manuel. L'annulation retire ce qui avait
+ * été débloqué (abonnement → gratuit, documents achetés retirés).
+ */
+export function useReviewManualPayment() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      reference: string;
+      decision: "confirmed" | "rejected";
+    }) => {
+      const { data, error } = await supabase.rpc("admin_review_manual_payment", {
+        p_reference: input.reference,
+        p_decision: input.decision,
+      });
+      if (error) throw new Error(error.message);
+      return data as string;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-payment-intents"] });
     },
   });
 }

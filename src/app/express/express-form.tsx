@@ -39,6 +39,7 @@ import { DEFAULT_COMPANY_COLOR } from "@/lib/constants";
 import { formatAmount } from "@/lib/format";
 import { downloadPdf, renderDocumentHtml, sharePdf } from "@/services/pdf";
 import { buildWhatsAppLink } from "@/services/whatsapp";
+import { track, trackOnce } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 interface ExpressLine {
@@ -121,6 +122,16 @@ function ExpressFormContent() {
       // Stockage indisponible : le sélecteur sera simplement reproposé.
     }
   }, []);
+
+  useEffect(() => {
+    trackOnce("express_started");
+  }, []);
+
+  // Fin du parcours Express (téléchargement gratuit ou paiement confirmé).
+  useEffect(() => {
+    if (step === "done") track("express_done", { type: docKind });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const chooseMetier = (choice: Metier) => {
     setMetier(choice);
@@ -254,6 +265,7 @@ function ExpressFormContent() {
         nif: "",
         taxRegime: "",
         premiumBranding: false,
+        signupUrl: `${window.location.origin}/inscription`,
       },
       lang,
     );
@@ -268,6 +280,7 @@ function ExpressFormContent() {
       return;
     }
     setStep("preview");
+    track("express_preview", { type: docKind });
   };
 
   const docName = () =>
@@ -340,6 +353,7 @@ function ExpressFormContent() {
    * Sans cela, créer un compte faisait perdre tout ce qui venait d'être tapé.
    */
   const handOffToAccount = () => {
+    track("express_to_signup", { type: docKind, step });
     try {
       localStorage.setItem(
         `digick_draft_${docKind}`,
@@ -787,7 +801,8 @@ function ExpressFormContent() {
             <PaymentForm
               amount={EXPRESS_PRICE}
               buttonLabel={`${t.pay_confirm} ${formatAmount(EXPRESS_PRICE)}`}
-              onPay={async ({ method, phone }) => {
+              purpose="express_document"
+              onPay={async ({ method, phone, transactionRef }) => {
                 const response = await fetch("/api/payments", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -795,6 +810,7 @@ function ExpressFormContent() {
                     purpose: "express_document",
                     method,
                     phone,
+                    transactionRef,
                   }),
                 });
                 if (!response.ok) {
