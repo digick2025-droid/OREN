@@ -100,7 +100,9 @@ export class KPayProvider implements PaymentProvider {
       description:
         input.purpose === "subscription"
           ? `OREN — abonnement ${input.planKey ?? ""}`.trim()
-          : "OREN — document express",
+          : input.purpose === "document_credit"
+            ? "OREN — document supplémentaire"
+            : "OREN — document express",
     };
     if (input.metadata?.customerName) {
       payload.customerName = input.metadata.customerName;

@@ -13,9 +13,11 @@ import type { PaymentInitiation } from "@/services/payments";
 import type { PaymentMethod } from "@/types/database";
 
 interface PaymentBody {
-  purpose: "subscription" | "express_document";
+  purpose: "subscription" | "express_document" | "document_credit";
   method: PaymentMethod;
   phone?: string;
+  /** Nombre de documents achetés (document_credit uniquement, 1 à 10). */
+  quantity?: number;
   planKey?: string;
   /** Code promo (abonnement uniquement) — revalidé authoritativement ici. */
   promoCode?: string;
@@ -25,7 +27,9 @@ function isPaymentBody(value: unknown): value is PaymentBody {
   if (typeof value !== "object" || value === null) return false;
   const body = value as Record<string, unknown>;
   return (
-    (body.purpose === "subscription" || body.purpose === "express_document") &&
+    (body.purpose === "subscription" ||
+      body.purpose === "express_document" ||
+      body.purpose === "document_credit") &&
     (body.method === "orange_money" ||
       body.method === "mtn_momo" ||
       body.method === "card")
@@ -195,6 +199,106 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
+
+  // ---- Document supplémentaire : achat à l'unité, une fois le quota atteint ----
+  if (body.purpose === "document_credit") {
+    // Même garde que Express : pendant le lancement gratuit, rien ne se paie.
+    if (FREE_LAUNCH) {
+      return NextResponse.json({ error: "PAYMENTS_DISABLED" }, { status: 409 });
+    }
+    const quantity = body.quantity ?? 1;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+      return NextResponse.json({ error: "INVALID_QUANTITY" }, { status: 400 });
+    }
+
+    const [{ data: buyer }, { data: unitPlan }] = await Promise.all([
+      supabase
+        .from("companies")
+        .select("id")
+        .eq("owner_id", user.id)
+        .is("deleted_at", null)
+        .maybeSingle(),
+      supabase
+        .from("plans")
+        .select("per_document_price_fcfa, is_active")
+        .eq("key", "express")
+        .maybeSingle(),
+    ]);
+    if (!buyer) {
+      return NextResponse.json({ error: "NO_COMPANY" }, { status: 400 });
+    }
+    if (!unitPlan || !unitPlan.is_active) {
+      return NextResponse.json({ error: "INVALID_PLAN" }, { status: 400 });
+    }
+    // Le prix vient de la base, jamais du client. `||` et non `??` : une base
+    // encore en « tout gratuit » (migration 0036) porte 0 F, et un document
+    // vendu 0 F ne passerait par aucune passerelle.
+    const unitPrice = unitPlan.per_document_price_fcfa || 500;
+    const amount = unitPrice * quantity;
+
+    const reference = `OREN-DOC-${randomUUID()}`;
+    const { error: intentError } = await service
+      .from("payment_intents")
+      .insert({
+        reference,
+        provider: provider.name,
+        purpose: "document_credit",
+        company_id: buyer.id,
+        amount,
+        credits: quantity,
+        currency: "XAF",
+        method: body.method,
+        phone: body.phone ?? null,
+      });
+    if (intentError) {
+      return NextResponse.json({ error: "INTENT_FAILED" }, { status: 500 });
+    }
+
+    const result = await provider.initiate({
+      reference,
+      amount,
+      currency: "XAF",
+      method: body.method,
+      phone: body.phone,
+      purpose: "document_credit",
+    });
+    if (!result.accepted || result.status === "failed") {
+      await settlePaymentIntent(
+        {
+          reference,
+          providerReference: result.providerReference,
+          status: "failed",
+          ...failureOf(result),
+        },
+        service,
+      );
+      return initiationError(result);
+    }
+
+    if (result.status === "pending") {
+      await service
+        .from("payment_intents")
+        .update({ provider_reference: result.providerReference })
+        .eq("reference", reference);
+      return NextResponse.json({
+        status: "pending",
+        reference,
+        redirectUrl: result.redirectUrl ?? null,
+        amount,
+      });
+    }
+
+    // Réglé de façon synchrone (simulateur) : même chemin que le webhook.
+    const settled = await settlePaymentIntent(
+      { reference, providerReference: result.providerReference, status: "succeeded" },
+      service,
+    );
+    if (settled !== "succeeded") {
+      return NextResponse.json({ error: "CREDIT_FAILED" }, { status: 500 });
+    }
+    return NextResponse.json({ status: "succeeded", reference, amount });
+  }
+
   if (!body.planKey) {
     return NextResponse.json({ error: "MISSING_PLAN" }, { status: 400 });
   }

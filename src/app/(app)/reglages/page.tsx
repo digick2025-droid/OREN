@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Building2, ChevronRight, CreditCard, Globe, LogOut, Palette, ShieldCheck } from "lucide-react";
+import { Bell, Building2, ChevronRight, CreditCard, Gift, Globe, LogOut, Palette, ShieldCheck } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -74,6 +74,21 @@ export default function ReglagesPage() {
               <div className="text-[15px] font-bold text-navy">{t.set_sub}</div>
               <div className="text-[12.5px] text-muted-foreground">
                 {usage ? usage.plan_name : "…"}
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-muted-foreground/70" />
+          </Link>
+        </Card>
+
+        <Card>
+          <Link href="/parrainage" className="flex items-center gap-3 px-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-navy">
+              <Gift size={19} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[15px] font-bold text-navy">{t.set_referral}</div>
+              <div className="truncate text-[12.5px] text-muted-foreground">
+                {t.set_referral_hint}
               </div>
             </div>
             <ChevronRight size={18} className="text-muted-foreground/70" />

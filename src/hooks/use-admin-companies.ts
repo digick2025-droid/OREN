@@ -28,7 +28,7 @@ export interface AdminPaymentIntentRow {
   reference: string;
   provider: string;
   provider_reference: string;
-  purpose: "subscription" | "express_document";
+  purpose: "subscription" | "express_document" | "document_credit";
   company_id: string | null;
   plan_key: string | null;
   amount: number;
