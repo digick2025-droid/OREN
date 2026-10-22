@@ -333,6 +333,32 @@ function ExpressFormContent() {
     }
   };
 
+  /**
+   * Passage Express → compte : la saisie est confiée à l'autosave du
+   * constructeur connecté (même clé, même format que `SavedDraft` dans
+   * document-builder), qui la restaure à l'ouverture du premier document.
+   * Sans cela, créer un compte faisait perdre tout ce qui venait d'être tapé.
+   */
+  const handOffToAccount = () => {
+    try {
+      localStorage.setItem(
+        `digick_draft_${docKind}`,
+        JSON.stringify({
+          clientId: null,
+          lines,
+          discount,
+          advance,
+          title,
+          note: "",
+          conditions,
+        }),
+      );
+    } catch {
+      // Stockage indisponible : le compte se crée quand même, sans reprise.
+    }
+  };
+  const signupHref = `/inscription?type=${docKind}`;
+
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md bg-surface pb-10">
       {step === "form" && (
@@ -342,6 +368,23 @@ function ExpressFormContent() {
             backHref="/"
           />
           <div className="space-y-5 px-4 pt-5">
+            {/* Le prix est annoncé avant la saisie, pas découvert à l'aperçu. */}
+            {FREE_LAUNCH ? null : (
+              <div className="rounded-xl bg-muted px-3.5 py-2.5 text-[12.5px] text-muted-foreground">
+                <span className="font-bold text-navy">
+                  {t.x_price_notice} {formatAmount(EXPRESS_PRICE)}
+                </span>{" "}
+                · {t.x_price_or}{" "}
+                <Link
+                  href={signupHref}
+                  onClick={handOffToAccount}
+                  className="font-bold text-navy underline"
+                >
+                  {t.x_price_account}
+                </Link>
+              </div>
+            )}
+
             {/* ----- Type de document ----- */}
             <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted p-1">
               {(["devis", "facture"] as const).map((kind) => (
@@ -721,7 +764,11 @@ function ExpressFormContent() {
 
             <p className="text-center text-[12.5px] text-muted-foreground/70">
               {t.xpdf_or}{" "}
-              <Link href="/inscription" className="font-bold text-navy underline">
+              <Link
+                href={signupHref}
+                onClick={handOffToAccount}
+                className="font-bold text-navy underline"
+              >
                 {t.xpdf_create}
               </Link>{" "}
               {t.xpdf_gift}
@@ -826,7 +873,9 @@ function ExpressFormContent() {
                 {t.xdl_acc_sub}
               </p>
               <Button asChild variant="accent" className="mt-4 w-full">
-                <Link href="/inscription">{t.xdl_create}</Link>
+                <Link href={signupHref} onClick={handOffToAccount}>
+                  {t.xdl_create}
+                </Link>
               </Button>
             </Card>
 

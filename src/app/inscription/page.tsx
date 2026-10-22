@@ -17,8 +17,15 @@ import { createClient } from "@/lib/supabase/client";
 type Step = "form" | "confirm";
 type Field = "company" | "email" | "password";
 
-/** Le premier écran après l'inscription : la promesse, pas un tableau de bord. */
-const FIRST_DOCUMENT_PATH = "/nouveau?type=devis";
+/**
+ * Le premier écran après l'inscription : la promesse, pas un tableau de bord.
+ * `?type=facture` arrive du mode Express, dont la saisie attend dans le
+ * brouillon local du même type.
+ */
+function firstDocumentPath(): string {
+  const type = new URLSearchParams(window.location.search).get("type");
+  return `/nouveau?type=${type === "facture" ? "facture" : "devis"}`;
+}
 
 export default function InscriptionPage() {
   const router = useRouter();
@@ -54,7 +61,7 @@ export default function InscriptionPage() {
     // (« Confirm email » = OFF) : signUp renvoie directement une session et
     // l'inscription se termine ici. `emailRedirectTo` et l'écran "confirm"
     // plus bas ne servent que de filet si la confirmation était réactivée.
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(FIRST_DOCUMENT_PATH)}`;
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(firstDocumentPath())}`;
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
@@ -106,7 +113,7 @@ export default function InscriptionPage() {
       }
 
       toast.success(t.signup_ok);
-      router.push(FIRST_DOCUMENT_PATH);
+      router.push(firstDocumentPath());
       router.refresh();
       return;
     }

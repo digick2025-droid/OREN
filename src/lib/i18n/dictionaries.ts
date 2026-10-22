@@ -607,6 +607,9 @@ const fr = {
   created_title: "Votre document est prêt",
   created_sub: "Envoyez-le maintenant à votre client sur WhatsApp.",
   created_nudge: "Ajoutez votre téléphone : il apparaîtra sur vos PDF",
+  x_price_notice: "Sans compte, par document :",
+  x_price_or: "ou",
+  x_price_account: "compte gratuit, 3 documents offerts",
 };
 
 export type Dict = typeof fr;
@@ -1173,6 +1176,9 @@ const en: Dict = {
   created_title: "Your document is ready",
   created_sub: "Send it to your client on WhatsApp now.",
   created_nudge: "Add your phone number: it will appear on your PDFs",
+  x_price_notice: "No account, per document:",
+  x_price_or: "or",
+  x_price_account: "free account, 3 documents included",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };
