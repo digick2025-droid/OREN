@@ -469,6 +469,40 @@ const fr = {
 
   // Paiement
   pay_title: "Paiement",
+  retour_succeeded_sub_credit: "Votre document est ajouté à votre compte.",
+
+  // Documents à l'unité
+  buydoc_title: "Document supplémentaire",
+  buydoc_sub:
+    "Votre quota est atteint. Achetez des documents à l'unité pour continuer, sans changer d'offre.",
+  buydoc_qty: "Nombre de documents",
+  buydoc_unit: "document",
+  buydoc_balance: "Il vous reste {n} document(s) offert(s) ou acheté(s).",
+  buydoc_success: "Paiement reçu — votre document est disponible.",
+  buydoc_free_title: "Envie d'un document gratuit ?",
+  buydoc_free_sub: "Parrainez un ami : vous gagnez tous les deux 1 document offert.",
+  counter_credits: "{n} document(s) en réserve",
+  buy_doc_cta: "Acheter un document",
+
+  // Parrainage
+  set_referral: "Parrainage",
+  set_referral_hint: "1 document offert pour vous et votre filleul",
+  referral_title: "Parrainage",
+  referral_pitch_title: "Parrainez, gagnez un document.",
+  referral_pitch_sub:
+    "Votre filleul reçoit 1 document offert dès son inscription. Vous recevez le vôtre quand il envoie son premier document.",
+  referral_your_code: "Votre code",
+  referral_copy: "Copier le lien",
+  referral_share: "Partager",
+  referral_copied: "Lien copié",
+  referral_share_text:
+    "Je fais mes devis et factures avec OREN. Inscris-toi avec mon lien et reçois un document offert :",
+  referral_stat_invited: "Inscrits",
+  referral_stat_rewarded: "Récompensés",
+  referral_stat_credits: "Documents offerts",
+  referral_rules:
+    "Un document offert s'utilise une fois votre quota atteint. Le parrainage est réservé aux nouveaux comptes.",
+  referral_applied: "Parrainage validé : 1 document offert ajouté à votre compte.",
   pay_sub_prefix: "Abonnement",
   pay_amount: "Montant à payer",
   pay_method: "Opérateur Mobile Money",
@@ -1020,6 +1054,40 @@ const en: Dict = {
   price_free: "Free",
 
   pay_title: "Payment",
+  retour_succeeded_sub_credit: "Your document has been added to your account.",
+
+  // Pay per document
+  buydoc_title: "Extra document",
+  buydoc_sub:
+    "You've reached your quota. Buy documents one by one to keep going, without changing plan.",
+  buydoc_qty: "Number of documents",
+  buydoc_unit: "document",
+  buydoc_balance: "You have {n} free or purchased document(s) left.",
+  buydoc_success: "Payment received — your document is available.",
+  buydoc_free_title: "Want a free document?",
+  buydoc_free_sub: "Refer a friend: you both get 1 free document.",
+  counter_credits: "{n} document(s) in reserve",
+  buy_doc_cta: "Buy a document",
+
+  // Referral
+  set_referral: "Referral",
+  set_referral_hint: "1 free document for you and your referral",
+  referral_title: "Referral",
+  referral_pitch_title: "Refer a friend, earn a document.",
+  referral_pitch_sub:
+    "Your referral gets 1 free document when they sign up. You get yours when they send their first document.",
+  referral_your_code: "Your code",
+  referral_copy: "Copy link",
+  referral_share: "Share",
+  referral_copied: "Link copied",
+  referral_share_text:
+    "I make my quotes and invoices with OREN. Sign up with my link and get a free document:",
+  referral_stat_invited: "Signed up",
+  referral_stat_rewarded: "Rewarded",
+  referral_stat_credits: "Free documents",
+  referral_rules:
+    "A free document is used once your quota is reached. Referrals are for new accounts only.",
+  referral_applied: "Referral confirmed: 1 free document added to your account.",
   pay_sub_prefix: "Subscription",
   pay_amount: "Amount to pay",
   pay_method: "Mobile Money operator",

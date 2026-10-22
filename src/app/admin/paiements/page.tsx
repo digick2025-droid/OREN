@@ -35,6 +35,7 @@ const STATUS_LABEL: Record<string, string> = {
 const PURPOSE_LABEL: Record<string, string> = {
   subscription: "Abonnement",
   express_document: "Express",
+  document_credit: "Document supplémentaire",
 };
 
 export default function AdminPaiementsPage() {

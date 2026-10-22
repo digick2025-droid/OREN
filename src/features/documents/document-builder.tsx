@@ -30,6 +30,7 @@ import {
   remainingToPay,
   type LineCategory,
 } from "@/lib/calculations";
+import { FREE_LAUNCH } from "@/lib/billing";
 import { formatAmount } from "@/lib/format";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useClients, useSaveClient } from "@/hooks/use-clients";
@@ -409,7 +410,7 @@ export function DocumentBuilder({
         onError: (error) => {
           if (isQuotaError(error)) {
             toast.error(t.toast_limit);
-            router.push("/offres");
+            router.push(FREE_LAUNCH ? "/offres" : "/paiement/document");
             return;
           }
           // Le code d'erreur de la base (SUSPENDED, FORBIDDEN…) aide le support

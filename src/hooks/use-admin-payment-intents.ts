@@ -7,7 +7,7 @@ export interface AdminPaymentIntentListItem {
   id: string;
   reference: string;
   provider: string;
-  purpose: "subscription" | "express_document";
+  purpose: "subscription" | "express_document" | "document_credit";
   company_id: string | null;
   company_name: string | null;
   plan_key: string | null;
