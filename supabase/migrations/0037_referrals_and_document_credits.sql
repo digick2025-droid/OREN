@@ -2,7 +2,7 @@
 -- 0037 : crédits de documents + parrainage + paiement par document
 --
 -- Deux besoins, un seul mécanisme :
---   - Parrainage : parrain ET filleul gagnent 1 document offert.
+--   - Parrainage : le parrain gagne 1 document offert par filleul (sans plafond).
 --   - Paiement à l'unité : une fois le quota atteint, on peut acheter des
 --     documents (prix = plans.express.per_document_price_fcfa, 500 F par défaut).
 --
@@ -95,8 +95,9 @@ on conflict (company_id) do nothing;
 -- 'NOT_NEW' : le parrainage est réservé aux comptes qui n'ont encore créé
 -- aucun document — sans cela, n'importe qui pourrait se « parrainer » après
 -- coup avec le code d'un ami pour gratter un crédit.
--- Le filleul reçoit son crédit tout de suite ; celui du parrain est versé
--- plus tard, au premier document réellement envoyé (voir le trigger).
+-- Le filleul ne reçoit rien : seul le parrain est récompensé, plus tard,
+-- au premier document réellement envoyé par le filleul (voir le trigger).
+-- Aucun plafond de filleuls par parrain.
 -- ------------------------------------------------------------
 create or replace function public.apply_referral(p_code text)
 returns text
@@ -140,8 +141,7 @@ begin
   end if;
 
   update public.company_credits
-  set referred_by = v_referrer,
-      document_credits = document_credits + 1
+  set referred_by = v_referrer
   where company_id = v_company_id;
 
   insert into public.activity_logs (company_id, actor_id, action, entity_type, entity_id, metadata)
