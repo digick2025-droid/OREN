@@ -8,16 +8,17 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useI18n } from "@/features/i18n/language-context";
 import { mapAuthError } from "@/lib/auth/errors";
-import {
-  isStrongPassword,
-  isValidEmail,
-  passwordsMatch,
-} from "@/lib/auth/validation";
+import { isStrongPassword, isValidEmail } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/client";
 
 type Step = "form" | "confirm";
+type Field = "company" | "email" | "password";
+
+/** Le premier écran après l'inscription : la promesse, pas un tableau de bord. */
+const FIRST_DOCUMENT_PATH = "/nouveau?type=devis";
 
 export default function InscriptionPage() {
   const router = useRouter();
@@ -25,59 +26,54 @@ export default function InscriptionPage() {
   const { t } = useI18n();
   const [step, setStep] = useState<Step>("form");
   const [companyName, setCompanyName] = useState("");
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [loading, setLoading] = useState(false);
 
+  // Trois champs seulement : le nom du gérant, le téléphone ou le logo se
+  // complètent plus tard dans Réglages. Les erreurs s'affichent sous le champ
+  // concerné, toutes en même temps, plutôt qu'en toasts successifs.
+  const validate = (): boolean => {
+    const next: Partial<Record<Field, string>> = {};
+    if (!companyName.trim()) next.company = t.toast_need_company;
+    if (!isValidEmail(email)) next.email = t.auth_error_invalid_email;
+    if (!isStrongPassword(password)) next.password = t.auth_error_weak_password;
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const clearError = (field: Field) =>
+    setErrors((current) => ({ ...current, [field]: undefined }));
+
   const signUp = async () => {
-    if (!companyName.trim()) {
-      toast.error(t.toast_need_company);
-      return;
-    }
-    if (!fullName.trim()) {
-      toast.error(t.signup_need_name);
-      return;
-    }
-    if (!isValidEmail(email)) {
-      toast.error(t.auth_error_invalid_email);
-      return;
-    }
-    if (!isStrongPassword(password)) {
-      toast.error(t.auth_error_weak_password);
-      return;
-    }
-    if (!passwordsMatch(password, confirmPassword)) {
-      toast.error(t.signup_password_mismatch);
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
     // La validation d'email est désactivée côté projet Supabase
     // (« Confirm email » = OFF) : signUp renvoie directement une session et
     // l'inscription se termine ici. `emailRedirectTo` et l'écran "confirm"
     // plus bas ne servent que de filet si la confirmation était réactivée.
-    const redirectTo = `${window.location.origin}/auth/callback?next=/accueil`;
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(FIRST_DOCUMENT_PATH)}`;
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
         data: {
-          full_name: fullName.trim(),
           company_name: companyName.trim(),
         },
         emailRedirectTo: redirectTo,
       },
     });
-    setLoading(false);
 
     if (error) {
+      setLoading(false);
       toast.error(mapAuthError(error, t));
       return;
     }
 
     if (!data.user) {
+      setLoading(false);
       toast.error(t.auth_error_generic);
       return;
     }
@@ -87,29 +83,35 @@ export default function InscriptionPage() {
     // Sans ce contrôle, chaque nouvelle tentative resignait un email de
     // confirmation et finissait par épuiser le quota d'envoi.
     if (data.user.identities && data.user.identities.length === 0) {
-      toast.error(t.auth_error_email_taken);
+      setLoading(false);
+      setErrors({ email: t.auth_error_email_taken });
       return;
     }
 
     if (data.session) {
       const { error: companyError } = await supabase.from("companies").insert({
         name: companyName.trim(),
-        owner_name: fullName.trim(),
         owner_id: data.user.id,
         email: email.trim().toLowerCase(),
       });
 
       if (companyError) {
-        toast.error(t.toast_save_error);
+        // Le compte existe déjà : rester ici condamnerait l'utilisateur à un
+        // « email déjà utilisé » au prochain essai. /bienvenue reprend la
+        // création de l'entreprise (AutoOnboard + formulaire prérempli).
+        console.error("[inscription] company insert failed:", companyError);
+        router.push("/bienvenue");
+        router.refresh();
         return;
       }
 
       toast.success(t.signup_ok);
-      router.push("/accueil");
+      router.push(FIRST_DOCUMENT_PATH);
       router.refresh();
       return;
     }
 
+    setLoading(false);
     setStep("confirm");
   };
 
@@ -142,14 +144,21 @@ export default function InscriptionPage() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-card px-6 pt-6 pb-8">
       <Link
-        href="/connexion"
+        href="/"
         className="-ml-1 w-fit rounded-xl p-1.5 text-navy hover:bg-muted"
         aria-label="Retour"
       >
         <ArrowLeft size={22} />
       </Link>
 
-      <div className="mt-8">
+      <form
+        className="mt-8"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void signUp();
+        }}
+      >
         <h1 className="text-[26px] font-extrabold text-navy">
           {t.signup_title}
         </h1>
@@ -157,71 +166,74 @@ export default function InscriptionPage() {
 
         <div className="mt-8 space-y-4">
           <div>
-            <Label htmlFor="company">{t.f_company}</Label>
+            <Label htmlFor="company">{t.signup_company}</Label>
             <Input
               id="company"
               autoComplete="organization"
               placeholder="Ets Kamga & Fils"
               value={companyName}
-              onChange={(event) => setCompanyName(event.target.value)}
+              aria-invalid={Boolean(errors.company)}
+              aria-describedby={errors.company ? "company-error" : undefined}
+              onChange={(event) => {
+                setCompanyName(event.target.value);
+                clearError("company");
+              }}
             />
-          </div>
-          <div>
-            <Label htmlFor="fullName">{t.signup_full_name}</Label>
-            <Input
-              id="fullName"
-              autoComplete="name"
-              placeholder="Paul Kamga"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-            />
+            <FieldError id="company-error" message={errors.company} />
           </div>
           <div>
             <Label htmlFor="email">{t.login_email}</Label>
             <Input
               id="email"
               type="email"
+              inputMode="email"
               autoComplete="email"
               placeholder="vous@entreprise.cm"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                clearError("email");
+              }}
             />
+            <FieldError id="email-error" message={errors.email} />
           </div>
           <div>
             <Label htmlFor="password">{t.login_password}</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
+              showLabel={t.auth_show_password}
+              hideLabel={t.auth_hide_password}
               autoComplete="new-password"
               placeholder="••••••••"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby="password-hint"
+              onChange={(event) => {
+                setPassword(event.target.value);
+                clearError("password");
+              }}
             />
-            <p className="mt-1.5 text-[12px] text-muted-foreground/70">
-              {t.signup_password_hint}
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="confirmPassword">{t.signup_confirm_password}</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && void signUp()}
-            />
+            {errors.password ? (
+              <FieldError id="password-hint" message={errors.password} />
+            ) : (
+              <p
+                id="password-hint"
+                className="mt-1.5 text-[12px] text-muted-foreground/70"
+              >
+                {t.signup_password_hint}
+              </p>
+            )}
           </div>
         </div>
 
-        <Button
-          className="mt-6 w-full"
-          onClick={() => void signUp()}
-          disabled={loading}
-        >
+        <Button type="submit" className="mt-6 w-full" disabled={loading}>
           {loading ? t.signup_creating : t.signup_btn}
         </Button>
+        <p className="mt-3 text-center text-[12.5px] text-muted-foreground/80">
+          {t.signup_next_hint}
+        </p>
 
         <p className="mt-6 text-center text-[13px] text-muted-foreground">
           {t.signup_have_account}{" "}
@@ -229,7 +241,16 @@ export default function InscriptionPage() {
             {t.land_login}
           </Link>
         </p>
-      </div>
+      </form>
     </div>
+  );
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="mt-1.5 text-[12.5px] font-semibold text-danger">
+      {message}
+    </p>
   );
 }

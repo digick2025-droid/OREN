@@ -587,6 +587,15 @@ const fr = {
   toast_limit_lifetime: "Vos documents gratuits sont épuisés",
   land_cta_secondary_paid: "Devis express sans compte",
   land_cta_note_free: "Gratuit pendant le lancement · sans carte bancaire",
+  signup_company: "Nom de votre entreprise (ou votre nom)",
+  signup_next_hint: "Juste après : votre premier devis, prêt en 2 minutes.",
+  auth_show_password: "Afficher le mot de passe",
+  auth_hide_password: "Masquer le mot de passe",
+  first_title: "Votre premier devis en 2 minutes",
+  first_step1: "Choisissez ou ajoutez le client",
+  first_step2: "Ajoutez vos prestations et leurs prix",
+  first_step3: "Envoyez le PDF sur WhatsApp",
+  first_cta: "Créer mon premier devis",
 };
 
 export type Dict = typeof fr;
@@ -1133,6 +1142,15 @@ const en: Dict = {
   toast_limit_lifetime: "Your free documents are used up",
   land_cta_secondary_paid: "Express quote, no account",
   land_cta_note_free: "Free during launch · no bank card",
+  signup_company: "Your business name (or your name)",
+  signup_next_hint: "Next: your first quote, ready in 2 minutes.",
+  auth_show_password: "Show password",
+  auth_hide_password: "Hide password",
+  first_title: "Your first quote in 2 minutes",
+  first_step1: "Pick or add the client",
+  first_step2: "Add your services and prices",
+  first_step3: "Send the PDF on WhatsApp",
+  first_cta: "Create my first quote",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };

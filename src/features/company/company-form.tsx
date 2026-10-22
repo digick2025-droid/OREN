@@ -158,7 +158,7 @@ export function CompanyForm({
       return;
     }
     toast.success(t.toast_saved);
-    router.push(company ? "/reglages" : "/accueil");
+    router.push(company ? "/reglages" : "/nouveau?type=devis");
     router.refresh();
   };
 
