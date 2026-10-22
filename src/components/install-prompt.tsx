@@ -7,6 +7,30 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/features/i18n/language-context";
 
 const DISMISS_KEY = "digick_pwa_dismissed";
+/** Posé au premier document partagé : avant, la bannière n'a rien à vendre. */
+const SHARED_KEY = "oren_first_share";
+const SHARED_EVENT = "oren:document-shared";
+
+/**
+ * À appeler après un partage réussi. Mémorise l'étape et prévient la bannière
+ * si elle est déjà montée (même session), sans dépendance entre composants.
+ */
+export function markDocumentShared(): void {
+  try {
+    localStorage.setItem(SHARED_KEY, "1");
+  } catch {
+    // Stockage indisponible : la bannière ne sera simplement pas proposée.
+  }
+  window.dispatchEvent(new Event(SHARED_EVENT));
+}
+
+function hasShared(): boolean {
+  try {
+    return localStorage.getItem(SHARED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -30,6 +54,10 @@ function isStandalone(): boolean {
  * - Android / Chrome : invite d'installation native (beforeinstallprompt)
  * - iPhone : instructions Partager → Sur l'écran d'accueil
  * En attendant la disponibilité sur Play Store et App Store.
+ *
+ * N'apparaît qu'après le premier document partagé : affichée dès la landing
+ * ou l'inscription, elle interrompait le visiteur avant qu'il ait vu la
+ * moindre valeur — et se faisait fermer par réflexe, définitivement.
  */
 export function InstallPrompt() {
   const { t } = useI18n();
@@ -41,21 +69,38 @@ export function InstallPrompt() {
   useEffect(() => {
     if (isStandalone() || localStorage.getItem(DISMISS_KEY)) return;
 
+    let eligible = hasShared();
+    let captured: BeforeInstallPromptEvent | null = null;
+    const ios = isIos();
+
+    const refresh = () => {
+      if (!eligible) return;
+      if (ios) {
+        setShowIosHint(true);
+        setVisible(true);
+      } else if (captured) {
+        setVisible(true);
+      }
+    };
+
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
-      setInstallEvent(event as BeforeInstallPromptEvent);
-      setVisible(true);
+      captured = event as BeforeInstallPromptEvent;
+      setInstallEvent(captured);
+      refresh();
+    };
+    const onShared = () => {
+      eligible = true;
+      refresh();
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener(SHARED_EVENT, onShared);
+    refresh();
 
-    // iOS ne déclenche jamais beforeinstallprompt : bannière d'instructions
-    if (isIos()) {
-      setShowIosHint(true);
-      setVisible(true);
-    }
-
-    return () =>
+    return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.removeEventListener(SHARED_EVENT, onShared);
+    };
   }, []);
 
   const dismiss = () => {

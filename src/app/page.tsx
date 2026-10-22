@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { APP_NAME, SUPPORT_WHATSAPP } from "@/lib/constants";
-import { formatAmountShort } from "@/lib/format";
+import { formatAmount, formatAmountShort } from "@/lib/format";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
@@ -40,11 +40,27 @@ export default async function LandingPage() {
   } = await supabase.auth.getUser();
   if (user) redirect("/accueil");
 
-  const { data: testimonials } = await supabase
-    .from("testimonials")
-    .select("id, author_name, author_role, quote, image_url")
-    .eq("is_active", true)
-    .order("display_order", { ascending: true });
+  const [{ data: testimonials }, { data: planRows }] = await Promise.all([
+    supabase
+      .from("testimonials")
+      .select("id, author_name, author_role, quote, image_url")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
+    supabase
+      .from("plans")
+      .select("key, price_fcfa, per_document_price_fcfa")
+      .eq("is_active", true),
+  ]);
+
+  // Prix lus dans `plans` (source de vérité de /offres et des paiements) :
+  // un prix codé en dur ici finissait par contredire la page des offres.
+  // Les valeurs en dur ne servent que de repli si la lecture échoue.
+  const priceOf = (key: string, fallback: number, perDoc = false) => {
+    const row = planRows?.find((p) => p.key === key);
+    const value = perDoc ? row?.per_document_price_fcfa : row?.price_fcfa;
+    return typeof value === "number" ? value : fallback;
+  };
+  const expressPrice = priceOf("express", 500, true);
 
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(LANG_COOKIE)?.value);
@@ -85,7 +101,6 @@ export default async function LandingPage() {
     { label: t.land_plat_ai, live: false },
   ];
 
-  // Tarifs alignés sur la table `plans` (express 500/doc, pro 2 900, startup 4 900).
   const plans = [
     {
       name: t.land_price_free_name,
@@ -97,7 +112,7 @@ export default async function LandingPage() {
     },
     {
       name: t.land_price_express_name,
-      price: 500,
+      price: expressPrice,
       unit: t.land_price_unit_doc,
       desc: t.land_price_express_desc,
       href: "/offres",
@@ -105,7 +120,7 @@ export default async function LandingPage() {
     },
     {
       name: t.land_price_pro_name,
-      price: 2900,
+      price: priceOf("pro", 2900),
       unit: t.land_price_unit_month,
       desc: t.land_price_pro_desc,
       href: "/offres",
@@ -113,7 +128,7 @@ export default async function LandingPage() {
     },
     {
       name: t.land_price_startup_name,
-      price: 4900,
+      price: priceOf("business", 4900),
       unit: t.land_price_unit_month,
       desc: t.land_price_startup_desc,
       href: "/offres",
@@ -170,10 +185,16 @@ export default async function LandingPage() {
               size="lg"
               className="border-white/20 bg-transparent text-white hover:bg-white/10"
             >
-              <Link href="/express">{t.land_cta_secondary}</Link>
+              <Link href="/express">
+                {/* Le prix est annoncé dès le bouton : le découvrir après
+                    avoir tout saisi était le pire moment pour l'apprendre. */}
+                {FREE_LAUNCH
+                  ? t.land_cta_secondary
+                  : `${t.land_cta_secondary_paid} · ${formatAmount(expressPrice)}`}
+              </Link>
             </Button>
             <p className="text-center text-[12.5px] text-white/50">
-              {t.land_cta_note}
+              {FREE_LAUNCH ? t.land_cta_note_free : t.land_cta_note}
             </p>
           </ScrollReveal>
 
@@ -476,7 +497,7 @@ export default async function LandingPage() {
               <Link href="/inscription">{t.land_cta_primary}</Link>
             </Button>
             <p className="mt-3.5 text-[12.5px] text-white/50">
-              {t.land_final_note}
+              {FREE_LAUNCH ? t.land_cta_note_free : t.land_final_note}
             </p>
           </ScrollReveal>
         </div>

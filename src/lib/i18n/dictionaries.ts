@@ -582,6 +582,11 @@ const fr = {
   wa_your_invoice: "votre facture",
   wa_here_is: "Voici",
   wa_amount: "Montant",
+  doc_download_short: "Télécharger",
+  doc_delete_confirm: "Supprimer définitivement ce document ?",
+  toast_limit_lifetime: "Vos documents gratuits sont épuisés",
+  land_cta_secondary_paid: "Devis express sans compte",
+  land_cta_note_free: "Gratuit pendant le lancement · sans carte bancaire",
 };
 
 export type Dict = typeof fr;
@@ -1123,6 +1128,11 @@ const en: Dict = {
   wa_your_invoice: "your invoice",
   wa_here_is: "Here is",
   wa_amount: "Amount",
+  doc_download_short: "Download",
+  doc_delete_confirm: "Delete this document permanently?",
+  toast_limit_lifetime: "Your free documents are used up",
+  land_cta_secondary_paid: "Express quote, no account",
+  land_cta_note_free: "Free during launch · no bank card",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };
