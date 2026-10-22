@@ -412,7 +412,10 @@ export function DocumentBuilder({
             router.push("/offres");
             return;
           }
-          toast.error(t.toast_create_error);
+          // Le code d'erreur de la base (SUSPENDED, FORBIDDEN…) aide le support
+          // à diagnostiquer sans accès au compte du client.
+          const code = error instanceof Error ? error.message.slice(0, 80) : "";
+          toast.error(code ? `${t.toast_create_error} (${code})` : t.toast_create_error);
         },
       },
     );
