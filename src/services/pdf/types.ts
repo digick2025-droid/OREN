@@ -64,6 +64,8 @@ export type PdfLang = "fr" | "en";
 
 /** Libellés du document — le moteur reste indépendant de l'app */
 export interface PdfStrings {
+  /** Langue des libellés (montant en toutes lettres). */
+  locale: PdfLang;
   quote: string;
   invoice: string;
   proforma: string;
@@ -93,6 +95,12 @@ export interface PdfStrings {
   regime: string;
   footer: string;
   footerCta: string;
+  /** « Arrêté le présent devis à la somme de », selon le type. */
+  amountStatementQuote: string;
+  amountStatementProforma: string;
+  amountStatementInvoice: string;
+  /** Devise en toutes lettres : « francs CFA ». */
+  currencyWords: string;
 }
 
 export interface PdfTemplate {

@@ -2,6 +2,7 @@ import type { PdfLang, PdfStrings } from "./types";
 
 export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
   fr: {
+    locale: "fr",
     quote: "DEVIS",
     invoice: "FACTURE",
     proforma: "FACTURE PROFORMA",
@@ -32,8 +33,13 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
     regime: "Régime",
     footer: "Créé avec OREN",
     footerCta: "Devis et factures pro en 2 minutes, gratuitement :",
+    amountStatementQuote: "Arrêté le présent devis à la somme de",
+    amountStatementProforma: "Arrêtée la présente facture proforma à la somme de",
+    amountStatementInvoice: "Arrêtée la présente facture à la somme de",
+    currencyWords: "francs CFA",
   },
   en: {
+    locale: "en",
     quote: "QUOTE",
     invoice: "INVOICE",
     proforma: "PROFORMA INVOICE",
@@ -64,5 +70,9 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
     regime: "Regime",
     footer: "Created with OREN",
     footerCta: "Pro quotes and invoices in 2 minutes, for free:",
+    amountStatementQuote: "This quote is set at the sum of",
+    amountStatementProforma: "This proforma invoice is set at the sum of",
+    amountStatementInvoice: "This invoice is set at the sum of",
+    currencyWords: "CFA francs",
   },
 };

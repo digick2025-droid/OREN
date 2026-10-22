@@ -7,6 +7,7 @@
  * l'image de l'entreprise.
  */
 
+import { numberToEnglishWords, numberToFrenchWords } from "../amount-words";
 import type {
   PdfCompany,
   PdfDocumentData,
@@ -169,6 +170,17 @@ export const classicTemplate: PdfTemplate = {
 
     const legalNote = doc.type === "facture" ? s.latePenalty : s.quoteValidity;
 
+    // « Arrêté le présent devis à la somme de … » : le total en toutes
+    // lettres, comme l'exige l'usage (OHADA) sur devis, proformas et factures.
+    const amountWords = (s.locale === "en" ? numberToEnglishWords : numberToFrenchWords)(doc.total);
+    const statementLabel =
+      doc.type === "facture"
+        ? s.amountStatementInvoice
+        : doc.type === "proforma"
+          ? s.amountStatementProforma
+          : s.amountStatementQuote;
+    const amountStatement = `<div style="margin-top:14px;font-size:11px;color:#334155;line-height:1.55">${statementLabel} : <strong style="color:#0F172A">${esc(amountWords.charAt(0).toUpperCase() + amountWords.slice(1))} ${s.currencyWords}</strong> (${fcfa(doc.total)}).</div>`;
+
     // Pied de page. Offre avec logo : à l'image de l'entreprise, sans aucune
     // mention OREN (avantage payant). Sinon : « Créé avec OREN » et le lien
     // d'inscription — chaque devis envoyé au client fait connaître OREN, et
@@ -267,6 +279,7 @@ export const classicTemplate: PdfTemplate = {
     </div>
   </div>
 
+  ${amountStatement}
   ${conditions}
   ${note}
 
