@@ -644,6 +644,8 @@ const fr = {
   x_price_or: "ou",
   x_price_account: "compte gratuit, 3 documents offerts",
   quota_buy_document: "Débloquer ce document",
+  referral_your_link: "Votre lien à partager",
+  referral_load_error: "Votre lien de parrainage n'a pas pu être chargé.",
 };
 
 export type Dict = typeof fr;
@@ -1247,6 +1249,8 @@ const en: Dict = {
   x_price_or: "or",
   x_price_account: "free account, 3 documents included",
   quota_buy_document: "Unlock this document",
+  referral_your_link: "Your link to share",
+  referral_load_error: "Your referral link could not be loaded.",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };
