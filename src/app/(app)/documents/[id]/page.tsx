@@ -26,6 +26,7 @@ import { useI18n } from "@/features/i18n/language-context";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { computeCategoryTotals } from "@/lib/calculations";
 import { DOCUMENT_STATUSES, STATUS_SOLID, STATUS_VARIANT } from "@/lib/constants";
+import { track } from "@/lib/analytics";
 import { formatAmount, formatDate } from "@/lib/format";
 import { statusLabel, typeLabel } from "@/lib/i18n/labels";
 import { noterProposition, peutProposer } from "@/lib/push-invite";
@@ -125,6 +126,12 @@ export default function DocumentDetailPage({
         window.open(buildDocumentShareLink(doc, company.name, lang), "_blank");
       }
       markDocumentShared();
+      track("document_shared", {
+        type: doc.type,
+        channel: result === "unsupported" ? "link" : "file",
+        first_share: doc.status === "brouillon",
+        since_created_ms: Math.max(0, Date.now() - Date.parse(doc.created_at)),
+      });
       if (doc.status === "brouillon") {
         updateStatus.mutate({ id: doc.id, status: "envoye" });
 

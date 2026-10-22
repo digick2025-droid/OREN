@@ -41,6 +41,7 @@ import {
   useUpdateDocument,
 } from "@/hooks/use-documents";
 import { useSetMetier } from "@/hooks/use-metier";
+import { track, trackOnce } from "@/lib/analytics";
 import { usePlanFeature, useUsage } from "@/hooks/use-usage";
 import type { Metier } from "@/lib/catalog-templates";
 import type {
@@ -166,6 +167,16 @@ export function DocumentBuilder({
   );
   const [draftRestored, setDraftRestored] = useState(false);
   const restoredRef = useRef(false);
+  // Début de saisie, pour mesurer le temps réel jusqu'à « Générer ».
+  const openedAtRef = useRef(0);
+
+  useEffect(() => {
+    if (isEdit) return;
+    openedAtRef.current = Date.now();
+    track("builder_opened", { type: createType ?? "devis", duplicate: Boolean(source) });
+    // Une seule mesure par ouverture du formulaire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---- Métier : pré-remplissage du catalogue / suggestions de lignes ----
   // `company` vient d'un composant serveur : après écriture, on tient l'état à
@@ -275,6 +286,10 @@ export function DocumentBuilder({
     quota !== null ? quota - (usage?.used ?? 0) + (usage?.credits ?? 0) : null;
   const quotaReached = remainingDocs !== null && remainingDocs <= 0;
   const lastFreeDocument = remainingDocs === 1;
+
+  useEffect(() => {
+    if (quotaReached) trackOnce("quota_blocked", { type });
+  }, [quotaReached, type]);
 
   const advanceValue = parseInt(advance, 10) || 0;
   const remaining = remainingToPay(totals.total, advanceValue);
@@ -425,6 +440,13 @@ export function DocumentBuilder({
       {
         onSuccess: (doc) => {
           clearDraft();
+          track("document_generated", {
+            type,
+            lines: items.length,
+            duplicate: Boolean(source),
+            draft_restored: draftRestored,
+            duration_ms: Date.now() - openedAtRef.current,
+          });
           toast.success(createdToast());
           router.push(`/documents/${doc.id}?created=1`);
         },

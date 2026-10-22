@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useI18n } from "@/features/i18n/language-context";
 import { mapAuthError } from "@/lib/auth/errors";
+import { track, trackOnce } from "@/lib/analytics";
 import { isStrongPassword, isValidEmail } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -37,6 +38,10 @@ export default function InscriptionPage() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    trackOnce("signup_view");
+  }, []);
 
   // Trois champs seulement : le nom du gérant, le téléphone ou le logo se
   // complètent plus tard dans Réglages. Les erreurs s'affichent sous le champ
@@ -94,6 +99,8 @@ export default function InscriptionPage() {
       setErrors({ email: t.auth_error_email_taken });
       return;
     }
+
+    track("signup_completed", { confirm_email: !data.session });
 
     if (data.session) {
       const { error: companyError } = await supabase.from("companies").insert({
