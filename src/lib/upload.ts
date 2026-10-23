@@ -184,6 +184,95 @@ export async function prepareLogo(file: File): Promise<PrepareLogoResult> {
   return { ok: true, file: compressed };
 }
 
+/**
+ * Extrait jusqu'à 3 couleurs dominantes et distinctes d'un logo, pour
+ * proposer une couleur de document assortie. Ignore la transparence, le
+ * quasi-blanc et le quasi-noir ; un logo sans couleur vive renvoie sa
+ * teinte sombre dominante. Renvoie [] si l'image est illisible.
+ */
+export async function extractLogoPalette(image: Blob): Promise<string[]> {
+  if (typeof document === "undefined" || typeof createImageBitmap === "undefined") {
+    return [];
+  }
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(image);
+  } catch {
+    return [];
+  }
+  const scale = Math.min(1, 64 / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) {
+    bitmap.close();
+    return [];
+  }
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
+  const data = ctx.getImageData(0, 0, w, h).data;
+
+  // Seaux de couleur (5 bits par canal) : effectif + somme RVB.
+  type Bucket = { n: number; r: number; g: number; b: number; sat: number };
+  const vivid = new Map<number, Bucket>();
+  const dark = { n: 0, r: 0, g: 0, b: 0, sat: 0 };
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i] ?? 0;
+    const g = data[i + 1] ?? 0;
+    const b = data[i + 2] ?? 0;
+    if ((data[i + 3] ?? 0) < 200) continue;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    if (min > 225) continue; // quasi-blanc (fond)
+    const sat = max === 0 ? 0 : (max - min) / max;
+    if (max < 35 || sat < 0.2) {
+      if (max < 140) {
+        dark.n++;
+        dark.r += r;
+        dark.g += g;
+        dark.b += b;
+      }
+      continue;
+    }
+    const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+    const bucket = vivid.get(key) ?? { n: 0, r: 0, g: 0, b: 0, sat: 0 };
+    bucket.n++;
+    bucket.r += r;
+    bucket.g += g;
+    bucket.b += b;
+    bucket.sat += sat;
+    vivid.set(key, bucket);
+  }
+
+  const hex = (r: number, g: number, b: number) =>
+    `#${[r, g, b].map((c) => Math.round(c).toString(16).padStart(2, "0")).join("")}`.toUpperCase();
+
+  // Les bords anticrénelés produisent de nombreuses teintes marginales :
+  // on ignore celles qui pèsent moins de 4 % des pixels colorés.
+  const vividTotal = [...vivid.values()].reduce((sum, bk) => sum + bk.n, 0);
+  const ranked = [...vivid.values()]
+    .filter((bk) => bk.n >= Math.max(2, vividTotal * 0.04))
+    .map((bk) => ({
+      rgb: [bk.r / bk.n, bk.g / bk.n, bk.b / bk.n] as const,
+      score: bk.n * (0.6 + bk.sat / bk.n),
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const picked: (readonly [number, number, number])[] = [];
+  for (const { rgb } of ranked) {
+    const distinct = picked.every(
+      (p) => Math.hypot(p[0] - rgb[0], p[1] - rgb[1], p[2] - rgb[2]) > 70,
+    );
+    if (distinct) picked.push(rgb);
+    if (picked.length === 3) break;
+  }
+  if (picked.length > 0) return picked.map(([r, g, b]) => hex(r, g, b));
+  return dark.n > 0 ? [hex(dark.r / dark.n, dark.g / dark.n, dark.b / dark.n)] : [];
+}
+
 /** Taille max d'une capture d'écran de témoignage, avant compression. */
 export const MAX_TESTIMONIAL_IMAGE_BYTES = 5 * 1024 * 1024; // 5 Mo
 

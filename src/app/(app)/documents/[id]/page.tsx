@@ -224,6 +224,11 @@ export default function DocumentDetailPage({
               {formatAmount(doc.total)}
             </div>
           </div>
+          {doc.description && (
+            <p className="mt-3 whitespace-pre-line border-t border-border pt-3 text-[13px] leading-relaxed text-muted-foreground">
+              {doc.description}
+            </p>
+          )}
         </Card>
 
         <section>

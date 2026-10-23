@@ -37,6 +37,8 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
     amountStatementProforma: "Arrêtée la présente facture proforma à la somme de",
     amountStatementInvoice: "Arrêtée la présente facture à la somme de",
     currencyWords: "francs CFA",
+    services: "Nos services",
+    projectDescription: "Description du projet",
   },
   en: {
     locale: "en",
@@ -74,5 +76,7 @@ export const PDF_STRINGS: Record<PdfLang, PdfStrings> = {
     amountStatementProforma: "This proforma invoice is set at the sum of",
     amountStatementInvoice: "This invoice is set at the sum of",
     currencyWords: "CFA francs",
+    services: "Our services",
+    projectDescription: "Project description",
   },
 };

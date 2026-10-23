@@ -26,6 +26,12 @@ export interface PdfCompany {
    * mention OREN).
    */
   signupUrl?: string;
+  /** Modèle de document choisi par l'entreprise. */
+  template: PdfTemplateId;
+  /** Services listés en pied de document (vide : bloc masqué). */
+  services: string[];
+  /** Mention libre en pied de document (paiement Mobile Money, banque…). */
+  footerNote: string;
 }
 
 export type PdfLineCategory = "article" | "main_oeuvre" | "transport";
@@ -44,6 +50,8 @@ export interface PdfDocumentData {
   type: "devis" | "facture" | "proforma";
   number: string;
   title: string;
+  /** Description du chantier / projet (vide : bloc masqué). */
+  description: string;
   issueDate: string;
   clientName: string;
   clientPhone: string;
@@ -58,7 +66,9 @@ export interface PdfDocumentData {
   conditions: string;
 }
 
-export type PdfTemplateId = "classic";
+export const PDF_TEMPLATE_IDS = ["classic", "modern", "elegant"] as const;
+
+export type PdfTemplateId = (typeof PDF_TEMPLATE_IDS)[number];
 
 export type PdfLang = "fr" | "en";
 
@@ -101,6 +111,8 @@ export interface PdfStrings {
   amountStatementInvoice: string;
   /** Devise en toutes lettres : « francs CFA ». */
   currencyWords: string;
+  services: string;
+  projectDescription: string;
 }
 
 export interface PdfTemplate {

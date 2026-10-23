@@ -16,6 +16,7 @@
 
 import type { LineCategory } from "@/lib/calculations";
 import type { Metier } from "@/lib/catalog-templates";
+import type { PdfTemplateId } from "@/services/pdf/types";
 
 export type DocumentType = "devis" | "facture" | "proforma";
 export type DocumentStatus =
@@ -61,6 +62,12 @@ export interface Company {
   vat_rate: number;
   /** Métier déclaré au premier document — pré-remplissage / suggestions (migration 0026). */
   metier: Metier | null;
+  /** Modèle de document PDF (migration 0044). */
+  pdf_template: PdfTemplateId;
+  /** Services affichés en pied de document, 12 max (migration 0044). */
+  doc_services: string[];
+  /** Mention libre en pied de document (migration 0044). */
+  doc_footer_note: string | null;
   suspended_at: string | null;
   suspended_reason: string | null;
   created_at: string;
@@ -130,6 +137,8 @@ export interface DocumentRow {
   number: string;
   status: DocumentStatus;
   title: string;
+  /** Description du chantier / projet (migration 0044). */
+  description: string;
   issue_date: string;
   client_name: string;
   client_phone: string;
@@ -321,6 +330,7 @@ export interface CreateDocumentPayload {
   client_name?: string;
   client_phone?: string;
   title: string;
+  description?: string;
   note: string;
   conditions: string;
   discount: number;
@@ -337,6 +347,7 @@ export interface UpdateDocumentPayload {
   client_name?: string;
   client_phone?: string;
   title: string;
+  description?: string;
   note: string;
   conditions: string;
   discount: number;

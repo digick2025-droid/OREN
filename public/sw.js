@@ -23,6 +23,8 @@ const PRECACHE = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  // Police des devis/factures : le PDF garde la police de l'app hors-ligne.
+  "/fonts/inter-latin.woff2",
 ];
 
 /** Une réponse personnalisée, redirigée ou en erreur n'a rien à faire en cache. */
