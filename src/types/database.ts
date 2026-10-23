@@ -84,6 +84,95 @@ export type CompanyUpdate = Partial<
   Omit<Company, "id" | "owner_id" | "created_at" | "updated_at">
 >;
 
+/**
+ * OREN ENTREPRISE — comptes rattachés à une entreprise avec rôle
+ * (migration 0037). Le propriétaire est toujours « gerant ».
+ */
+export type CompanyRole =
+  | "gerant"
+  | "dispatcheur"
+  | "commercial"
+  | "technicien"
+  | "comptable";
+export type MemberStatus = "active" | "suspended";
+/** Un invité ne peut pas être « gerant » (contrainte company_invitations). */
+export type InvitationRole = Exclude<CompanyRole, "gerant">;
+export type InvitationStatus = "pending" | "accepted" | "revoked";
+
+export interface CompanyMember {
+  id: string;
+  company_id: string;
+  user_id: string;
+  role: CompanyRole;
+  status: MemberStatus;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface CompanyInvitation {
+  id: string;
+  company_id: string;
+  phone: string;
+  role: InvitationRole;
+  status: InvitationStatus;
+  invited_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** OREN ENTREPRISE — intervention / bon de travail (migration 0040). */
+export type InterventionStatus =
+  | "a_planifier"
+  | "planifiee"
+  | "en_cours"
+  | "terminee"
+  | "annulee";
+
+export interface Intervention {
+  id: string;
+  company_id: string;
+  client_id: string | null;
+  title: string;
+  description: string;
+  status: InterventionStatus;
+  assigned_to: string | null;
+  scheduled_at: string | null;
+  address: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type InterventionInsert = Pick<Intervention, "company_id" | "title"> &
+  Partial<
+    Pick<
+      Intervention,
+      | "client_id"
+      | "description"
+      | "status"
+      | "assigned_to"
+      | "scheduled_at"
+      | "address"
+      | "created_by"
+    >
+  >;
+
+export type InterventionUpdate = Partial<
+  Pick<
+    Intervention,
+    | "client_id"
+    | "title"
+    | "description"
+    | "status"
+    | "assigned_to"
+    | "scheduled_at"
+    | "address"
+    | "deleted_at"
+  >
+>;
+
 export interface Client {
   id: string;
   company_id: string;
@@ -183,7 +272,11 @@ export type PlanFeature =
   | "reports"
   | "proforma"
   | "logo"
-  | "advance";
+  | "advance"
+  /** OREN ENTREPRISE — équipe & rôles (migrations 0037/0038). */
+  | "members"
+  /** OREN ENTREPRISE — gestion d'interventions / FSM (migration 0040). */
+  | "interventions";
 
 /** Contenu marketing bilingue d'une offre (`plans.marketing`, migration 0021). */
 export interface PlanMarketingContent {

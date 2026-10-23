@@ -19,6 +19,8 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   proforma: "Facture proforma",
   logo: "Logo entreprise",
   advance: "Acompte sur facture",
+  members: "Équipe & rôles",
+  interventions: "Interventions (terrain)",
 };
 
 const ALL_FEATURES: PlanFeature[] = [
@@ -27,6 +29,8 @@ const ALL_FEATURES: PlanFeature[] = [
   "proforma",
   "logo",
   "advance",
+  "members",
+  "interventions",
 ];
 
 function emptyMarketing(): PlanMarketingContent {

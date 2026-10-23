@@ -41,3 +41,19 @@ export const FREE_LAUNCH: boolean = false;
  * paiement part avec le commit qui l'a décidé.
  */
 export const MANUAL_PAYMENT: boolean = true;
+
+/**
+ * OREN ENTREPRISE — interrupteur de preview du module FSM (en construction).
+ *
+ * Quand `true`, l'espace « Équipe » (et plus tard interventions/planning) est
+ * visible même sans la feature `members` en base — pour développer et tester
+ * avant d'ouvrir l'offre. Comme `FREE_LAUNCH`, c'est une constante de code
+ * (jamais une env Vercel) : l'état part avec le commit, sans désync silencieuse.
+ *
+ * Laissé à `false` : tant que l'offre `entreprise` n'est pas active, le module
+ * reste invisible en production (gaté par `usePlanFeature("members")`).
+ *
+ * Annoté `boolean` (pas le littéral `false`) pour que TypeScript continue de
+ * vérifier les branches « preview actif ».
+ */
+export const ENTERPRISE_PREVIEW: boolean = false;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Building2, ChevronRight, CreditCard, Gift, Globe, LogOut, Palette, ShieldCheck } from "lucide-react";
+import { Bell, Building2, ChevronRight, CreditCard, Gift, Globe, LogOut, Palette, ShieldCheck, Users } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -13,6 +13,7 @@ import { useI18n } from "@/features/i18n/language-context";
 import { clearOfflineData } from "@/lib/offline";
 import { desactiverPush } from "@/lib/push";
 import { createClient } from "@/lib/supabase/client";
+import { useEnterpriseAccess } from "@/hooks/use-enterprise";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUsage } from "@/hooks/use-usage";
 
@@ -22,6 +23,7 @@ export default function ReglagesPage() {
   const { t } = useI18n();
   const { data: usage } = useUsage();
   const isAdmin = useIsAdmin();
+  const enterpriseAccess = useEnterpriseAccess();
   const supabase = createClient();
 
   const signOut = async () => {
@@ -127,6 +129,23 @@ export default function ReglagesPage() {
           </div>
           <LanguageToggle />
         </Card>
+
+        {enterpriseAccess ? (
+          <Card>
+            <Link href="/equipe" className="flex items-center gap-3 px-4 py-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-navy">
+                <Users size={19} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[15px] font-bold text-navy">Équipe</div>
+                <div className="text-[12.5px] text-muted-foreground">
+                  Membres & rôles
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-muted-foreground/70" />
+            </Link>
+          </Card>
+        ) : null}
 
         {isAdmin ? (
           <Card>
