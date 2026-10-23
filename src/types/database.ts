@@ -211,6 +211,53 @@ export type InterventionReportUpsert = Pick<
     >
   >;
 
+/** OREN ENTREPRISE — pièce détachée en magasin (migration 0048). */
+export interface Part {
+  id: string;
+  company_id: string;
+  name: string;
+  reference: string;
+  unit: string;
+  unit_price: number;
+  stock: number;
+  low_stock_threshold: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type PartInsert = Pick<Part, "company_id" | "name"> &
+  Partial<
+    Pick<Part, "reference" | "unit" | "unit_price" | "stock" | "low_stock_threshold">
+  >;
+
+export type PartUpdate = Partial<
+  Pick<
+    Part,
+    "name" | "reference" | "unit" | "unit_price" | "stock" | "low_stock_threshold" | "deleted_at"
+  >
+>;
+
+/** Pièce posée sur une intervention (snapshot du magasin, migration 0048). */
+export interface InterventionPart {
+  id: string;
+  company_id: string;
+  intervention_id: string;
+  part_id: string | null;
+  name: string;
+  unit: string;
+  unit_price: number;
+  quantity: number;
+  created_by: string | null;
+  created_at: string;
+}
+
+export type InterventionPartInsert = Pick<
+  InterventionPart,
+  "company_id" | "intervention_id" | "name" | "quantity"
+> &
+  Partial<Pick<InterventionPart, "part_id" | "unit" | "unit_price">>;
+
 export interface Client {
   id: string;
   company_id: string;
@@ -314,7 +361,9 @@ export type PlanFeature =
   /** OREN ENTREPRISE — équipe & rôles (migrations 0037/0038). */
   | "members"
   /** OREN ENTREPRISE — gestion d'interventions / FSM (migration 0040). */
-  | "interventions";
+  | "interventions"
+  /** OREN ENTREPRISE — pièces détachées & stock (migration 0048). */
+  | "parts";
 
 /** Contenu marketing bilingue d'une offre (`plans.marketing`, migration 0021). */
 export interface PlanMarketingContent {

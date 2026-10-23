@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, CalendarDays, Plus, User } from "lucide-react";
+import { Boxes, CalendarClock, CalendarDays, Plus, User } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { useClients } from "@/hooks/use-clients";
@@ -47,6 +47,13 @@ export default function InterventionsPage() {
         title="Interventions"
         action={
           <div className="flex items-center gap-1">
+            <Link
+              href="/stock"
+              aria-label="Stock"
+              className="rounded-xl p-1.5 text-navy hover:bg-muted"
+            >
+              <Boxes size={21} />
+            </Link>
             <Link
               href="/interventions/planning"
               aria-label="Planning"

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   CalendarClock,
   Check,
@@ -9,7 +10,10 @@ import {
   FileSignature,
   FileText,
   MapPin,
+  Package,
+  Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
@@ -23,10 +27,17 @@ import {
 } from "@/hooks/use-interventions";
 import { isQuotaError, useCreateDocument } from "@/hooks/use-documents";
 import { useInterventionReport } from "@/hooks/use-intervention-reports";
+import {
+  useAddInterventionPart,
+  useInterventionParts,
+  useRemoveInterventionPart,
+} from "@/hooks/use-intervention-parts";
+import { useParts } from "@/hooks/use-parts";
 import { useClients } from "@/hooks/use-clients";
 import { useTeamMembers } from "@/hooks/use-team";
 import { useCurrentRole } from "@/features/company/company-context";
 import { canManageInterventions } from "@/lib/roles";
+import { formatAmount } from "@/lib/format";
 import {
   INTERVENTION_STATUSES,
   INTERVENTION_STATUS_CLASSES,
@@ -45,10 +56,17 @@ export default function InterventionDetailPage() {
   const { data: report } = useInterventionReport(params.id);
   const { data: members } = useTeamMembers();
   const { data: clients } = useClients();
+  const { data: usedParts } = useInterventionParts(params.id);
+  const { data: parts } = useParts();
+  const addPart = useAddInterventionPart(params.id);
+  const removePart = useRemoveInterventionPart(params.id);
   const save = useSaveIntervention();
   const remove = useDeleteIntervention();
   const createDoc = useCreateDocument();
   const canManage = canManageInterventions(useCurrentRole());
+
+  const [pickPart, setPickPart] = useState("");
+  const [pickQty, setPickQty] = useState("1");
 
   if (isLoading) {
     return (
@@ -107,6 +125,24 @@ export default function InterventionDetailPage() {
   };
 
   const makeQuote = () => {
+    // Main d'œuvre + une ligne « article » par pièce posée (coût prérempli,
+    // à ajuster côté devis).
+    const items = [
+      {
+        name: iv.title,
+        unit: "forfait",
+        category: "main_oeuvre" as const,
+        quantity: 1,
+        unit_price: 0,
+      },
+      ...(usedParts ?? []).map((p) => ({
+        name: p.name,
+        unit: p.unit,
+        category: "article" as const,
+        quantity: p.quantity,
+        unit_price: p.unit_price,
+      })),
+    ];
     createDoc.mutate(
       {
         type: "devis",
@@ -116,15 +152,7 @@ export default function InterventionDetailPage() {
         conditions: "",
         discount: 0,
         status: "brouillon",
-        items: [
-          {
-            name: iv.title,
-            unit: "forfait",
-            category: "main_oeuvre",
-            quantity: 1,
-            unit_price: 0,
-          },
-        ],
+        items,
       },
       {
         onSuccess: (doc) => {
@@ -138,6 +166,30 @@ export default function InterventionDetailPage() {
       },
     );
   };
+
+  const onAddPart = () => {
+    const part = parts?.find((p) => p.id === pickPart);
+    if (!part) {
+      toast.error("Choisissez une pièce");
+      return;
+    }
+    const qty = Math.max(1, Math.round(Number(pickQty) || 1));
+    addPart.mutate(
+      { part, quantity: qty },
+      {
+        onSuccess: () => {
+          setPickPart("");
+          setPickQty("1");
+        },
+        onError: (e) => toast.error(e.message),
+      },
+    );
+  };
+
+  const partsTotal = (usedParts ?? []).reduce(
+    (sum, p) => sum + p.unit_price * p.quantity,
+    0,
+  );
 
   const when = iv.scheduled_at
     ? new Date(iv.scheduled_at).toLocaleString("fr-FR", {
@@ -236,6 +288,96 @@ export default function InterventionDetailPage() {
             )}
           </Card>
         </Link>
+
+        {/* Pièces posées */}
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <Label className="mb-0 flex items-center gap-1.5">
+              <Package size={14} /> Pièces posées
+            </Label>
+            {partsTotal > 0 ? (
+              <span className="text-[12.5px] font-semibold text-navy">
+                {formatAmount(partsTotal)}
+              </span>
+            ) : null}
+          </div>
+
+          {(usedParts ?? []).length > 0 ? (
+            <div className="mb-2 space-y-1.5">
+              {(usedParts ?? []).map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-2 rounded-[12px] border border-border bg-card px-3 py-2"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13.5px] font-medium text-navy">
+                      {p.name}
+                    </div>
+                    <div className="text-[11.5px] text-muted-foreground">
+                      {p.quantity} {p.unit} × {formatAmount(p.unit_price)}
+                    </div>
+                  </div>
+                  <span className="text-[12.5px] font-semibold text-navy">
+                    {formatAmount(p.unit_price * p.quantity)}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Retirer la pièce"
+                    onClick={() =>
+                      removePart.mutate(p.id, {
+                        onError: (e) => toast.error(e.message),
+                      })
+                    }
+                    className="text-muted-foreground hover:text-error"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {(parts ?? []).length > 0 ? (
+            <div className="flex items-stretch gap-2">
+              <select
+                aria-label="Pièce"
+                value={pickPart}
+                onChange={(e) => setPickPart(e.target.value)}
+                className={cn(SELECT_CLASS, "h-[44px] flex-1")}
+              >
+                <option value="">— Choisir une pièce —</option>
+                {(parts ?? []).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.stock} {p.unit})
+                  </option>
+                ))}
+              </select>
+              <input
+                aria-label="Quantité"
+                inputMode="numeric"
+                value={pickQty}
+                onChange={(e) => setPickQty(e.target.value)}
+                className="h-[44px] w-14 rounded-[14px] border-[1.5px] border-border bg-card px-2 text-center text-[15px] text-navy focus-visible:border-navy focus-visible:outline-none"
+              />
+              <button
+                type="button"
+                aria-label="Ajouter la pièce"
+                onClick={onAddPart}
+                disabled={addPart.isPending}
+                className="flex h-[44px] w-[44px] items-center justify-center rounded-[14px] bg-primary text-primary-foreground disabled:opacity-50"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/stock"
+              className="block rounded-[12px] border border-dashed border-border px-3 py-2.5 text-center text-[12.5px] font-medium text-muted-foreground"
+            >
+              Aucune pièce en magasin — ouvrir le stock
+            </Link>
+          )}
+        </div>
 
         <div>
           <Label htmlFor="iv-assigned">Technicien affecté</Label>
