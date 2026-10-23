@@ -1,7 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { CalendarClock, FileText, MapPin, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  Check,
+  ChevronRight,
+  FileSignature,
+  FileText,
+  MapPin,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
@@ -13,6 +22,7 @@ import {
   useSaveIntervention,
 } from "@/hooks/use-interventions";
 import { isQuotaError, useCreateDocument } from "@/hooks/use-documents";
+import { useInterventionReport } from "@/hooks/use-intervention-reports";
 import { useClients } from "@/hooks/use-clients";
 import { useTeamMembers } from "@/hooks/use-team";
 import { useCurrentRole } from "@/features/company/company-context";
@@ -32,6 +42,7 @@ export default function InterventionDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: intervention, isLoading } = useIntervention(params.id);
+  const { data: report } = useInterventionReport(params.id);
   const { data: members } = useTeamMembers();
   const { data: clients } = useClients();
   const save = useSaveIntervention();
@@ -190,6 +201,31 @@ export default function InterventionDetailPage() {
             ))}
           </div>
         </div>
+
+        <Link href={`/interventions/${iv.id}/rapport`}>
+          <Card className="flex items-center gap-3 px-4 py-3.5">
+            <FileSignature size={18} className="shrink-0 text-navy" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[14px] font-semibold text-navy">
+                Rapport d&apos;intervention
+              </div>
+              <div className="text-[12px] text-muted-foreground">
+                {report?.signed_at
+                  ? `Signé par ${report.signed_by || "le client"}`
+                  : (report?.photos.length ?? 0) > 0 || report?.summary
+                    ? "En cours — à faire signer"
+                    : "Photos avant/après et signature"}
+              </div>
+            </div>
+            {report?.signed_at ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                <Check size={12} /> Signé
+              </span>
+            ) : (
+              <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
+            )}
+          </Card>
+        </Link>
 
         <div>
           <Label htmlFor="iv-assigned">Technicien affecté</Label>

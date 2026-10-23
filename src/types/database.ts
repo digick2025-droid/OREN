@@ -173,6 +173,40 @@ export type InterventionUpdate = Partial<
   >
 >;
 
+/** OREN ENTREPRISE — rapport d'intervention signé (migration 0046). */
+export type InterventionPhotoKind = "before" | "after";
+
+export interface InterventionPhoto {
+  path: string;
+  kind: InterventionPhotoKind;
+}
+
+export interface InterventionReport {
+  id: string;
+  company_id: string;
+  intervention_id: string;
+  summary: string;
+  photos: InterventionPhoto[];
+  signature_path: string | null;
+  signed_by: string;
+  signed_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Champs posés par l'app lors d'un upsert de rapport. */
+export type InterventionReportUpsert = Pick<
+  InterventionReport,
+  "company_id" | "intervention_id"
+> &
+  Partial<
+    Pick<
+      InterventionReport,
+      "summary" | "photos" | "signature_path" | "signed_by" | "signed_at"
+    >
+  >;
+
 export interface Client {
   id: string;
   company_id: string;
