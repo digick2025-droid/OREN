@@ -154,7 +154,12 @@ export function CompanyForm({
 
     setSaving(false);
     if (result.error) {
-      toast.error(t.toast_save_error);
+      // Numéro déjà utilisé par une autre entreprise (migration 0043).
+      toast.error(
+        result.error.message.includes("PHONE_TAKEN")
+          ? t.toast_phone_taken
+          : t.toast_save_error,
+      );
       return;
     }
     toast.success(t.toast_saved);

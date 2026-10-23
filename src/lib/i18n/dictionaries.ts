@@ -251,6 +251,7 @@ const fr = {
   saving: "Enregistrement…",
   toast_saved: "Profil enregistré",
   toast_save_error: "Enregistrement impossible. Réessayez.",
+  toast_phone_taken: "Ce numéro est déjà utilisé par un autre compte OREN. Un souci ? Écrivez-nous sur WhatsApp.",
   toast_need_company: "Entrez le nom de l'entreprise",
 
   // Accueil
@@ -905,6 +906,7 @@ const en: Dict = {
   saving: "Saving…",
   toast_saved: "Profile saved",
   toast_save_error: "Could not save. Try again.",
+  toast_phone_taken: "This number is already used by another OREN account. A problem? Message us on WhatsApp.",
   toast_need_company: "Enter your business name",
 
   home_hello: "Hello",
