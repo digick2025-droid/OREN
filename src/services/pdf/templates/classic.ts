@@ -2,7 +2,7 @@
  * Modèle « classic » — rendu premium :
  * bandeau dégradé couleur entreprise, en-tête aéré, tableau encadré,
  * totaux en panneau teinté, mentions OHADA, bloc signature.
- * Avec l'offre Startup (logo chargé), le document passe en branding
+ * Avec l'offre Pro (logo chargé), le document passe en branding
  * complet : filigrane du logo, en-tête magnifié, pied de page à
  * l'image de l'entreprise.
  */
@@ -68,7 +68,7 @@ export const classicTemplate: PdfTemplate = {
       ? `<img src="${esc(company.logoUrl)}" alt="" style="width:${logoSize}px;height:${logoSize}px;object-fit:contain;border-radius:12px${branded ? `;padding:5px;background:#fff;border:1px solid ${softBorder};box-shadow:0 1px 4px rgba(15,23,42,.06)` : ""}" />`
       : `<div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,${color},${tint(color, "CC")});color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${esc((company.name || "D").charAt(0).toUpperCase())}</div>`;
 
-    // Filigrane Startup : le logo en très grand, à peine visible, centré
+    // Filigrane Pro : le logo en très grand, à peine visible, centré
     const watermark = branded
       ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none">
            <img src="${esc(company.logoUrl)}" alt="" style="width:105mm;max-height:105mm;object-fit:contain;opacity:.045" />

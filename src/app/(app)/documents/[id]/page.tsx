@@ -65,7 +65,7 @@ export default function DocumentDetailPage({
   const updateStatus = useUpdateDocumentStatus();
   const convertToInvoice = useConvertToInvoice();
   const deleteDocument = useDeleteDocument();
-  // Branding Startup : la fonctionnalité « logo » débloque le PDF personnalisé
+  // Branding Pro : la fonctionnalité « logo » débloque le PDF personnalisé
   const { enabled: premiumBranding } = usePlanFeature("logo");
   const { data: usage } = useUsage();
   // Lien de parrainage dans la mention « Créé avec OREN » des PDF gratuits :

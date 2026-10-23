@@ -244,7 +244,7 @@ export function CompanyForm({
         </div>
       </div>
 
-      {/* ----- Image de marque (offre Startup) ----- */}
+      {/* ----- Image de marque (offre Pro) ----- */}
       {!brandingAccess.loading &&
         (brandingAccess.enabled ? (
           <Card className="p-4">

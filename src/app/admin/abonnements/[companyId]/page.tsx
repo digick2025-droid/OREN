@@ -160,7 +160,8 @@ export default function AdminCompanyDetailPage({
                   onChange={(e) => setSelectedPlan(e.target.value)}
                 >
                   <option value="">Changer d&rsquo;offre…</option>
-                  {(plans ?? []).map((p) => (
+                  {/* Le document à l'unité n'est pas un abonnement. */}
+                  {(plans ?? []).filter((p) => !p.per_document_price_fcfa).map((p) => (
                     <option key={p.key} value={p.key}>
                       {p.name}
                     </option>

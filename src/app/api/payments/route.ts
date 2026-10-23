@@ -8,7 +8,7 @@ import {
   settlePaymentIntent,
 } from "@/services/payments";
 import { normalizeTransactionRef } from "@/lib/manual-payment";
-import { annualPrice } from "@/lib/pricing";
+import { periodPrice, WEEK_DAYS, type BillingPeriod } from "@/lib/pricing";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PaymentInitiation } from "@/services/payments";
@@ -25,8 +25,11 @@ interface PaymentBody {
   promoCode?: string;
   /** Paiement manuel : référence de transaction recopiée du SMS. */
   transactionRef?: string;
-  /** Abonnement : mensuel (défaut) ou annuel, 12 mois pour le prix de 10. */
-  billing?: "monthly" | "annual";
+  /**
+   * Abonnement : à la semaine, au mois (défaut) ou à l'année (12 mois pour
+   * le prix de 10).
+   */
+  billing?: BillingPeriod;
 }
 
 function isPaymentBody(value: unknown): value is PaymentBody {
@@ -352,7 +355,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle(),
     supabase
       .from("plans")
-      .select("key, price_fcfa, is_active")
+      .select("key, price_fcfa, week_price_fcfa, is_active")
       .eq("key", body.planKey)
       .maybeSingle(),
   ]);
@@ -368,17 +371,22 @@ export async function POST(request: NextRequest) {
   // migration 0036 n'a pas encore tourné ne doit pas se mettre à réclamer de
   // l'argent alors que toute l'interface promet la gratuité.
   if (!FREE_LAUNCH && plan.price_fcfa > 0) {
-    // Annuel : le prix est recalculé ici depuis le mensuel, jamais repris du
-    // client. Les codes promo restent réservés au mensuel (ils sont calculés
-    // sur un mois) : cumuler les deux réductions n'est pas prévu.
-    const annual = body.billing === "annual";
-    if (annual && body.promoCode) {
+    // Semaine / année : le prix est lu ou recalculé ici depuis la base,
+    // jamais repris du client. Les codes promo restent réservés au mensuel
+    // (ils sont calculés sur un mois) : cumuler deux réductions n'est pas prévu.
+    const billing: BillingPeriod =
+      body.billing === "weekly" || body.billing === "annual" ? body.billing : "monthly";
+    if (billing !== "monthly" && body.promoCode) {
       return NextResponse.json({ error: "PROMO_MONTHLY_ONLY" }, { status: 400 });
+    }
+    const periodAmount = periodPrice(plan, billing);
+    if (periodAmount === null) {
+      return NextResponse.json({ error: "INVALID_BILLING" }, { status: 400 });
     }
 
     // Code promo optionnel : revalidé ici (authoritatif), jamais le montant
     // envoyé tel quel par le client — même RPC que l'aperçu côté formulaire.
-    let amount = annual ? annualPrice(plan.price_fcfa) : plan.price_fcfa;
+    let amount = periodAmount;
     let promoCodeId: string | null = null;
     let discountFcfa = 0;
     if (body.promoCode) {
@@ -428,7 +436,8 @@ export async function POST(request: NextRequest) {
         phone: body.phone ?? null,
         promo_code_id: promoCodeId,
         discount_fcfa: discountFcfa,
-        billing_months: annual ? 12 : 1,
+        billing_months: billing === "annual" ? 12 : 1,
+        billing_days: billing === "weekly" ? WEEK_DAYS : null,
         ...manualFields,
       });
     if (intentError) {

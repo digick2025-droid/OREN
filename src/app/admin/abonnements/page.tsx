@@ -33,6 +33,26 @@ function daysUntil(iso: string | null): number | null {
   return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
 }
 
+/**
+ * Une offre PAYÉE qui arrive à échéance. L'offre gratuite a aussi une date
+ * de fin technique (renouvelée par expire_overdue_subscriptions), mais elle
+ * n'expire jamais pour le client : l'afficher « expire bientôt » faisait
+ * passer des comptes gratuits sains pour des comptes à traiter.
+ */
+function isExpiringSoon(
+  planKey: string | null,
+  status: string | null,
+  days: number | null,
+): boolean {
+  return (
+    !!planKey &&
+    planKey !== "free" &&
+    status === "active" &&
+    days !== null &&
+    days <= 7
+  );
+}
+
 export default function AdminAbonnementsPage() {
   const { data: companies, isLoading, error } = useAdminCompanies();
   const { data: plans } = usePlans();
@@ -54,9 +74,11 @@ export default function AdminAbonnementsPage() {
       if (planFilter !== "all" && c.plan_key !== planFilter) return false;
       if (statusFilter === "suspended" && !c.suspended_at) return false;
       if (statusFilter === "active" && c.subscription_status !== "active") return false;
-      if (statusFilter === "expiring") {
-        const d = daysUntil(c.current_period_end);
-        if (!(c.subscription_status === "active" && d !== null && d <= 7)) return false;
+      if (
+        statusFilter === "expiring" &&
+        !isExpiringSoon(c.plan_key, c.subscription_status, daysUntil(c.current_period_end))
+      ) {
+        return false;
       }
       return true;
     });
@@ -87,7 +109,7 @@ export default function AdminAbonnementsPage() {
         <div className="sm:w-48">
           <Select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}>
             <option value="all">Toutes les offres</option>
-            {(plans ?? []).map((p) => (
+            {(plans ?? []).filter((p) => !p.per_document_price_fcfa).map((p) => (
               <option key={p.key} value={p.key}>
                 {p.name}
               </option>
@@ -134,10 +156,7 @@ export default function AdminAbonnementsPage() {
             ) : (
               filtered.map((c) => {
                 const expiresInDays = daysUntil(c.current_period_end);
-                const expiringSoon =
-                  c.subscription_status === "active" &&
-                  expiresInDays !== null &&
-                  expiresInDays <= 7;
+                const expiringSoon = isExpiringSoon(c.plan_key, c.subscription_status, expiresInDays);
                 return (
                   <TableRow key={c.company_id}>
                     <TableCell>

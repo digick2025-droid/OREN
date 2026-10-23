@@ -6,36 +6,33 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useAdminPlans,
-  useRestorePlanPrices,
-  useSetAllPlansFree,
-} from "@/hooks/use-admin-plans";
+import { useAdminPlans, useRestorePlanPrices } from "@/hooks/use-admin-plans";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { formatAmount } from "@/lib/format";
+import { annualPrice } from "@/lib/pricing";
+import type { Plan } from "@/types/database";
+
+/** Prix tels que l'artisan les voit : semaine · mois · année, ou à l'unité. */
+function priceLines(plan: Plan): string[] {
+  if (plan.per_document_price_fcfa) {
+    return [`${formatAmount(plan.per_document_price_fcfa)} / document`];
+  }
+  if (plan.price_fcfa === 0) return ["Gratuit"];
+  return [
+    plan.week_price_fcfa ? `${formatAmount(plan.week_price_fcfa)} / semaine` : null,
+    `${formatAmount(plan.price_fcfa)} / mois`,
+    `${formatAmount(annualPrice(plan.price_fcfa))} / an`,
+  ].filter((line): line is string => line !== null);
+}
 
 export default function AdminOffresPage() {
   const { data: plans, isLoading } = useAdminPlans();
-  const setAllFree = useSetAllPlansFree();
   const restorePrices = useRestorePlanPrices();
 
-  const inPromo = (plans ?? []).some(
-    (p) => p.promo_price_snapshot_fcfa != null,
-  );
-
-  const handleSetAllFree = () => {
-    if (
-      !window.confirm(
-        "Passer TOUTES les offres à 0 F ? Les prix actuels seront sauvegardés et pourront être restaurés ensuite.",
-      )
-    ) {
-      return;
-    }
-    setAllFree.mutate(undefined, {
-      onSuccess: () => toast.success("Toutes les offres sont maintenant gratuites."),
-      onError: (err) => toast.error(err.message),
-    });
-  };
+  // Les offres retirées (Business, migration 0042) restent en base pour
+  // l'historique mais n'ont plus rien à régler ici.
+  const activePlans = (plans ?? []).filter((p) => p.is_active);
+  const inPromo = activePlans.some((p) => p.promo_price_snapshot_fcfa != null);
 
   const handleRestore = () => {
     if (!window.confirm("Restaurer les prix d'origine de toutes les offres ?")) {
@@ -53,9 +50,12 @@ export default function AdminOffresPage() {
         <div>
           <h1 className="text-xl font-bold text-navy">Offres</h1>
           <p className="text-[13.5px] text-muted-foreground">
-            Prix, quotas et contenu marketing affichés sur /offres.
+            Gratuit et Pro sur /offres ; le document à l&rsquo;unité est
+            proposé au blocage du quota et en Express sans compte.
           </p>
         </div>
+        {/* Reste du lancement gratuit (0036) : ne s'affiche que si des prix
+            sont encore à 0 F avec leur sauvegarde. */}
         {inPromo ? (
           <Button
             variant="outline"
@@ -64,15 +64,7 @@ export default function AdminOffresPage() {
           >
             {restorePrices.isPending ? "Restauration…" : "Restaurer les prix d'origine"}
           </Button>
-        ) : (
-          <Button
-            variant="outline"
-            onClick={handleSetAllFree}
-            disabled={setAllFree.isPending}
-          >
-            {setAllFree.isPending ? "Application…" : "Tout mettre à gratuit"}
-          </Button>
-        )}
+        ) : null}
       </div>
 
       {FREE_LAUNCH ? (
@@ -86,53 +78,47 @@ export default function AdminOffresPage() {
         </div>
       ) : null}
 
-      {inPromo ? (
-        <div className="rounded-xl border-[1.5px] border-coral/30 bg-coral/10 px-4 py-3 text-[13px] font-semibold text-coral">
-          Mode promo actif : toutes les offres passées à 0 F sont marquées ci-dessous.
-          Utilisez « Restaurer les prix d&rsquo;origine » pour revenir aux tarifs normaux.
-        </div>
-      ) : null}
-
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-40 w-full" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {(plans ?? []).map((plan) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {activePlans.map((plan) => (
             <Link key={plan.key} href={`/admin/offres/${plan.key}`}>
               <Card className="h-full transition-colors hover:border-primary/40">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <span className="text-[15px] font-bold text-navy">
-                      {plan.name}
+                      {plan.per_document_price_fcfa ? "Document à l'unité" : plan.name}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      {plan.promo_price_snapshot_fcfa != null ? (
-                        <Badge variant="warning">Promo</Badge>
-                      ) : null}
-                      <Badge variant={plan.is_active ? "success" : "neutral"}>
-                        {plan.is_active ? "Active" : "Désactivée"}
-                      </Badge>
-                    </div>
+                    {plan.promo_price_snapshot_fcfa != null ? (
+                      <Badge variant="warning">Promo</Badge>
+                    ) : null}
+                  </div>
+                  <div className="mt-3 space-y-0.5">
+                    {priceLines(plan).map((line, i) => (
+                      <div
+                        key={line}
+                        className={
+                          i === 0
+                            ? "text-lg font-bold text-navy"
+                            : "text-[13px] font-semibold text-navy"
+                        }
+                      >
+                        {line}
+                      </div>
+                    ))}
                   </div>
                   <p className="mt-1 text-[12.5px] text-muted-foreground">
-                    {plan.key}
-                  </p>
-                  <div className="mt-3 text-lg font-bold text-navy">
                     {plan.per_document_price_fcfa
-                      ? `${formatAmount(plan.per_document_price_fcfa)} / devis`
-                      : plan.price_fcfa === 0
-                        ? "Gratuit"
-                        : `${formatAmount(plan.price_fcfa)} / mois`}
-                  </div>
-                  {plan.monthly_quota != null ? (
-                    <p className="text-[12.5px] text-muted-foreground">
-                      {plan.monthly_quota} documents / mois
-                    </p>
-                  ) : null}
+                      ? "Sans compte, ou après le quota"
+                      : plan.monthly_quota != null
+                        ? `${plan.monthly_quota} documents / mois`
+                        : "Documents illimités"}
+                  </p>
                 </CardContent>
               </Card>
             </Link>

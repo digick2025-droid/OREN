@@ -194,6 +194,8 @@ export interface Plan {
   price_fcfa: number;
   monthly_quota: number | null;
   per_document_price_fcfa: number | null;
+  /** Prix pour 7 jours (migration 0042) ; null = pas vendue à la semaine. */
+  week_price_fcfa: number | null;
   features: PlanFeature[];
   marketing: PlanMarketing;
   sort_order: number;

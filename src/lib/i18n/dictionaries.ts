@@ -22,7 +22,7 @@ const fr = {
     "Créez un devis professionnel en 2 minutes, envoyez-le sur WhatsApp, et donnez à vos clients l'image sérieuse qui fait la différence.",
   land_cta_primary: "Commencer gratuitement",
   land_cta_secondary: "Créer un devis rapide",
-  land_cta_note: "3 documents offerts · sans carte bancaire",
+  land_cta_note: "5 documents offerts chaque mois · sans carte bancaire",
   land_proof_title: "Conçu au Cameroun, pour les pros du terrain",
   land_proof_note:
     "Pensé pour le chantier, pas pour le bureau : ça marche sur votre téléphone.",
@@ -94,7 +94,7 @@ const fr = {
     "Vos documents et vos clients vous appartiennent. Protégés, jamais revendus, accessibles uniquement par vous.",
   land_obj4_q: "« Ça coûte combien ? »",
   land_obj4_a:
-    "Gratuit pour commencer : 3 documents offerts, sans carte bancaire. Vous ne payez que si OREN vous fait gagner de l'argent.",
+    "Gratuit pour commencer : 5 documents chaque mois, sans carte bancaire. Pro coûte moins de 1 000 F la semaine, et vous arrêtez quand vous voulez.",
 
   // Landing — plateforme
   land_plat_kicker: "Une vraie plateforme",
@@ -118,18 +118,11 @@ const fr = {
   land_price_tag_start: "Commencez ici",
   land_price_free_name: "Gratuit",
   land_price_free_desc:
-    "3 documents offerts à vie. De quoi tester en conditions réelles, sans engagement.",
-  land_price_express_name: "Express",
-  land_price_express_desc:
-    "Un devis pressé, sans même créer de compte. Vous payez à l'unité.",
+    "5 documents chaque mois, pour toujours. Sans carte bancaire, sans engagement.",
   land_price_pro_name: "Pro",
   land_price_pro_desc:
-    "Jusqu'à 25 documents par mois, puis paiement à l'usage. Pour l'activité qui tourne.",
-  land_price_startup_name: "Startup",
-  land_price_startup_desc:
-    "Documents illimités, catalogue, logo, statistiques. Pour aller plus loin.",
+    "Devis et factures illimités, votre logo, sans mention OREN. Ou {week} F la semaine, au rythme de vos chantiers.",
   land_price_currency: "FCFA",
-  land_price_unit_doc: "FCFA / doc",
   land_price_unit_month: "FCFA / mois",
   land_price_compare: "Comparer les offres en détail",
 
@@ -159,7 +152,7 @@ const fr = {
   land_final_title: "Prêt à décrocher votre prochain chantier ?",
   land_final_sub:
     "Créez votre premier devis maintenant. C'est gratuit, et ça prend 2 minutes.",
-  land_final_note: "3 documents offerts · sans carte bancaire · sans engagement",
+  land_final_note: "5 documents offerts chaque mois · sans carte bancaire · sans engagement",
   land_foot_support: "Support WhatsApp :",
   land_foot_note:
     "OREN — une marque DIGICK · Conçu pour les professionnels d'Afrique.",
@@ -234,7 +227,7 @@ const fr = {
   ohada_legal: "Informations légales (OHADA)",
   ohada_hint:
     "Optionnelles — recommandées pour des factures conformes dans l'espace OHADA.",
-  branding_title: "Image de marque (Startup)",
+  branding_title: "Image de marque (Pro)",
   branding_hint: "Le logo et le slogan apparaissent sur vos documents.",
   f_logo: "Logo",
   f_slogan: "Slogan",
@@ -243,8 +236,8 @@ const fr = {
   logo_change: "Changer le logo",
   logo_uploading: "Envoi du logo…",
   logo_save_first: "Enregistrez d'abord l'entreprise pour ajouter un logo.",
-  branding_locked: "Logo et slogan sont réservés à OREN Startup.",
-  branding_upgrade: "Passer à Startup",
+  branding_locked: "Logo et slogan sont réservés à OREN Pro.",
+  branding_upgrade: "Passer à Pro",
   f_rccm: "N° RCCM",
   f_nif: "NIF / NCC",
   f_regime: "Régime fiscal",
@@ -345,10 +338,10 @@ const fr = {
   type_prestation: "Prestation",
   toast_article_saved: "Article enregistré",
   toast_need_price: "Entrez un prix unitaire valide",
-  catalog_locked_title: "Catalogue réservé à OREN Startup",
+  catalog_locked_title: "Catalogue réservé à OREN Pro",
   catalog_locked_sub:
     "Enregistrez vos produits et prestations une fois pour toutes et ajoutez-les à vos devis en un geste.",
-  catalog_upgrade: "Passer à Startup",
+  catalog_upgrade: "Passer à Pro",
 
   // Création de document
   new_quote: "Nouveau devis",
@@ -404,7 +397,7 @@ const fr = {
   toast_draft_saved: "Brouillon enregistré",
   draft_restored: "Brouillon restauré",
   home_proforma: "Nouvelle proforma",
-  proforma_locked: "La proforma est réservée à OREN Startup.",
+  proforma_locked: "La proforma est réservée à OREN Pro.",
 
   // Métier (sélecteur au premier élément d'un document)
   metier_title: "Quel est votre métier ?",
@@ -642,7 +635,7 @@ const fr = {
   created_nudge: "Ajoutez votre téléphone : il apparaîtra sur vos PDF",
   x_price_notice: "Sans compte, par document :",
   x_price_or: "ou",
-  x_price_account: "compte gratuit, 3 documents offerts",
+  x_price_account: "compte gratuit, 5 documents par mois",
   quota_buy_document: "Débloquer ce document",
   referral_your_link: "Votre lien à partager",
   referral_load_error: "Votre lien de parrainage n'a pas pu être chargé.",
@@ -663,14 +656,21 @@ const fr = {
   off_value: "Un seul chantier signé rembourse des mois d'OREN.",
   off_per_day: "soit {n} F / jour",
   off_per_doc: "{n} F le document",
-  buydoc_pro_hint: "Dès {n} documents par mois, Pro est moins cher : {quota} documents pour {price}, soit {per} le document.",
+  buydoc_pro_hint: "Dès {n} documents, Pro est moins cher : illimité pour {price} par mois.",
   buydoc_pro_cta: "Voir Pro",
+  buydoc_week_cta: "Pro 7 jours · {price}",
+  pay_weekly: "Semaine",
   pay_monthly: "Mensuel",
   pay_annual: "Annuel",
   pay_annual_gift: "2 mois offerts",
-  pay_annual_note: "12 mois pour {total}, soit {monthly} par mois. Votre quota reste mensuel.",
+  pay_annual_note: "12 mois pour {total}, soit {monthly} par mois.",
+  pay_weekly_note: "7 jours de Pro pour {price}. Au mois, c'est {monthly} : moins cher dès 4 semaines.",
   pay_error_promo_monthly: "Les codes promo s'appliquent au paiement mensuel.",
   off_annual: "Ou {price} F à l'année · 2 mois offerts",
+  off_week: "Ou {price} F la semaine",
+  per_week: "semaine",
+  off_team: "Vous êtes une équipe ? Plusieurs utilisateurs, export comptable : parlons-en sur WhatsApp",
+  off_team_msg: "Bonjour, je suis intéressé par OREN pour mon entreprise (plusieurs utilisateurs).",
 };
 
 export type Dict = typeof fr;
@@ -690,7 +690,7 @@ const en: Dict = {
     "Create a professional quote in 2 minutes, send it on WhatsApp, and give your clients the serious image that makes the difference.",
   land_cta_primary: "Start for free",
   land_cta_secondary: "Create a quick quote",
-  land_cta_note: "3 free documents · no bank card",
+  land_cta_note: "5 free documents every month · no bank card",
   land_proof_title: "Built in Cameroon, for pros in the field",
   land_proof_note:
     "Designed for the job site, not the office: it works on your phone.",
@@ -756,7 +756,7 @@ const en: Dict = {
     "Your documents and your clients belong to you. Protected, never resold, accessible only by you.",
   land_obj4_q: "“How much does it cost?”",
   land_obj4_a:
-    "Free to start: 3 documents on us, no bank card. You only pay if OREN makes you money.",
+    "Free to start: 5 documents every month, no bank card. Pro costs under 1,000 F a week, and you stop whenever you want.",
 
   land_plat_kicker: "A real platform",
   land_plat_title: "Not just quotes. Your whole business.",
@@ -778,18 +778,11 @@ const en: Dict = {
   land_price_tag_start: "Start here",
   land_price_free_name: "Free",
   land_price_free_desc:
-    "3 free documents, for life. Enough to test in real conditions, no commitment.",
-  land_price_express_name: "Express",
-  land_price_express_desc:
-    "A quote in a hurry, without even creating an account. Pay per document.",
+    "5 documents every month, forever. No bank card, no commitment.",
   land_price_pro_name: "Pro",
   land_price_pro_desc:
-    "Up to 25 documents a month, then pay as you go. For a business that is running.",
-  land_price_startup_name: "Startup",
-  land_price_startup_desc:
-    "Unlimited documents, catalog, logo, statistics. To go further.",
+    "Unlimited quotes and invoices, your logo, no OREN mention. Or {week} F a week, at the pace of your jobs.",
   land_price_currency: "FCFA",
-  land_price_unit_doc: "FCFA / doc",
   land_price_unit_month: "FCFA / mo",
   land_price_compare: "Compare plans in detail",
 
@@ -815,7 +808,7 @@ const en: Dict = {
   land_final_title: "Ready to win your next job?",
   land_final_sub:
     "Create your first quote now. It's free, and it takes 2 minutes.",
-  land_final_note: "3 free documents · no bank card · no commitment",
+  land_final_note: "5 free documents every month · no bank card · no commitment",
   land_foot_support: "WhatsApp support:",
   land_foot_note:
     "OREN — a DIGICK brand · Built for professionals across Africa.",
@@ -888,7 +881,7 @@ const en: Dict = {
   ohada_legal: "Legal information (OHADA)",
   ohada_hint:
     "Optional — recommended for compliant invoices in the OHADA area.",
-  branding_title: "Branding (Startup)",
+  branding_title: "Branding (Pro)",
   branding_hint: "Your logo and slogan appear on your documents.",
   f_logo: "Logo",
   f_slogan: "Slogan",
@@ -897,8 +890,8 @@ const en: Dict = {
   logo_change: "Change logo",
   logo_uploading: "Uploading logo…",
   logo_save_first: "Save the business first to add a logo.",
-  branding_locked: "Logo and slogan are a OREN Startup feature.",
-  branding_upgrade: "Upgrade to Startup",
+  branding_locked: "Logo and slogan are a OREN Pro feature.",
+  branding_upgrade: "Upgrade to Pro",
   f_rccm: "Trade register No.",
   f_nif: "Tax ID (NIF/NCC)",
   f_regime: "Tax regime",
@@ -994,10 +987,10 @@ const en: Dict = {
   type_prestation: "Service",
   toast_article_saved: "Item saved",
   toast_need_price: "Enter a valid unit price",
-  catalog_locked_title: "Catalog is a OREN Startup feature",
+  catalog_locked_title: "Catalog is a OREN Pro feature",
   catalog_locked_sub:
     "Save your products and services once and add them to quotes in one tap.",
-  catalog_upgrade: "Upgrade to Startup",
+  catalog_upgrade: "Upgrade to Pro",
 
   new_quote: "New quote",
   new_invoice: "New invoice",
@@ -1051,7 +1044,7 @@ const en: Dict = {
   toast_draft_saved: "Draft saved",
   draft_restored: "Draft restored",
   home_proforma: "New proforma",
-  proforma_locked: "Proforma is a OREN Startup feature.",
+  proforma_locked: "Proforma is a OREN Pro feature.",
 
   metier_title: "What is your trade?",
   metier_sub_catalog:
@@ -1272,7 +1265,7 @@ const en: Dict = {
   created_nudge: "Add your phone number: it will appear on your PDFs",
   x_price_notice: "No account, per document:",
   x_price_or: "or",
-  x_price_account: "free account, 3 documents included",
+  x_price_account: "free account, 5 documents a month",
   quota_buy_document: "Unlock this document",
   referral_your_link: "Your link to share",
   referral_load_error: "Your referral link could not be loaded.",
@@ -1293,14 +1286,21 @@ const en: Dict = {
   off_value: "A single signed job pays for months of OREN.",
   off_per_day: "about {n} F / day",
   off_per_doc: "{n} F per document",
-  buydoc_pro_hint: "From {n} documents a month, Pro costs less: {quota} documents for {price}, i.e. {per} per document.",
+  buydoc_pro_hint: "From {n} documents, Pro costs less: unlimited for {price} a month.",
   buydoc_pro_cta: "See Pro",
+  buydoc_week_cta: "Pro for 7 days · {price}",
+  pay_weekly: "Week",
   pay_monthly: "Monthly",
   pay_annual: "Yearly",
   pay_annual_gift: "2 months free",
-  pay_annual_note: "12 months for {total}, i.e. {monthly} a month. Your quota stays monthly.",
+  pay_annual_note: "12 months for {total}, i.e. {monthly} a month.",
+  pay_weekly_note: "7 days of Pro for {price}. Monthly is {monthly}: cheaper from 4 weeks.",
   pay_error_promo_monthly: "Promo codes apply to monthly billing.",
   off_annual: "Or {price} F per year · 2 months free",
+  off_week: "Or {price} F a week",
+  per_week: "week",
+  off_team: "A team? Several users, accounting export: let's talk on WhatsApp",
+  off_team_msg: "Hello, I'm interested in OREN for my company (several users).",
 };
 
 export const dictionaries: Record<Lang, Dict> = { fr, en };

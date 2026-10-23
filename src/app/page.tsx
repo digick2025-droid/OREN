@@ -49,19 +49,22 @@ export default async function LandingPage() {
       .order("display_order", { ascending: true }),
     supabase
       .from("plans")
-      .select("key, price_fcfa, per_document_price_fcfa")
+      .select("key, price_fcfa, per_document_price_fcfa, week_price_fcfa")
       .eq("is_active", true),
   ]);
 
   // Prix lus dans `plans` (source de vérité de /offres et des paiements) :
   // un prix codé en dur ici finissait par contredire la page des offres.
   // Les valeurs en dur ne servent que de repli si la lecture échoue.
-  const priceOf = (key: string, fallback: number, perDoc = false) => {
-    const row = planRows?.find((p) => p.key === key);
-    const value = perDoc ? row?.per_document_price_fcfa : row?.price_fcfa;
+  const priceOf = (
+    key: string,
+    fallback: number,
+    field: "price_fcfa" | "per_document_price_fcfa" | "week_price_fcfa" = "price_fcfa",
+  ) => {
+    const value = planRows?.find((p) => p.key === key)?.[field];
     return typeof value === "number" ? value : fallback;
   };
-  const expressPrice = priceOf("express", 500, true);
+  const expressPrice = priceOf("express", 500, "per_document_price_fcfa");
 
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(LANG_COOKIE)?.value);
@@ -111,27 +114,17 @@ export default async function LandingPage() {
       href: "/inscription",
       tag: t.land_price_tag_start,
     },
-    {
-      name: t.land_price_express_name,
-      price: expressPrice,
-      unit: t.land_price_unit_doc,
-      desc: t.land_price_express_desc,
-      href: "/offres",
-      tag: null,
-    },
+    // Deux offres seulement : Gratuit et Pro. La semaine est une durée de
+    // Pro, pas une offre de plus ; l'Express reste le bouton secondaire du
+    // héros.
     {
       name: t.land_price_pro_name,
       price: priceOf("pro", 2900),
       unit: t.land_price_unit_month,
-      desc: t.land_price_pro_desc,
-      href: "/offres",
-      tag: null,
-    },
-    {
-      name: t.land_price_startup_name,
-      price: priceOf("business", 4900),
-      unit: t.land_price_unit_month,
-      desc: t.land_price_startup_desc,
+      desc: t.land_price_pro_desc.replace(
+        "{week}",
+        formatAmountShort(priceOf("pro", 950, "week_price_fcfa")),
+      ),
       href: "/offres",
       tag: null,
     },

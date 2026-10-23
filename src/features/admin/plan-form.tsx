@@ -47,6 +47,10 @@ export function PlanForm({ plan }: { plan: Plan }) {
       ? String(plan.per_document_price_fcfa)
       : "",
   );
+  const isUnitPlan = plan.per_document_price_fcfa != null;
+  const [weekPrice, setWeekPrice] = useState(
+    plan.week_price_fcfa != null ? String(plan.week_price_fcfa) : "",
+  );
   const [features, setFeatures] = useState<PlanFeature[]>(plan.features ?? []);
   const [isActive, setIsActive] = useState(plan.is_active);
 
@@ -81,6 +85,8 @@ export function PlanForm({ plan }: { plan: Plan }) {
           per_document_price_fcfa: perDocPrice.trim()
             ? parseInt(perDocPrice, 10)
             : null,
+          // Vide ou 0 = offre non vendue à la semaine (la base refuse 0).
+          week_price_fcfa: parseInt(weekPrice, 10) > 0 ? parseInt(weekPrice, 10) : null,
           features,
           is_active: isActive,
           marketing: {
@@ -129,39 +135,57 @@ export function PlanForm({ plan }: { plan: Plan }) {
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="plan-price">Prix mensuel (FCFA)</Label>
-              <Input
-                id="plan-price"
-                inputMode="numeric"
-                value={priceFcfa}
-                onChange={(e) => setPriceFcfa(e.target.value.replace(/[^\d]/g, ""))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="plan-quota">Quota mensuel (documents)</Label>
-              <Input
-                id="plan-quota"
-                inputMode="numeric"
-                value={monthlyQuota}
-                onChange={(e) =>
-                  setMonthlyQuota(e.target.value.replace(/[^\d]/g, ""))
-                }
-                placeholder="Illimité"
-              />
-            </div>
-            <div>
-              <Label htmlFor="plan-perdoc">Prix par document (offre Express)</Label>
-              <Input
-                id="plan-perdoc"
-                inputMode="numeric"
-                value={perDocPrice}
-                onChange={(e) =>
-                  setPerDocPrice(e.target.value.replace(/[^\d]/g, ""))
-                }
-                placeholder="Laisser vide sinon"
-              />
-            </div>
+            {/* Document à l'unité : seul son prix compte. Les autres offres :
+                prix au mois et à la semaine, quota. */}
+            {isUnitPlan ? (
+              <div>
+                <Label htmlFor="plan-perdoc">Prix par document (FCFA)</Label>
+                <Input
+                  id="plan-perdoc"
+                  inputMode="numeric"
+                  value={perDocPrice}
+                  onChange={(e) =>
+                    setPerDocPrice(e.target.value.replace(/[^\d]/g, ""))
+                  }
+                />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <Label htmlFor="plan-price">Prix mensuel (FCFA)</Label>
+                  <Input
+                    id="plan-price"
+                    inputMode="numeric"
+                    value={priceFcfa}
+                    onChange={(e) => setPriceFcfa(e.target.value.replace(/[^\d]/g, ""))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="plan-week">Prix pour 7 jours (FCFA)</Label>
+                  <Input
+                    id="plan-week"
+                    inputMode="numeric"
+                    value={weekPrice}
+                    onChange={(e) =>
+                      setWeekPrice(e.target.value.replace(/[^\d]/g, ""))
+                    }
+                    placeholder="Pas de paiement à la semaine"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="plan-quota">Quota mensuel (documents)</Label>
+                  <Input
+                    id="plan-quota"
+                    inputMode="numeric"
+                    value={monthlyQuota}
+                    onChange={(e) =>
+                      setMonthlyQuota(e.target.value.replace(/[^\d]/g, ""))
+                    }
+                    placeholder="Illimité"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div>
@@ -181,12 +205,18 @@ export function PlanForm({ plan }: { plan: Plan }) {
           <div className="flex items-center gap-3">
             <Switch checked={isActive} onCheckedChange={setIsActive} />
             <span className="text-[14px] font-semibold text-navy">
-              Offre active (visible sur /offres)
+              {isUnitPlan
+                ? "Achat à l'unité et Express sans compte ouverts"
+                : "Offre active (visible sur /offres)"}
             </span>
           </div>
         </CardContent>
       </Card>
 
+      {/* Le document à l'unité n'a pas de carte sur /offres : pas de
+          contenu marketing à saisir. */}
+      {isUnitPlan ? null : (
+      <>
       <Card>
         <CardContent className="space-y-4 p-5">
           <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -244,6 +274,8 @@ export function PlanForm({ plan }: { plan: Plan }) {
           </div>
         </CardContent>
       </Card>
+      </>
+      )}
 
       <Button className="w-full" onClick={save} disabled={updatePlan.isPending}>
         {updatePlan.isPending ? "Enregistrement…" : "Enregistrer"}
