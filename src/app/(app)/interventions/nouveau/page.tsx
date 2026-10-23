@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { useClients } from "@/hooks/use-clients";
 import { useSaveIntervention } from "@/hooks/use-interventions";
 import { useTeamMembers } from "@/hooks/use-team";
+import { useCurrentRole } from "@/features/company/company-context";
+import { canManageInterventions } from "@/lib/roles";
 
 const SELECT_CLASS =
   "h-[52px] w-full rounded-[14px] border-[1.5px] border-border bg-card px-3 text-[15px] text-navy focus-visible:border-navy focus-visible:outline-none";
@@ -19,6 +21,7 @@ export default function NouvelleInterventionPage() {
   const save = useSaveIntervention();
   const { data: clients } = useClients();
   const { data: members } = useTeamMembers();
+  const canManage = canManageInterventions(useCurrentRole());
 
   const [title, setTitle] = useState("");
   const [clientId, setClientId] = useState("");
@@ -54,6 +57,18 @@ export default function NouvelleInterventionPage() {
       },
     );
   };
+
+  if (!canManage) {
+    return (
+      <div>
+        <ScreenHeader title="Nouvelle intervention" backHref="/interventions" />
+        <p className="px-4 pt-6 text-[13.5px] text-muted-foreground">
+          Seuls le gérant et le dispatcheur créent des interventions. Les vôtres
+          apparaissent dans la liste dès qu&apos;elles vous sont affectées.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>

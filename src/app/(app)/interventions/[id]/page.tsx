@@ -15,6 +15,8 @@ import {
 import { isQuotaError, useCreateDocument } from "@/hooks/use-documents";
 import { useClients } from "@/hooks/use-clients";
 import { useTeamMembers } from "@/hooks/use-team";
+import { useCurrentRole } from "@/features/company/company-context";
+import { canManageInterventions } from "@/lib/roles";
 import {
   INTERVENTION_STATUSES,
   INTERVENTION_STATUS_CLASSES,
@@ -35,6 +37,7 @@ export default function InterventionDetailPage() {
   const save = useSaveIntervention();
   const remove = useDeleteIntervention();
   const createDoc = useCreateDocument();
+  const canManage = canManageInterventions(useCurrentRole());
 
   if (isLoading) {
     return (
@@ -58,6 +61,10 @@ export default function InterventionDetailPage() {
 
   const iv = intervention;
   const client = clients?.find((c) => c.id === iv.client_id)?.name ?? null;
+  const assignedMember = members?.find((m) => m.user_id === iv.assigned_to);
+  const assignedName = assignedMember
+    ? assignedMember.full_name || assignedMember.phone || "Technicien"
+    : null;
 
   const setStatus = (status: InterventionStatus) => {
     if (status === iv.status) return;
@@ -186,39 +193,49 @@ export default function InterventionDetailPage() {
 
         <div>
           <Label htmlFor="iv-assigned">Technicien affecté</Label>
-          <select
-            id="iv-assigned"
-            value={iv.assigned_to ?? ""}
-            onChange={(e) => setAssigned(e.target.value)}
-            disabled={save.isPending}
-            className={SELECT_CLASS}
-          >
-            <option value="">— Non affecté —</option>
-            {(members ?? []).map((m) => (
-              <option key={m.user_id} value={m.user_id}>
-                {m.full_name || m.phone || "Membre"}
-              </option>
-            ))}
-          </select>
+          {canManage ? (
+            <select
+              id="iv-assigned"
+              value={iv.assigned_to ?? ""}
+              onChange={(e) => setAssigned(e.target.value)}
+              disabled={save.isPending}
+              className={SELECT_CLASS}
+            >
+              <option value="">— Non affecté —</option>
+              {(members ?? []).map((m) => (
+                <option key={m.user_id} value={m.user_id}>
+                  {m.full_name || m.phone || "Membre"}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-[14px] font-medium text-navy">
+              {assignedName ?? "Non affecté"}
+            </p>
+          )}
         </div>
 
-        <Button
-          className="w-full"
-          onClick={makeQuote}
-          disabled={createDoc.isPending}
-        >
-          <FileText size={16} />{" "}
-          {createDoc.isPending ? "Création…" : "Créer un devis"}
-        </Button>
+        {canManage ? (
+          <>
+            <Button
+              className="w-full"
+              onClick={makeQuote}
+              disabled={createDoc.isPending}
+            >
+              <FileText size={16} />{" "}
+              {createDoc.isPending ? "Création…" : "Créer un devis"}
+            </Button>
 
-        <Button
-          variant="destructive"
-          className="w-full"
-          onClick={del}
-          disabled={remove.isPending}
-        >
-          <Trash2 size={16} /> Supprimer
-        </Button>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={del}
+              disabled={remove.isPending}
+            >
+              <Trash2 size={16} /> Supprimer
+            </Button>
+          </>
+        ) : null}
       </div>
     </div>
   );

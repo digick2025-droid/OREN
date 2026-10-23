@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { useClients } from "@/hooks/use-clients";
 import { useInterventions } from "@/hooks/use-interventions";
 import { useTeamMembers } from "@/hooks/use-team";
+import { useCurrentRole } from "@/features/company/company-context";
+import { canManageInterventions } from "@/lib/roles";
 import {
   INTERVENTION_STATUS_CLASSES,
   INTERVENTION_STATUS_LABELS,
@@ -27,6 +29,7 @@ export default function InterventionsPage() {
   const { data: interventions, isLoading } = useInterventions();
   const { data: members } = useTeamMembers();
   const { data: clients } = useClients();
+  const canManage = canManageInterventions(useCurrentRole());
 
   const memberName = (userId: string | null) => {
     if (!userId) return null;
@@ -43,13 +46,15 @@ export default function InterventionsPage() {
       <ScreenHeader
         title="Interventions"
         action={
-          <Link
-            href="/interventions/nouveau"
-            aria-label="Nouvelle intervention"
-            className="rounded-xl p-1.5 text-navy hover:bg-muted"
-          >
-            <Plus size={22} />
-          </Link>
+          canManage ? (
+            <Link
+              href="/interventions/nouveau"
+              aria-label="Nouvelle intervention"
+              className="rounded-xl p-1.5 text-navy hover:bg-muted"
+            >
+              <Plus size={22} />
+            </Link>
+          ) : null
         }
       />
 
@@ -62,14 +67,18 @@ export default function InterventionsPage() {
               Aucune intervention
             </p>
             <p className="mt-1 text-[12.5px] text-muted-foreground">
-              Créez votre premier bon d&apos;intervention.
+              {canManage
+                ? "Créez votre premier bon d'intervention."
+                : "Aucune intervention ne vous est affectée pour le moment."}
             </p>
-            <Link
-              href="/interventions/nouveau"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-field bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground"
-            >
-              <Plus size={16} /> Nouvelle intervention
-            </Link>
+            {canManage ? (
+              <Link
+                href="/interventions/nouveau"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-field bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground"
+              >
+                <Plus size={16} /> Nouvelle intervention
+              </Link>
+            ) : null}
           </div>
         ) : (
           (interventions ?? []).map((iv) => {

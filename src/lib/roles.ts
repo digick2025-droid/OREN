@@ -34,3 +34,18 @@ export const INVITABLE_ROLES: InvitationRole[] = [
   "technicien",
   "comptable",
 ];
+
+/**
+ * Peut créer, affecter et supprimer des interventions (vue bureau).
+ * Le technicien, lui, ne gère que ses interventions affectées (statut,
+ * compte-rendu) — cf. RLS 0045. `null` = propriétaire/admin/rôle non
+ * encore résolu : on laisse l'UI complète, la RLS reste la vérité.
+ */
+export function canManageInterventions(role: CompanyRole | null): boolean {
+  return role === null || role === "gerant" || role === "dispatcheur";
+}
+
+/** Technicien de terrain : accès restreint à ses propres interventions. */
+export function isFieldTechnician(role: CompanyRole | null): boolean {
+  return role === "technicien";
+}
