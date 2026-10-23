@@ -114,17 +114,23 @@ const fr = {
 
   // Landing — offres
   land_price_kicker: "Nos offres",
-  land_price_title: "Commencez gratuitement. Payez quand ça rapporte.",
+  land_price_title: "Deux offres. Payez au rythme de vos chantiers.",
+  land_price_lead:
+    "Commencez gratuitement. Quand les chantiers s'enchaînent, passez à Pro pour une semaine, un mois ou un an — par Orange Money ou MTN MoMo, sans engagement.",
   land_price_tag_start: "Commencez ici",
   land_price_free_name: "Gratuit",
-  land_price_free_desc:
-    "5 documents chaque mois, pour toujours. Sans carte bancaire, sans engagement.",
+  land_price_free_desc: "Pour démarrer, sans carte bancaire et sans limite de temps.",
+  land_price_free_f1: "5 devis ou factures chaque mois",
+  land_price_free_f2: "PDF professionnel et envoi WhatsApp",
+  land_price_free_f3: "Clients et conversion devis → facture",
   land_price_pro_name: "Pro",
-  land_price_pro_desc:
-    "Devis et factures illimités, votre logo, sans mention OREN. Ou {week} F la semaine, au rythme de vos chantiers.",
+  land_price_pro_desc: "Pour l'artisan qui travaille. Moins de {day} F par jour.",
+  land_price_pro_f1: "Devis et factures illimités",
+  land_price_pro_f2: "Votre logo, sans mention OREN",
+  land_price_pro_f3: "Acomptes, proformas, catalogue et rapports",
+  land_price_pro_cta: "Voir l'offre Pro",
   land_price_currency: "FCFA",
   land_price_unit_month: "FCFA / mois",
-  land_price_compare: "Comparer les offres en détail",
 
   // Lancement gratuit — affiché tant que FREE_LAUNCH est vrai
   // (src/lib/billing.ts). Les clés land_price_* ci-dessus restent en place
@@ -670,6 +676,7 @@ const fr = {
   off_annual: "Ou {price} F à l'année · 2 mois offerts",
   off_week: "Ou {price} F la semaine",
   per_week: "semaine",
+  per_year: "an",
   off_team: "Vous êtes une équipe ? Plusieurs utilisateurs, export comptable : parlons-en sur WhatsApp",
   off_team_msg: "Bonjour, je suis intéressé par OREN pour mon entreprise (plusieurs utilisateurs).",
 };
@@ -775,17 +782,23 @@ const en: Dict = {
   land_plat_ai: "Artificial intelligence",
 
   land_price_kicker: "Our plans",
-  land_price_title: "Start free. Pay when it pays off.",
+  land_price_title: "Two plans. Pay at the pace of your jobs.",
+  land_price_lead:
+    "Start free. When jobs pile up, switch to Pro for a week, a month or a year — with Orange Money or MTN MoMo, no commitment.",
   land_price_tag_start: "Start here",
   land_price_free_name: "Free",
-  land_price_free_desc:
-    "5 documents every month, forever. No bank card, no commitment.",
+  land_price_free_desc: "To get started, no bank card and no time limit.",
+  land_price_free_f1: "5 quotes or invoices every month",
+  land_price_free_f2: "Professional PDF and WhatsApp sharing",
+  land_price_free_f3: "Clients and quote → invoice conversion",
   land_price_pro_name: "Pro",
-  land_price_pro_desc:
-    "Unlimited quotes and invoices, your logo, no OREN mention. Or {week} F a week, at the pace of your jobs.",
+  land_price_pro_desc: "For working tradespeople. Under {day} F a day.",
+  land_price_pro_f1: "Unlimited quotes and invoices",
+  land_price_pro_f2: "Your logo, no OREN mention",
+  land_price_pro_f3: "Deposits, proformas, catalog and reports",
+  land_price_pro_cta: "See the Pro plan",
   land_price_currency: "FCFA",
   land_price_unit_month: "FCFA / mo",
-  land_price_compare: "Compare plans in detail",
 
   free_kicker: "Launch offer",
   free_title: "All of OREN, free during launch.",
@@ -1301,6 +1314,7 @@ const en: Dict = {
   off_annual: "Or {price} F per year · 2 months free",
   off_week: "Or {price} F a week",
   per_week: "week",
+  per_year: "yr",
   off_team: "A team? Several users, accounting export: let's talk on WhatsApp",
   off_team_msg: "Hello, I'm interested in OREN for my company (several users).",
 };

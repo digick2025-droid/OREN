@@ -2,7 +2,6 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  ArrowRight,
   Check,
   Clock,
   MessageCircle,
@@ -24,6 +23,7 @@ import { APP_NAME, SUPPORT_WHATSAPP } from "@/lib/constants";
 import { formatAmount, formatAmountShort } from "@/lib/format";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict } from "@/lib/i18n/dictionaries";
+import { annualPrice, pricePerDay } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppLink } from "@/services/whatsapp";
@@ -105,26 +105,40 @@ export default async function LandingPage() {
     { label: t.land_plat_ai, live: false },
   ];
 
+  // Deux offres seulement : Gratuit et Pro. La semaine est une durée de Pro,
+  // pas une offre de plus ; l'Express reste le bouton secondaire du héros.
+  const proMonth = priceOf("pro", 2900);
+  const proWeek = priceOf("pro", 950, "week_price_fcfa");
   const plans = [
     {
       name: t.land_price_free_name,
       price: 0,
       unit: t.land_price_currency,
       desc: t.land_price_free_desc,
+      features: [t.land_price_free_f1, t.land_price_free_f2, t.land_price_free_f3],
+      durations: null,
+      cta: t.land_cta_primary,
       href: "/inscription",
       tag: t.land_price_tag_start,
     },
-    // Deux offres seulement : Gratuit et Pro. La semaine est une durée de
-    // Pro, pas une offre de plus ; l'Express reste le bouton secondaire du
-    // héros.
     {
       name: t.land_price_pro_name,
-      price: priceOf("pro", 2900),
+      price: proMonth,
       unit: t.land_price_unit_month,
+      // Le prix ramené à la journée : « moins de 100 F par jour » se décide
+      // tout seul, « 2 900 F par mois » se compare.
+      // Arrondi à la centaine supérieure : « moins de 100 F », pas « 97 F ».
       desc: t.land_price_pro_desc.replace(
-        "{week}",
-        formatAmountShort(priceOf("pro", 950, "week_price_fcfa")),
+        "{day}",
+        formatAmountShort(Math.ceil(pricePerDay(proMonth) / 100) * 100),
       ),
+      features: [t.land_price_pro_f1, t.land_price_pro_f2, t.land_price_pro_f3],
+      durations: [
+        `${formatAmountShort(proWeek)} F / ${t.per_week}`,
+        `${formatAmountShort(proMonth)} F / ${t.per_month}`,
+        `${formatAmountShort(annualPrice(proMonth))} F / ${t.per_year}`,
+      ],
+      cta: t.land_price_pro_cta,
       href: "/offres",
       tag: null,
     },
@@ -425,49 +439,95 @@ export default async function LandingPage() {
             </>
           ) : (
             <>
-          <div className="mt-6 space-y-3.5">
+          <ScrollReveal>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+              {t.land_price_lead}
+            </p>
+          </ScrollReveal>
+
+          <div className="mt-7 space-y-5">
             {plans.map((plan) => (
               <ScrollReveal key={plan.name}>
-                <Link href={plan.href} className="group block">
-                  <Card
-                    className={cn(
-                      "relative p-[18px] transition-shadow group-hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring/50",
-                      plan.tag && "border-2 border-coral",
-                    )}
-                  >
-                    {plan.tag ? (
-                      <span className="absolute -top-2.5 left-[18px] rounded-full bg-accent px-2.5 py-1 text-[11px] font-extrabold text-accent-foreground">
-                        {plan.tag}
-                      </span>
-                    ) : null}
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="text-[16.5px] font-extrabold">
-                        {plan.name}
-                      </span>
-                      <span className="shrink-0 text-[16px] font-extrabold tabular-nums">
-                        {formatAmountShort(plan.price)}{" "}
-                        <small className="text-[12px] font-semibold text-muted-foreground">
-                          {plan.unit}
-                        </small>
-                      </span>
+                <Card
+                  className={cn(
+                    "relative p-[18px]",
+                    plan.tag && "border-2 border-coral",
+                  )}
+                >
+                  {plan.tag ? (
+                    <span className="absolute -top-2.5 left-[18px] rounded-full bg-accent px-2.5 py-1 text-[11px] font-extrabold text-accent-foreground">
+                      {plan.tag}
+                    </span>
+                  ) : null}
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[16.5px] font-extrabold">
+                      {plan.name}
+                    </span>
+                    <span className="shrink-0 text-[20px] font-extrabold tabular-nums">
+                      {formatAmountShort(plan.price)}{" "}
+                      <small className="text-[12px] font-semibold text-muted-foreground">
+                        {plan.unit}
+                      </small>
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
+                    {plan.desc}
+                  </p>
+
+                  {/* Pro : une seule offre, trois durées — comme un pass. */}
+                  {plan.durations ? (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {plan.durations.map((d) => (
+                        <span
+                          key={d}
+                          className="whitespace-nowrap rounded-full bg-muted px-2 py-1 text-[11.5px] font-bold tabular-nums text-navy"
+                        >
+                          {d}
+                        </span>
+                      ))}
                     </div>
-                    <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
-                      {plan.desc}
-                    </p>
-                  </Card>
-                </Link>
+                  ) : null}
+
+                  <ul className="mt-4 space-y-2">
+                    {plan.features.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-2.5 text-[14px] leading-snug text-muted-foreground"
+                      >
+                        <Check className="mt-[3px] h-[15px] w-[15px] shrink-0 text-success" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    asChild
+                    variant={plan.tag ? "accent" : "outline"}
+                    size="lg"
+                    className="mt-5 w-full"
+                  >
+                    <Link href={plan.href}>{plan.cta}</Link>
+                  </Button>
+                </Card>
               </ScrollReveal>
             ))}
           </div>
 
           <ScrollReveal>
-            <Link
-              href="/offres"
-              className="mt-5 flex items-center justify-center gap-1.5 rounded-field py-2 text-[14.5px] font-bold hover:text-coral focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            <p className="mt-5 text-center text-[14px] font-semibold text-navy">
+              {t.off_value}
+            </p>
+            {/* Entreprise : pas de prix tant que les fonctions d'équipe
+                n'existent pas — la demande arrive sur WhatsApp. */}
+            <a
+              href={buildWhatsAppLink(SUPPORT_WHATSAPP, t.off_team_msg)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 flex items-center justify-center gap-1.5 rounded-field py-2 text-center text-[13.5px] font-bold hover:text-coral focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             >
-              {t.land_price_compare}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+              <MessageCircle className="h-4 w-4 shrink-0 text-whatsapp" />
+              {t.off_team}
+            </a>
           </ScrollReveal>
             </>
           )}
