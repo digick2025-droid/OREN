@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { CalendarClock, MapPin, Trash2 } from "lucide-react";
+import { CalendarClock, FileText, MapPin, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
   useIntervention,
   useSaveIntervention,
 } from "@/hooks/use-interventions";
+import { isQuotaError, useCreateDocument } from "@/hooks/use-documents";
 import { useClients } from "@/hooks/use-clients";
 import { useTeamMembers } from "@/hooks/use-team";
 import {
@@ -33,6 +34,7 @@ export default function InterventionDetailPage() {
   const { data: clients } = useClients();
   const save = useSaveIntervention();
   const remove = useDeleteIntervention();
+  const createDoc = useCreateDocument();
 
   if (isLoading) {
     return (
@@ -84,6 +86,39 @@ export default function InterventionDetailPage() {
       },
       onError: (e) => toast.error(e.message),
     });
+  };
+
+  const makeQuote = () => {
+    createDoc.mutate(
+      {
+        type: "devis",
+        client_id: iv.client_id,
+        title: iv.title,
+        note: iv.description,
+        conditions: "",
+        discount: 0,
+        status: "brouillon",
+        items: [
+          {
+            name: iv.title,
+            unit: "forfait",
+            category: "main_oeuvre",
+            quantity: 1,
+            unit_price: 0,
+          },
+        ],
+      },
+      {
+        onSuccess: (doc) => {
+          toast.success("Devis créé — complétez les montants");
+          router.push(`/documents/${doc.id}/modifier`);
+        },
+        onError: (e) =>
+          toast.error(
+            isQuotaError(e) ? "Quota de documents atteint" : e.message,
+          ),
+      },
+    );
   };
 
   const when = iv.scheduled_at
@@ -166,6 +201,15 @@ export default function InterventionDetailPage() {
             ))}
           </select>
         </div>
+
+        <Button
+          className="w-full"
+          onClick={makeQuote}
+          disabled={createDoc.isPending}
+        >
+          <FileText size={16} />{" "}
+          {createDoc.isPending ? "Création…" : "Créer un devis"}
+        </Button>
 
         <Button
           variant="destructive"
