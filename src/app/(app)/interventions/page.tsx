@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, Plus, User } from "lucide-react";
+import { CalendarClock, CalendarDays, Plus, User } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { useClients } from "@/hooks/use-clients";
@@ -46,15 +46,24 @@ export default function InterventionsPage() {
       <ScreenHeader
         title="Interventions"
         action={
-          canManage ? (
+          <div className="flex items-center gap-1">
             <Link
-              href="/interventions/nouveau"
-              aria-label="Nouvelle intervention"
+              href="/interventions/planning"
+              aria-label="Planning"
               className="rounded-xl p-1.5 text-navy hover:bg-muted"
             >
-              <Plus size={22} />
+              <CalendarDays size={21} />
             </Link>
-          ) : null
+            {canManage ? (
+              <Link
+                href="/interventions/nouveau"
+                aria-label="Nouvelle intervention"
+                className="rounded-xl p-1.5 text-navy hover:bg-muted"
+              >
+                <Plus size={22} />
+              </Link>
+            ) : null}
+          </div>
         }
       />
 
