@@ -17,7 +17,7 @@ export interface PdfCompany {
   rccm: string;
   nif: string;
   taxRegime: string;
-  /** Offre Startup : branding complet (filigrane, pied de page à l'image de l'entreprise) */
+  /** Offre Pro : branding complet (filigrane, pied de page à l'image de l'entreprise) */
   premiumBranding: boolean;
   /**
    * Lien d'inscription affiché dans la mention « Créé avec OREN » des

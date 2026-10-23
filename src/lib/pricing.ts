@@ -33,3 +33,22 @@ export const ANNUAL_PAID_MONTHS = 10;
 export function annualPrice(monthlyFcfa: number): number {
   return monthlyFcfa * ANNUAL_PAID_MONTHS;
 }
+
+/** Durées de paiement d'une offre : l'artisan paie au rythme de ses chantiers. */
+export type BillingPeriod = "weekly" | "monthly" | "annual";
+
+/** Jours couverts par un paiement à la semaine. */
+export const WEEK_DAYS = 7;
+
+/**
+ * Prix d'une offre pour une durée ; null si l'offre n'est pas vendue à
+ * cette durée (pas de prix à la semaine en base).
+ */
+export function periodPrice(
+  plan: { price_fcfa: number; week_price_fcfa: number | null },
+  period: BillingPeriod,
+): number | null {
+  if (period === "weekly") return plan.week_price_fcfa ?? null;
+  if (period === "annual") return annualPrice(plan.price_fcfa);
+  return plan.price_fcfa;
+}

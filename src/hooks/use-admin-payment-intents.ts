@@ -26,6 +26,8 @@ export interface AdminPaymentIntentListItem {
   review_status: "to_review" | "confirmed" | "rejected" | null;
   /** Durée payée : 1 (mensuel) ou 12 (annuel, 0040). */
   billing_months: number;
+  /** Paiement à la semaine : jours payés (0042), sinon null. */
+  billing_days: number | null;
 }
 
 export function useAdminPaymentIntents() {
@@ -37,7 +39,7 @@ export function useAdminPaymentIntents() {
       const { data, error } = await supabase
         .from("payment_intents")
         .select(
-          "id, reference, provider, purpose, company_id, plan_key, amount, discount_fcfa, method, status, failure_reason, settled_at, created_at, transaction_ref, phone, review_status, billing_months, companies(name)",
+          "id, reference, provider, purpose, company_id, plan_key, amount, discount_fcfa, method, status, failure_reason, settled_at, created_at, transaction_ref, phone, review_status, billing_months, billing_days, companies(name)",
         )
         .order("created_at", { ascending: false })
         .limit(500);

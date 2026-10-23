@@ -14,7 +14,7 @@ import { usePlans } from "@/hooks/use-usage";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/client";
 import { formatAmount } from "@/lib/format";
-import { annualPrice } from "@/lib/pricing";
+import { annualPrice, periodPrice, type BillingPeriod } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 interface PromoPreview {
@@ -43,8 +43,8 @@ export default function PaiementPage({
   searchParams: Promise<{ plan?: string; periode?: string }>;
 }) {
   const { plan: planKey, periode } = use(searchParams);
-  const [billing, setBilling] = useState<"monthly" | "annual">(
-    periode === "annuel" ? "annual" : "monthly",
+  const [billing, setBilling] = useState<BillingPeriod>(
+    periode === "annuel" ? "annual" : periode === "semaine" ? "weekly" : "monthly",
   );
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -94,10 +94,19 @@ export default function PaiementPage({
     setPromoInput("");
   };
 
-  const annual = billing === "annual";
-  const amount = annual
-    ? annualPrice(plan?.price_fcfa ?? 0)
-    : (promo?.preview.final_amount_fcfa ?? plan?.price_fcfa ?? 0);
+  // Durées proposées : la semaine seulement si l'offre a un prix à la
+  // semaine. Une durée demandée par l'URL mais indisponible retombe au mois.
+  const periods: BillingPeriod[] = plan?.week_price_fcfa
+    ? ["weekly", "monthly", "annual"]
+    : ["monthly", "annual"];
+  const period: BillingPeriod = periods.includes(billing) ? billing : "monthly";
+  const annual = period === "annual";
+  const amount =
+    period === "monthly"
+      ? (promo?.preview.final_amount_fcfa ?? plan?.price_fcfa ?? 0)
+      : plan
+        ? (periodPrice(plan, period) ?? 0)
+        : 0;
 
   return (
     <div>
@@ -110,35 +119,55 @@ export default function PaiementPage({
               <span className="font-bold text-navy">{plan.name}</span>
             </p>
 
-            {/* Mensuel ou annuel : l'annuel (2 mois offerts) encaisse d'avance
-                chez les fidèles, sans rien imposer aux autres. */}
+            {/* Semaine, mois ou année : l'artisan paie au rythme de ses
+                chantiers. Le mois reste le choix par défaut ; l'année (2 mois
+                offerts) encaisse d'avance chez les fidèles. */}
             {plan.price_fcfa > 0 ? (
-              <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-muted p-1">
-                {(["monthly", "annual"] as const).map((option) => (
+              <div
+                className={cn(
+                  "mb-4 grid gap-2 rounded-xl bg-muted p-1",
+                  periods.length === 3 ? "grid-cols-3" : "grid-cols-2",
+                )}
+              >
+                {periods.map((option) => (
                   <button
                     key={option}
                     type="button"
-                    aria-pressed={billing === option}
+                    aria-pressed={period === option}
                     onClick={() => {
                       setBilling(option);
-                      if (option === "annual") removePromo();
+                      if (option !== "monthly") removePromo();
                     }}
                     className={cn(
                       "rounded-lg px-2 py-2.5 text-[13px] font-bold transition-colors",
-                      billing === option
+                      period === option
                         ? "bg-card text-navy shadow-sm"
                         : "text-muted-foreground",
                     )}
                   >
-                    {option === "monthly" ? t.pay_monthly : t.pay_annual}
+                    {option === "weekly"
+                      ? t.pay_weekly
+                      : option === "monthly"
+                        ? t.pay_monthly
+                        : t.pay_annual}
                     <span className="block text-[11.5px] font-semibold text-muted-foreground">
-                      {option === "monthly"
-                        ? `${formatAmount(plan.price_fcfa)} / ${t.per_month}`
-                        : t.pay_annual_gift}
+                      {option === "weekly"
+                        ? `${formatAmount(plan.week_price_fcfa ?? 0)} / ${t.per_week}`
+                        : option === "monthly"
+                          ? `${formatAmount(plan.price_fcfa)} / ${t.per_month}`
+                          : t.pay_annual_gift}
                     </span>
                   </button>
                 ))}
               </div>
+            ) : null}
+
+            {period === "weekly" && plan.price_fcfa > 0 ? (
+              <p className="mb-4 text-[13px] text-muted-foreground">
+                {t.pay_weekly_note
+                  .replace("{price}", formatAmount(plan.week_price_fcfa ?? 0))
+                  .replace("{monthly}", formatAmount(plan.price_fcfa))}
+              </p>
             ) : null}
 
             {annual && plan.price_fcfa > 0 ? (
@@ -149,7 +178,7 @@ export default function PaiementPage({
               </p>
             ) : null}
 
-            {plan.price_fcfa > 0 && !annual ? (
+            {plan.price_fcfa > 0 && period === "monthly" ? (
               <div className="mb-4">
                 {promo ? (
                   <div className="flex items-center justify-between rounded-field border border-success/30 bg-success-surface px-4 py-3">
@@ -201,8 +230,8 @@ export default function PaiementPage({
                     method,
                     phone,
                     transactionRef,
-                    billing,
-                    promoCode: annual ? undefined : promo?.code,
+                    billing: period,
+                    promoCode: period === "monthly" ? promo?.code : undefined,
                   }),
                 });
                 if (!response.ok) {

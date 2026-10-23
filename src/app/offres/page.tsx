@@ -5,12 +5,13 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FREE_LAUNCH } from "@/lib/billing";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, SUPPORT_WHATSAPP } from "@/lib/constants";
 import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { getDict, type Dict } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
 import { formatAmountShort } from "@/lib/format";
 import { annualPrice, pricePerDay, pricePerDocument } from "@/lib/pricing";
+import { buildWhatsAppLink } from "@/services/whatsapp";
 import type { Plan } from "@/types/database";
 
 function planPrice(t: Dict, plan: Plan): string {
@@ -101,7 +102,12 @@ export default async function OffresPage() {
       .order("sort_order"),
     supabase.auth.getUser(),
   ]);
-  const plans = (plansData ?? []) as Plan[];
+  // Deux cartes : Gratuit et Pro. L'achat à l'unité (offre « express »)
+  // n'est pas une carte : il est proposé au moment du blocage et en
+  // Express sans compte depuis l'accueil.
+  const plans = ((plansData ?? []) as Plan[]).filter(
+    (plan) => !plan.per_document_price_fcfa,
+  );
   const user = authResult.data.user;
 
   let currentPlanKey: string | null = null;
@@ -235,12 +241,39 @@ export default async function OffresPage() {
                     .replace("{price}", formatAmountShort(annualPrice(plan.price_fcfa)))}
                 </Link>
               ) : null}
+              {/* Semaine : la même offre, au rythme des chantiers. */}
+              {!FREE_LAUNCH &&
+              !isCurrent &&
+              plan.week_price_fcfa &&
+              plan.price_fcfa > 0 ? (
+                <Link
+                  href={
+                    user
+                      ? `/paiement?plan=${plan.key}&periode=semaine`
+                      : `/connexion?next=${encodeURIComponent(`/paiement?plan=${plan.key}&periode=semaine`)}`
+                  }
+                  className="mt-1.5 block text-center text-[13px] font-semibold text-navy underline"
+                >
+                  {t.off_week.replace("{price}", formatAmountShort(plan.week_price_fcfa))}
+                </Link>
+              ) : null}
               <p className="mt-2 text-center text-[11.5px] text-muted-foreground/70">
                 {content.audience}
               </p>
             </Card>
           );
         })}
+
+        {/* Entreprise : pas de prix tant que les fonctions d'équipe
+            n'existent pas — on recueille la demande sur WhatsApp. */}
+        <a
+          href={buildWhatsAppLink(SUPPORT_WHATSAPP, t.off_team_msg)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl border border-dashed border-border px-4 py-3 text-center text-[13px] font-semibold text-navy hover:border-navy"
+        >
+          {t.off_team}
+        </a>
       </div>
     </div>
   );

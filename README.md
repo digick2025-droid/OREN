@@ -72,12 +72,16 @@ npm run dev
 
 Les offres sont **configurées en base** (table `plans`) — jamais codées en dur :
 
-| Offre    | Prix          | Quota mensuel      |
-| -------- | ------------- | ------------------ |
-| Gratuit  | 0 F           | 3 documents offerts |
-| Express  | 500 F / devis | paiement à l'usage, sans compte |
-| Pro      | 3 000 F / mois | 25 documents       |
-| Business | 5 000 F / mois | illimité           |
+Deux offres affichées (migration `0042_offres_simplifiees.sql`) :
+
+| Offre   | Prix                                          | Documents        |
+| ------- | --------------------------------------------- | ---------------- |
+| Gratuit | 0 F                                           | 5 par mois       |
+| Pro     | 950 F / semaine · 2 900 F / mois · 29 000 F / an | illimités, logo |
+
+Le document à l'unité (500 F, offre `express`) n'est pas une carte : il est
+proposé au blocage du quota et en Express sans compte. L'offre `business`
+est désactivée ; ses abonnés ont été basculés en Pro.
 
 Le quota est vérifié **côté base** (`assert_quota`) à chaque création de
 document ; le compteur mensuel est calculé sur les documents créés dans le

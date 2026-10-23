@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   annualPrice,
   breakEvenDocuments,
+  periodPrice,
   pricePerDay,
   pricePerDocument,
 } from "./pricing";
@@ -27,5 +28,23 @@ describe("annualPrice", () => {
   it("facture 10 mois pour 12", () => {
     expect(annualPrice(2900)).toBe(29000);
     expect(annualPrice(4900)).toBe(49000);
+  });
+});
+
+describe("periodPrice", () => {
+  const pro = { price_fcfa: 2900, week_price_fcfa: 950 };
+
+  it("donne le prix de chaque durée", () => {
+    expect(periodPrice(pro, "weekly")).toBe(950);
+    expect(periodPrice(pro, "monthly")).toBe(2900);
+    expect(periodPrice(pro, "annual")).toBe(29000);
+  });
+
+  it("refuse la semaine quand l'offre n'a pas de prix à la semaine", () => {
+    expect(periodPrice({ price_fcfa: 2900, week_price_fcfa: null }, "weekly")).toBeNull();
+  });
+
+  it("garde le mois plus avantageux que 4 semaines", () => {
+    expect(4 * (periodPrice(pro, "weekly") ?? 0)).toBeGreaterThan(2900);
   });
 });

@@ -28,7 +28,7 @@ export default function NouveauDocumentPage({
   const docType = parseType(type);
   const proformaAccess = usePlanFeature("proforma");
 
-  // La proforma est réservée à l'offre Startup
+  // La proforma est réservée à l'offre Pro
   if (docType === "proforma" && !proformaAccess.loading && !proformaAccess.enabled) {
     return (
       <div>

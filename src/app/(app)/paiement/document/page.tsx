@@ -13,7 +13,7 @@ import { useI18n } from "@/features/i18n/language-context";
 import { usePlans, useUsage } from "@/hooks/use-usage";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { formatAmount } from "@/lib/format";
-import { breakEvenDocuments, pricePerDocument } from "@/lib/pricing";
+import { breakEvenDocuments } from "@/lib/pricing";
 
 const MAX_QUANTITY = 10;
 /** Repli si le plan « express » n'a pas de prix en base (même défaut que l'API). */
@@ -38,15 +38,25 @@ export default function PaiementDocumentPage() {
     plans?.find((p) => p.key === "express")?.per_document_price_fcfa ||
     DEFAULT_UNIT_PRICE;
   const proPlan = plans?.find((p) => p.key === "pro" && p.price_fcfa > 0);
-  const proPerDoc = proPlan
-    ? pricePerDocument(proPlan.price_fcfa, proPlan.monthly_quota)
-    : null;
+  const proWeekPrice = proPlan?.week_price_fcfa ?? null;
 
   return (
     <div>
       <ScreenHeader title={t.buydoc_title} backHref="/accueil" />
       <div className="space-y-4 px-4 pt-4">
         <p className="text-[14px] text-muted-foreground">{t.buydoc_sub}</p>
+
+        {/* Au blocage, deux réponses et pas plus : ce document à l'unité, ou
+            Pro pour 7 jours — l'artisan en plein chantier paie la semaine
+            sans s'engager sur un mois. */}
+        {proWeekPrice ? (
+          <Link
+            href="/paiement?plan=pro&periode=semaine"
+            className="block rounded-xl bg-accent px-4 py-3.5 text-center text-[14px] font-extrabold text-accent-foreground"
+          >
+            {t.buydoc_week_cta.replace("{price}", formatAmount(proWeekPrice))}
+          </Link>
+        ) : null}
 
         <Card className="flex items-center justify-between p-4">
           <div>
@@ -84,16 +94,14 @@ export default function PaiementDocumentPage() {
 
         {/* Comparaison qui rend le forfait évident, sans rien bloquer : le
             document à l'unité reste le chemin le plus court. */}
-        {proPlan && proPerDoc !== null ? (
+        {proPlan ? (
           <Link
             href="/paiement?plan=pro"
             className="block rounded-xl border border-dashed border-border px-4 py-3 text-[13px] text-muted-foreground hover:border-navy"
           >
             {t.buydoc_pro_hint
               .replace("{n}", String(breakEvenDocuments(proPlan.price_fcfa, unitPrice)))
-              .replace("{quota}", String(proPlan.monthly_quota))
-              .replace("{price}", formatAmount(proPlan.price_fcfa))
-              .replace("{per}", formatAmount(proPerDoc))}{" "}
+              .replace("{price}", formatAmount(proPlan.price_fcfa))}{" "}
             <span className="font-semibold text-navy underline">{t.buydoc_pro_cta}</span>
           </Link>
         ) : null}
