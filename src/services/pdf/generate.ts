@@ -11,6 +11,8 @@
  * sur le bundle que lorsque l'utilisateur télécharge ou partage réellement.
  */
 
+import { PDF_FONT_URL } from "./theme";
+
 // Dimensions A4 en millimètres.
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
@@ -44,9 +46,38 @@ interface Capture {
   tbody: Band | null;
 }
 
+let parentFontReady: Promise<void> | null = null;
+
+/**
+ * html2canvas mesure le texte dans l'iframe mais le dessine sur un canvas
+ * du document courant : la police du document doit donc aussi y être
+ * chargée, sinon les mots sont dessinés dans une autre police à la place
+ * mesurée (espaces irréguliers, mots qui se chevauchent).
+ */
+function ensureParentFont(): Promise<void> {
+  if (!parentFontReady) {
+    parentFontReady = (async () => {
+      if (typeof FontFace === "undefined") return;
+      const face = new FontFace("Inter", `url(${PDF_FONT_URL}) format("woff2")`, {
+        weight: "100 900",
+        style: "normal",
+      });
+      document.fonts.add(await face.load());
+    })().catch(() => {
+      // Police injoignable (hors-ligne sans cache) : rendu avec la police
+      // système, et nouvelle tentative au prochain export.
+      parentFontReady = null;
+    });
+  }
+  return parentFontReady;
+}
+
 /** Rend le HTML A4 autonome dans une iframe cachée puis le capture. */
 async function renderHtmlToCanvas(html: string): Promise<Capture> {
-  const { default: html2canvas } = await import("html2canvas");
+  const [{ default: html2canvas }] = await Promise.all([
+    import("html2canvas"),
+    ensureParentFont(),
+  ]);
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");

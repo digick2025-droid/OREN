@@ -8,25 +8,37 @@
 import type { Company, DocumentItem, DocumentRow } from "@/types/database";
 import { PDF_STRINGS } from "./strings";
 import { classicTemplate } from "./templates/classic";
-import type {
-  PdfCompany,
-  PdfDocumentData,
-  PdfLang,
-  PdfTemplate,
-  PdfTemplateId,
+import { elegantTemplate } from "./templates/elegant";
+import { modernTemplate } from "./templates/modern";
+import {
+  PDF_TEMPLATE_IDS,
+  type PdfCompany,
+  type PdfDocumentData,
+  type PdfLang,
+  type PdfTemplate,
+  type PdfTemplateId,
 } from "./types";
 
 const TEMPLATES: Record<PdfTemplateId, PdfTemplate> = {
   classic: classicTemplate,
+  modern: modernTemplate,
+  elegant: elegantTemplate,
 };
 
+/** Valeur stockée en base → modèle connu (repli sur classic). */
+export function toTemplateId(value: string | null | undefined): PdfTemplateId {
+  return PDF_TEMPLATE_IDS.includes(value as PdfTemplateId)
+    ? (value as PdfTemplateId)
+    : "classic";
+}
+
+/** Rend le document avec le modèle choisi par l'entreprise. */
 export function renderDocumentHtml(
   doc: PdfDocumentData,
   company: PdfCompany,
   lang: PdfLang = "fr",
-  templateId: PdfTemplateId = "classic",
 ): string {
-  return TEMPLATES[templateId].render(doc, company, PDF_STRINGS[lang]);
+  return TEMPLATES[toTemplateId(company.template)].render(doc, company, PDF_STRINGS[lang]);
 }
 
 /** Adapte les lignes Supabase vers les données du moteur PDF. */
@@ -38,6 +50,7 @@ export function toPdfData(
     type: doc.type,
     number: doc.number,
     title: doc.title,
+    description: doc.description ?? "",
     issueDate: doc.issue_date,
     clientName: doc.client_name,
     clientPhone: doc.client_phone,
@@ -79,6 +92,10 @@ export function toPdfCompany(
     taxRegime: company.tax_regime,
     premiumBranding: options?.premiumBranding ?? false,
     signupUrl: options?.signupUrl ?? "",
+    // Tolérant tant que la migration 0044 n'est pas passée.
+    template: toTemplateId(company.pdf_template),
+    services: company.doc_services ?? [],
+    footerNote: company.doc_footer_note ?? "",
   };
 }
 
@@ -114,11 +131,17 @@ const AUTO_PRINT_SNIPPET =
  */
 function openDocumentTab(html: string, autoPrint = false): boolean {
   try {
+    // Une URL blob: n'a pas de chemin : sans <base>, la police du document
+    // (/fonts/…) ne se résoudrait pas.
+    const withBase = html.replace(
+      "<head>",
+      `<head><base href="${window.location.origin}/" />`,
+    );
     const payload = autoPrint
-      ? html.includes("</body>")
-        ? html.replace("</body>", `${AUTO_PRINT_SNIPPET}</body>`)
-        : html + AUTO_PRINT_SNIPPET
-      : html;
+      ? withBase.includes("</body>")
+        ? withBase.replace("</body>", `${AUTO_PRINT_SNIPPET}</body>`)
+        : withBase + AUTO_PRINT_SNIPPET
+      : withBase;
     const blob = new Blob([payload], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const win = window.open(url, "_blank");
@@ -204,6 +227,8 @@ export {
   type ShareResult,
   type SharePdfOptions,
 } from "./generate";
+
+export { PDF_TEMPLATE_IDS } from "./types";
 
 export type {
   PdfCompany,

@@ -75,9 +75,14 @@ interface SavedDraft {
   discount: string;
   advance: string;
   title: string;
+  /** Absente des brouillons enregistrés avant son ajout. */
+  description?: string;
   note: string;
   conditions: string;
 }
+
+/** Longueur max de la description du chantier (alignée sur la RPC). */
+const MAX_DESCRIPTION_LENGTH = 2000;
 
 let uidCounter = 1;
 
@@ -151,6 +156,7 @@ export function DocumentBuilder({
     seedDoc && seedDoc.advance_amount > 0 ? String(seedDoc.advance_amount) : "",
   );
   const [title, setTitle] = useState(seedDoc?.title ?? "");
+  const [description, setDescription] = useState(seedDoc?.description ?? "");
   const [note, setNote] = useState(seedDoc?.note ?? "");
   const [conditions, setConditions] = useState(seedDoc?.conditions ?? "");
   // L'intitulé est rangé dans les options : facultatif, il passait avant le
@@ -161,6 +167,7 @@ export function DocumentBuilder({
         (seedDoc.discount > 0 ||
           seedDoc.advance_amount > 0 ||
           seedDoc.title ||
+          seedDoc.description ||
           seedDoc.note ||
           seedDoc.conditions),
     ),
@@ -199,7 +206,7 @@ export function DocumentBuilder({
       if (!raw) return;
       const saved = JSON.parse(raw) as SavedDraft;
       const savedLines = (saved.lines ?? []).filter(lineHasContent);
-      if (savedLines.length > 0 || saved.title) {
+      if (savedLines.length > 0 || saved.title || saved.description) {
         setClientId(saved.clientId ?? null);
         if (savedLines.length > 0) {
           setLines(savedLines.map((l) => ({ ...l, uid: uidCounter++ })));
@@ -207,6 +214,7 @@ export function DocumentBuilder({
         setDiscount(saved.discount ?? "");
         setAdvance(saved.advance ?? "");
         setTitle(saved.title ?? "");
+        setDescription(saved.description ?? "");
         setNote(saved.note ?? "");
         setConditions(saved.conditions ?? "");
         setDraftRestored(true);
@@ -224,17 +232,19 @@ export function DocumentBuilder({
       discount,
       advance,
       title,
+      description,
       note,
       conditions,
     };
-    const empty = !lines.some(lineHasContent) && !title && !note && !conditions;
+    const empty =
+      !lines.some(lineHasContent) && !title && !description && !note && !conditions;
     try {
       if (empty) localStorage.removeItem(draftKey(type));
       else localStorage.setItem(draftKey(type), JSON.stringify(payload));
     } catch {
       // quota storage plein : sans gravité
     }
-  }, [isEdit, type, clientId, lines, discount, advance, title, note, conditions]);
+  }, [isEdit, type, clientId, lines, discount, advance, title, description, note, conditions]);
 
   const clearDraft = () => {
     try {
@@ -414,6 +424,7 @@ export function DocumentBuilder({
     const base = {
       client_id: clientId,
       title: title.trim(),
+      description: description.trim(),
       note: note.trim(),
       conditions: conditions.trim(),
       discount: parseInt(discount, 10) || 0,
@@ -800,6 +811,17 @@ export function DocumentBuilder({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={t.q_title_ph}
+                />
+              </div>
+              <div>
+                <Label htmlFor="doc-description">{t.q_description}</Label>
+                <Textarea
+                  id="doc-description"
+                  rows={3}
+                  maxLength={MAX_DESCRIPTION_LENGTH}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t.q_description_ph}
                 />
               </div>
               <div>

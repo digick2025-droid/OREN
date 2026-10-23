@@ -10,6 +10,7 @@ export interface ConvertedInvoice {
   status: "brouillon";
   number: string;
   title: string;
+  description: string;
   client_id: string | null;
   client_name: string;
   client_phone: string;
@@ -44,6 +45,7 @@ export function buildConvertedInvoice(
     status: "brouillon",
     number: invoiceNumber,
     title: quote.title,
+    description: quote.description,
     client_id: quote.client_id,
     client_name: quote.client_name,
     client_phone: quote.client_phone,

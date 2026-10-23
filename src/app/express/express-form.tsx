@@ -226,6 +226,7 @@ function ExpressFormContent() {
         type: docKind,
         number: isFacture ? "FAC-EXP" : "DEV-EXP",
         title: title.trim(),
+        description: "",
         issueDate: new Date().toISOString(),
         clientName,
         clientPhone,
@@ -266,6 +267,9 @@ function ExpressFormContent() {
         taxRegime: "",
         premiumBranding: false,
         signupUrl: `${window.location.origin}/inscription`,
+        template: "classic",
+        services: [],
+        footerNote: "",
       },
       lang,
     );

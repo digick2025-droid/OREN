@@ -10,6 +10,7 @@ const quote: DocumentRow = {
   number: "DEV-003",
   status: "accepte",
   title: "Réparation fuite",
+  description: "Salle de bain, 2e étage",
   issue_date: "2026-07-01",
   client_name: "Jean Kouassi",
   client_phone: "+237 690 00 00 00",
@@ -80,6 +81,11 @@ describe("buildConvertedInvoice — conversion devis → facture", () => {
     expect(invoice.items).toHaveLength(2);
     expect(invoice.items[0]?.name).toBe("Tube PVC 20");
     expect(invoice.items[1]?.line_total).toBe(25000);
+  });
+
+  it("recopie la description du chantier", () => {
+    const invoice = buildConvertedInvoice(quote, items, "FAC-001");
+    expect(invoice.description).toBe("Salle de bain, 2e étage");
   });
 
   it("garde la trace du devis d'origine", () => {
