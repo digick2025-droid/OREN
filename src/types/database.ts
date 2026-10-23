@@ -132,6 +132,8 @@ export type InterventionStatus =
 export interface Intervention {
   id: string;
   company_id: string;
+  /** Numéro OT-NNN posé à la création (migration 0047). */
+  number: string | null;
   client_id: string | null;
   title: string;
   description: string;
@@ -185,6 +187,8 @@ export interface InterventionReport {
   id: string;
   company_id: string;
   intervention_id: string;
+  /** Numéro RI-NNN posé à la création (migration 0047). */
+  number: string | null;
   summary: string;
   photos: InterventionPhoto[];
   signature_path: string | null;

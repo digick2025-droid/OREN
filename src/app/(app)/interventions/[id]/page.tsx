@@ -151,6 +151,11 @@ export default function InterventionDetailPage() {
       <ScreenHeader title="Intervention" backHref="/interventions" />
       <div className="space-y-5 px-4 pt-4">
         <div>
+          {iv.number ? (
+            <p className="text-[11.5px] font-semibold tracking-wide text-muted-foreground">
+              {iv.number}
+            </p>
+          ) : null}
           <h1 className="text-[18px] font-extrabold text-navy">{iv.title}</h1>
           {client ? (
             <p className="text-[13px] text-muted-foreground">{client}</p>
@@ -208,6 +213,11 @@ export default function InterventionDetailPage() {
             <div className="min-w-0 flex-1">
               <div className="text-[14px] font-semibold text-navy">
                 Rapport d&apos;intervention
+                {report?.number ? (
+                  <span className="ml-1.5 text-[11.5px] font-semibold tracking-wide text-muted-foreground">
+                    {report.number}
+                  </span>
+                ) : null}
               </div>
               <div className="text-[12px] text-muted-foreground">
                 {report?.signed_at

@@ -90,6 +90,11 @@ export default function InterventionsPage() {
                 <Card className="space-y-2 px-4 py-3.5">
                   <div className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
+                      {iv.number ? (
+                        <div className="text-[11px] font-semibold tracking-wide text-muted-foreground">
+                          {iv.number}
+                        </div>
+                      ) : null}
                       <div className="truncate text-[15px] font-bold text-navy">
                         {iv.title}
                       </div>

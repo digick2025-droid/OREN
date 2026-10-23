@@ -146,6 +146,13 @@ export default function InterventionReportPage() {
       />
       <div className="space-y-6 px-4 pt-4">
         <div>
+          {report?.number || intervention.number ? (
+            <p className="text-[11.5px] font-semibold tracking-wide text-muted-foreground">
+              {[report?.number, intervention.number]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          ) : null}
           <h1 className="text-[17px] font-extrabold text-navy">
             {intervention.title}
           </h1>
