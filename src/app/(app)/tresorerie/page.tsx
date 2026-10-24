@@ -62,6 +62,7 @@ export default function TreasuryPage() {
     return (
       <div>
         <ScreenHeader title="Trésorerie" backHref="/terrain" />
+        <TerrainTabs />
         <p className="px-4 pt-6 text-[13.5px] text-muted-foreground">
           Accès réservé au gérant et au comptable.
         </p>

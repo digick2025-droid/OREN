@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { Company, CompanyRole } from "@/types/database";
+import { useRolePreview } from "@/features/company/role-preview";
 
 interface CompanyContextValue {
   company: Company;
@@ -50,5 +51,9 @@ export function useCompanyOrNull(): Company | null {
  * — la vérité reste côté RLS/RPC (0037/0038).
  */
 export function useCurrentRole(): CompanyRole | null {
-  return useContext(CompanyContext)?.role ?? null;
+  const real = useContext(CompanyContext)?.role ?? null;
+  // Prévisualisation admin : simule l'interface d'un autre rôle (ne touche
+  // pas les données). null = rôle réel.
+  const preview = useRolePreview();
+  return preview ?? real;
 }

@@ -11,6 +11,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useCurrentRole } from "@/features/company/company-context";
+import { RolePreviewBar } from "@/components/role-preview-bar";
 import { canSeeTreasury } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +35,9 @@ export function TerrainTabs() {
     : TABS;
 
   return (
-    <div className="flex gap-2 overflow-x-auto px-4 pt-3">
-      {tabs.map((t) => {
+    <>
+      <div className="flex gap-2 overflow-x-auto px-4 pt-3">
+        {tabs.map((t) => {
         const Icon = t.icon;
         const active = t.exact
           ? pathname === t.href
@@ -55,6 +57,8 @@ export function TerrainTabs() {
           </Link>
         );
       })}
-    </div>
+      </div>
+      <RolePreviewBar />
+    </>
   );
 }
