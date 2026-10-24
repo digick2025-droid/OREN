@@ -123,3 +123,107 @@
     font-feature-settings: "cv11", "ss01";
   }
 }
+
+/* ---------------------------------------------------------------
+   Écran d'ouverture de l'app installée (src/components/launch-splash.tsx).
+   Hors @layer : jamais purgé, et prioritaire sur les utilitaires.
+   --------------------------------------------------------------- */
+.launch-splash {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  .launch-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background-color: hsl(var(--background));
+    animation: launch-splash-out 320ms ease-in 1050ms forwards;
+  }
+}
+
+html.splash-seen .launch-splash {
+  display: none;
+}
+
+.launch-splash__mark {
+  width: 76px;
+  height: auto;
+  overflow: visible;
+}
+
+.launch-splash__ring {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: launch-splash-draw 620ms cubic-bezier(0.65, 0, 0.35, 1) 80ms forwards;
+}
+
+.launch-splash__bar {
+  opacity: 0;
+  transform: translateX(-18px);
+  animation: launch-splash-bar 380ms cubic-bezier(0.22, 1, 0.36, 1) 360ms forwards;
+}
+
+.launch-splash__bar--2 {
+  animation-delay: 440ms;
+}
+
+.launch-splash__word {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: hsl(var(--primary));
+  opacity: 0;
+  transform: translateY(6px);
+  animation: launch-splash-word 360ms ease-out 560ms forwards;
+}
+
+@keyframes launch-splash-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes launch-splash-bar {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes launch-splash-word {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes launch-splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Mouvement réduit : logo affiché d'emblée, simple fondu de sortie. */
+@media (prefers-reduced-motion: reduce) {
+  .launch-splash__ring,
+  .launch-splash__bar,
+  .launch-splash__word {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0;
+  }
+  @media (display-mode: standalone) {
+    .launch-splash {
+      animation-delay: 400ms;
+    }
+  }
+}
