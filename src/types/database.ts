@@ -323,6 +323,40 @@ export type MaintenanceContractUpdate = Partial<
   >
 >;
 
+/** OREN ENTREPRISE — dépense de l'entreprise (migration 0050). */
+export interface Expense {
+  id: string;
+  company_id: string;
+  intervention_id: string | null;
+  label: string;
+  category: string;
+  supplier: string;
+  amount: number;
+  expense_date: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type ExpenseInsert = Pick<Expense, "company_id" | "label" | "amount"> &
+  Partial<
+    Pick<Expense, "intervention_id" | "category" | "supplier" | "expense_date">
+  >;
+
+export type ExpenseUpdate = Partial<
+  Pick<
+    Expense,
+    | "intervention_id"
+    | "label"
+    | "category"
+    | "supplier"
+    | "amount"
+    | "expense_date"
+    | "deleted_at"
+  >
+>;
+
 export interface Client {
   id: string;
   company_id: string;
@@ -430,7 +464,9 @@ export type PlanFeature =
   /** OREN ENTREPRISE — pièces détachées & stock (migration 0048). */
   | "parts"
   /** OREN ENTREPRISE — contrats de maintenance récurrents (migration 0049). */
-  | "contracts";
+  | "contracts"
+  /** OREN ENTREPRISE — dépenses & trésorerie (migration 0050). */
+  | "treasury";
 
 /** Contenu marketing bilingue d'une offre (`plans.marketing`, migration 0021). */
 export interface PlanMarketingContent {

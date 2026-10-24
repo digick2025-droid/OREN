@@ -8,6 +8,7 @@ import {
   Plus,
   RefreshCw,
   User,
+  Wallet,
 } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import { useClients } from "@/hooks/use-clients";
 import { useInterventions } from "@/hooks/use-interventions";
 import { useTeamMembers } from "@/hooks/use-team";
 import { useCurrentRole } from "@/features/company/company-context";
-import { canManageInterventions } from "@/lib/roles";
+import { canManageInterventions, canSeeTreasury } from "@/lib/roles";
 import {
   INTERVENTION_STATUS_CLASSES,
   INTERVENTION_STATUS_LABELS,
@@ -36,7 +37,9 @@ export default function InterventionsPage() {
   const { data: interventions, isLoading } = useInterventions();
   const { data: members } = useTeamMembers();
   const { data: clients } = useClients();
-  const canManage = canManageInterventions(useCurrentRole());
+  const role = useCurrentRole();
+  const canManage = canManageInterventions(role);
+  const showTreasury = canSeeTreasury(role);
 
   const memberName = (userId: string | null) => {
     if (!userId) return null;
@@ -71,6 +74,9 @@ export default function InterventionsPage() {
           { href: "/interventions/planning", label: "Planning", icon: CalendarDays },
           { href: "/stock", label: "Stock", icon: Boxes },
           { href: "/contrats", label: "Contrats", icon: RefreshCw },
+          ...(showTreasury
+            ? [{ href: "/tresorerie", label: "Trésorerie", icon: Wallet }]
+            : []),
         ].map((s) => {
           const Icon = s.icon;
           return (

@@ -49,3 +49,17 @@ export function canManageInterventions(role: CompanyRole | null): boolean {
 export function isFieldTechnician(role: CompanyRole | null): boolean {
   return role === "technicien";
 }
+
+/**
+ * Accès aux données financières (trésorerie, dépenses) : rôles bureau
+ * financiers. `null` = propriétaire/admin/non résolu → accès (la RLS 0050
+ * reste la vérité).
+ */
+export function canSeeTreasury(role: CompanyRole | null): boolean {
+  return (
+    role === null ||
+    role === "gerant" ||
+    role === "dispatcheur" ||
+    role === "comptable"
+  );
+}

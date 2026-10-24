@@ -23,6 +23,7 @@ const FEATURE_LABELS: Record<PlanFeature, string> = {
   interventions: "Interventions (terrain)",
   parts: "Pièces & stock",
   contracts: "Contrats de maintenance",
+  treasury: "Trésorerie & dépenses",
 };
 
 const ALL_FEATURES: PlanFeature[] = [
@@ -35,6 +36,7 @@ const ALL_FEATURES: PlanFeature[] = [
   "interventions",
   "parts",
   "contracts",
+  "treasury",
 ];
 
 function emptyMarketing(): PlanMarketingContent {
