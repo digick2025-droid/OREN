@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { clearOfflineData } from "@/lib/offline";
 import { desactiverPush } from "@/lib/push";
@@ -30,7 +30,7 @@ export function AdminNav() {
     await desactiverPush();
     await supabase.auth.signOut();
     await clearOfflineData();
-    router.push("/");
+    router.push("/connexion");
     router.refresh();
   };
 
@@ -43,13 +43,23 @@ export function AdminNav() {
             Admin
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <LogOut size={16} /> Déconnexion
-        </button>
+        <div className="flex items-center gap-4">
+          {/* L'admin est un compte OREN comme un autre : on y entre depuis
+              Réglages, on doit pouvoir en ressortir sans se déconnecter. */}
+          <Link
+            href="/accueil"
+            className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft size={16} /> Retour à l&apos;app
+          </Link>
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <LogOut size={16} /> Déconnexion
+          </button>
+        </div>
       </div>
       <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
         {NAV_ITEMS.map((item) => {
