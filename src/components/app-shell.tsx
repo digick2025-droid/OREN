@@ -2,13 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, Home, Package, Settings, Users } from "lucide-react";
+import {
+  FileText,
+  Home,
+  Package,
+  Settings,
+  Users,
+  Wrench,
+} from "lucide-react";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { useEnterpriseAccess } from "@/hooks/use-enterprise";
 import { useI18n } from "@/features/i18n/language-context";
 import type { Dict } from "@/lib/i18n/dictionaries";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS: Array<{
+type NavItem = { href: string; label: string; icon: typeof Home };
+
+const BASE_ITEMS: Array<{
   href: string;
   labelKey: keyof Dict;
   icon: typeof Home;
@@ -34,7 +44,22 @@ function isFocusRoute(pathname: string): boolean {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const enterpriseAccess = useEnterpriseAccess();
   const focus = isFocusRoute(pathname);
+
+  const items: NavItem[] = BASE_ITEMS.map((item) => ({
+    href: item.href,
+    label: String(t[item.labelKey]),
+    icon: item.icon,
+  }));
+  // OREN ENTREPRISE : accès au module terrain (gaté offre/preview/admin).
+  if (enterpriseAccess) {
+    items.splice(1, 0, {
+      href: "/terrain",
+      label: "Terrain",
+      icon: Wrench,
+    });
+  }
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-surface">
@@ -43,7 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {focus ? null : (
         <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
           <div className="flex">
-            {NAV_ITEMS.map((item) => {
+            {items.map((item) => {
               const active =
                 pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
@@ -57,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   <Icon size={21} strokeWidth={active ? 2.4 : 2} />
-                  {String(t[item.labelKey])}
+                  {item.label}
                 </Link>
               );
             })}

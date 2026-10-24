@@ -84,6 +84,279 @@ export type CompanyUpdate = Partial<
   Omit<Company, "id" | "owner_id" | "created_at" | "updated_at">
 >;
 
+/**
+ * OREN ENTREPRISE — comptes rattachés à une entreprise avec rôle
+ * (migration 0037). Le propriétaire est toujours « gerant ».
+ */
+export type CompanyRole =
+  | "gerant"
+  | "dispatcheur"
+  | "commercial"
+  | "technicien"
+  | "comptable";
+export type MemberStatus = "active" | "suspended";
+/** Un invité ne peut pas être « gerant » (contrainte company_invitations). */
+export type InvitationRole = Exclude<CompanyRole, "gerant">;
+export type InvitationStatus = "pending" | "accepted" | "revoked";
+
+export interface CompanyMember {
+  id: string;
+  company_id: string;
+  user_id: string;
+  role: CompanyRole;
+  status: MemberStatus;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface CompanyInvitation {
+  id: string;
+  company_id: string;
+  phone: string;
+  role: InvitationRole;
+  status: InvitationStatus;
+  invited_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** OREN ENTREPRISE — intervention / bon de travail (migration 0040). */
+export type InterventionStatus =
+  | "a_planifier"
+  | "planifiee"
+  | "en_cours"
+  | "terminee"
+  | "annulee";
+
+export interface Intervention {
+  id: string;
+  company_id: string;
+  /** Numéro OT-NNN posé à la création (migration 0047). */
+  number: string | null;
+  client_id: string | null;
+  title: string;
+  description: string;
+  status: InterventionStatus;
+  assigned_to: string | null;
+  scheduled_at: string | null;
+  address: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type InterventionInsert = Pick<Intervention, "company_id" | "title"> &
+  Partial<
+    Pick<
+      Intervention,
+      | "client_id"
+      | "description"
+      | "status"
+      | "assigned_to"
+      | "scheduled_at"
+      | "address"
+      | "created_by"
+    >
+  >;
+
+export type InterventionUpdate = Partial<
+  Pick<
+    Intervention,
+    | "client_id"
+    | "title"
+    | "description"
+    | "status"
+    | "assigned_to"
+    | "scheduled_at"
+    | "address"
+    | "deleted_at"
+  >
+>;
+
+/** OREN ENTREPRISE — rapport d'intervention signé (migration 0046). */
+export type InterventionPhotoKind = "before" | "after";
+
+export interface InterventionPhoto {
+  path: string;
+  kind: InterventionPhotoKind;
+}
+
+export interface InterventionReport {
+  id: string;
+  company_id: string;
+  intervention_id: string;
+  /** Numéro RI-NNN posé à la création (migration 0047). */
+  number: string | null;
+  summary: string;
+  photos: InterventionPhoto[];
+  signature_path: string | null;
+  signed_by: string;
+  signed_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Champs posés par l'app lors d'un upsert de rapport. */
+export type InterventionReportUpsert = Pick<
+  InterventionReport,
+  "company_id" | "intervention_id"
+> &
+  Partial<
+    Pick<
+      InterventionReport,
+      "summary" | "photos" | "signature_path" | "signed_by" | "signed_at"
+    >
+  >;
+
+/** OREN ENTREPRISE — pièce détachée en magasin (migration 0048). */
+export interface Part {
+  id: string;
+  company_id: string;
+  name: string;
+  reference: string;
+  unit: string;
+  unit_price: number;
+  stock: number;
+  low_stock_threshold: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type PartInsert = Pick<Part, "company_id" | "name"> &
+  Partial<
+    Pick<Part, "reference" | "unit" | "unit_price" | "stock" | "low_stock_threshold">
+  >;
+
+export type PartUpdate = Partial<
+  Pick<
+    Part,
+    "name" | "reference" | "unit" | "unit_price" | "stock" | "low_stock_threshold" | "deleted_at"
+  >
+>;
+
+/** Pièce posée sur une intervention (snapshot du magasin, migration 0048). */
+export interface InterventionPart {
+  id: string;
+  company_id: string;
+  intervention_id: string;
+  part_id: string | null;
+  name: string;
+  unit: string;
+  unit_price: number;
+  quantity: number;
+  created_by: string | null;
+  created_at: string;
+}
+
+export type InterventionPartInsert = Pick<
+  InterventionPart,
+  "company_id" | "intervention_id" | "name" | "quantity"
+> &
+  Partial<Pick<InterventionPart, "part_id" | "unit" | "unit_price">>;
+
+/** OREN ENTREPRISE — contrat de maintenance récurrent (migration 0049). */
+export type ContractFrequency =
+  | "mensuel"
+  | "trimestriel"
+  | "semestriel"
+  | "annuel";
+
+export type ContractStatus = "actif" | "suspendu" | "termine";
+
+export interface MaintenanceContract {
+  id: string;
+  company_id: string;
+  client_id: string | null;
+  number: string | null;
+  title: string;
+  description: string;
+  frequency: ContractFrequency;
+  amount: number;
+  assigned_to: string | null;
+  start_date: string;
+  end_date: string | null;
+  next_due: string;
+  status: ContractStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type MaintenanceContractInsert = Pick<
+  MaintenanceContract,
+  "company_id" | "title"
+> &
+  Partial<
+    Pick<
+      MaintenanceContract,
+      | "client_id"
+      | "description"
+      | "frequency"
+      | "amount"
+      | "assigned_to"
+      | "start_date"
+      | "end_date"
+      | "next_due"
+      | "status"
+    >
+  >;
+
+export type MaintenanceContractUpdate = Partial<
+  Pick<
+    MaintenanceContract,
+    | "client_id"
+    | "title"
+    | "description"
+    | "frequency"
+    | "amount"
+    | "assigned_to"
+    | "start_date"
+    | "end_date"
+    | "next_due"
+    | "status"
+    | "deleted_at"
+  >
+>;
+
+/** OREN ENTREPRISE — dépense de l'entreprise (migration 0050). */
+export interface Expense {
+  id: string;
+  company_id: string;
+  intervention_id: string | null;
+  label: string;
+  category: string;
+  supplier: string;
+  amount: number;
+  expense_date: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type ExpenseInsert = Pick<Expense, "company_id" | "label" | "amount"> &
+  Partial<
+    Pick<Expense, "intervention_id" | "category" | "supplier" | "expense_date">
+  >;
+
+export type ExpenseUpdate = Partial<
+  Pick<
+    Expense,
+    | "intervention_id"
+    | "label"
+    | "category"
+    | "supplier"
+    | "amount"
+    | "expense_date"
+    | "deleted_at"
+  >
+>;
+
 export interface Client {
   id: string;
   company_id: string;
@@ -183,7 +456,17 @@ export type PlanFeature =
   | "reports"
   | "proforma"
   | "logo"
-  | "advance";
+  | "advance"
+  /** OREN ENTREPRISE — équipe & rôles (migrations 0037/0038). */
+  | "members"
+  /** OREN ENTREPRISE — gestion d'interventions / FSM (migration 0040). */
+  | "interventions"
+  /** OREN ENTREPRISE — pièces détachées & stock (migration 0048). */
+  | "parts"
+  /** OREN ENTREPRISE — contrats de maintenance récurrents (migration 0049). */
+  | "contracts"
+  /** OREN ENTREPRISE — dépenses & trésorerie (migration 0050). */
+  | "treasury";
 
 /** Contenu marketing bilingue d'une offre (`plans.marketing`, migration 0021). */
 export interface PlanMarketingContent {
