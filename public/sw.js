@@ -11,7 +11,9 @@
  *  2. On précharge un par un, jamais avec addAll : addAll est atomique, une
  *     seule URL en échec vidait tout le préchargement — en silence.
  */
-const CACHE = "oren-v3";
+/* À incrémenter à chaque changement du manifest ou des icônes : ils sont
+ * servis cache-first, l'ancienne version resterait sinon sur les appareils. */
+const CACHE = "oren-v4";
 /* Fichier statique, pas une route Next : servi sous l'URL demandée, une page
  * du routeur hydrate une charge RSC qui ne correspond pas à l'URL et l'error
  * boundary affiche « Une erreur est survenue » à la place du repli. */
