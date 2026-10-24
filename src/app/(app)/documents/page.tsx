@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { DocumentCard } from "@/components/document-card";
+import { PendingDocumentCard } from "@/components/pending-document-card";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/features/i18n/language-context";
 import { useDocuments } from "@/hooks/use-documents";
+import { useOutbox } from "@/hooks/use-outbox";
 import { cn } from "@/lib/utils";
 
 type Filter = "tous" | "devis" | "facture" | "proforma";
@@ -14,6 +16,7 @@ type Filter = "tous" | "devis" | "facture" | "proforma";
 export default function DocumentsPage() {
   const { t } = useI18n();
   const { data: documents, isLoading } = useDocuments();
+  const outbox = useOutbox();
   const [filter, setFilter] = useState<Filter>("tous");
 
   const filters: Array<{ key: Filter; label: string }> = [
@@ -25,6 +28,10 @@ export default function DocumentsPage() {
 
   const filtered = (documents ?? []).filter(
     (doc) => filter === "tous" || doc.type === filter,
+  );
+  // Créés hors connexion, pas encore numérotés : en tête, tant qu'ils attendent.
+  const pending = outbox.filter(
+    (entry) => filter === "tous" || entry.payload.type === filter,
   );
 
   return (
@@ -50,12 +57,17 @@ export default function DocumentsPage() {
         </div>
 
         <div className="mt-4 space-y-3">
+          {pending.map((entry) => (
+            <PendingDocumentCard key={entry.localId} entry={entry} />
+          ))}
           {isLoading ? (
             <ListSkeleton />
           ) : filtered.length === 0 ? (
+            pending.length > 0 ? null : (
             <Card className="p-6 text-center text-[14px] text-muted-foreground/70">
               {t.docs_empty}
             </Card>
+            )
           ) : (
             filtered.map((doc) => <DocumentCard key={doc.id} document={doc} />)
           )}

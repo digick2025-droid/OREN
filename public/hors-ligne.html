@@ -92,7 +92,7 @@
       }
       a.retry {
         display: block;
-        margin: 32px auto 0;
+        margin: 12px auto 0;
         max-width: 20rem;
         padding: 12px 20px;
         border: 1px solid var(--border);
@@ -102,6 +102,12 @@
         font-size: 14px;
         font-weight: 600;
         text-decoration: none;
+      }
+      a.retry.primary {
+        margin-top: 32px;
+        border-color: var(--coral);
+        background: var(--coral);
+        color: #ffffff;
       }
     </style>
   </head>
@@ -135,10 +141,16 @@
         data-en="This page isn't available offline yet"
       ></h1>
       <p
-        data-fr="Les pages déjà ouvertes restent consultables sans réseau, et vos brouillons sont conservés sur cet appareil. Celle-ci n'a pas encore été chargée."
-        data-en="Pages you have already opened stay available without a network, and your drafts are kept on this device. This one hasn't been loaded yet."
+        data-fr="Vous restez connecté : l'accueil, vos documents et la création de devis et factures fonctionnent sans réseau. Les documents créés sont envoyés dès le retour de la connexion."
+        data-en="You're still signed in: home, your documents and creating quotes and invoices work without a network. New documents are sent as soon as you're back online."
       ></p>
 
+      <a
+        class="retry primary"
+        href="/nouveau?type=devis"
+        data-fr="Créer un devis"
+        data-en="Create a quote"
+      ></a>
       <a
         class="retry"
         href="/accueil"

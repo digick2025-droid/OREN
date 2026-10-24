@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { LastSeenTracker } from "@/components/last-seen-tracker";
+import { OfflineSync } from "@/components/offline-sync";
 import { CompanyProvider } from "@/features/company/company-context";
 import { ReferralApply } from "@/features/referral/referral-apply";
 import { createClient } from "@/lib/supabase/server";
@@ -27,6 +28,7 @@ export default async function AppLayout({
   return (
     <CompanyProvider company={company as Company}>
       <LastSeenTracker />
+      <OfflineSync />
       <ReferralApply />
       <AppShell>{children}</AppShell>
     </CompanyProvider>
