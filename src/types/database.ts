@@ -258,6 +258,71 @@ export type InterventionPartInsert = Pick<
 > &
   Partial<Pick<InterventionPart, "part_id" | "unit" | "unit_price">>;
 
+/** OREN ENTREPRISE — contrat de maintenance récurrent (migration 0049). */
+export type ContractFrequency =
+  | "mensuel"
+  | "trimestriel"
+  | "semestriel"
+  | "annuel";
+
+export type ContractStatus = "actif" | "suspendu" | "termine";
+
+export interface MaintenanceContract {
+  id: string;
+  company_id: string;
+  client_id: string | null;
+  number: string | null;
+  title: string;
+  description: string;
+  frequency: ContractFrequency;
+  amount: number;
+  assigned_to: string | null;
+  start_date: string;
+  end_date: string | null;
+  next_due: string;
+  status: ContractStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type MaintenanceContractInsert = Pick<
+  MaintenanceContract,
+  "company_id" | "title"
+> &
+  Partial<
+    Pick<
+      MaintenanceContract,
+      | "client_id"
+      | "description"
+      | "frequency"
+      | "amount"
+      | "assigned_to"
+      | "start_date"
+      | "end_date"
+      | "next_due"
+      | "status"
+    >
+  >;
+
+export type MaintenanceContractUpdate = Partial<
+  Pick<
+    MaintenanceContract,
+    | "client_id"
+    | "title"
+    | "description"
+    | "frequency"
+    | "amount"
+    | "assigned_to"
+    | "start_date"
+    | "end_date"
+    | "next_due"
+    | "status"
+    | "deleted_at"
+  >
+>;
+
 export interface Client {
   id: string;
   company_id: string;
@@ -363,7 +428,9 @@ export type PlanFeature =
   /** OREN ENTREPRISE — gestion d'interventions / FSM (migration 0040). */
   | "interventions"
   /** OREN ENTREPRISE — pièces détachées & stock (migration 0048). */
-  | "parts";
+  | "parts"
+  /** OREN ENTREPRISE — contrats de maintenance récurrents (migration 0049). */
+  | "contracts";
 
 /** Contenu marketing bilingue d'une offre (`plans.marketing`, migration 0021). */
 export interface PlanMarketingContent {

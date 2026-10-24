@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Boxes, CalendarClock, CalendarDays, Plus, User } from "lucide-react";
+import {
+  Boxes,
+  CalendarClock,
+  CalendarDays,
+  Plus,
+  RefreshCw,
+  User,
+} from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { Card } from "@/components/ui/card";
 import { useClients } from "@/hooks/use-clients";
@@ -46,33 +53,37 @@ export default function InterventionsPage() {
       <ScreenHeader
         title="Interventions"
         action={
-          <div className="flex items-center gap-1">
+          canManage ? (
             <Link
-              href="/stock"
-              aria-label="Stock"
+              href="/interventions/nouveau"
+              aria-label="Nouvelle intervention"
               className="rounded-xl p-1.5 text-navy hover:bg-muted"
             >
-              <Boxes size={21} />
+              <Plus size={22} />
             </Link>
-            <Link
-              href="/interventions/planning"
-              aria-label="Planning"
-              className="rounded-xl p-1.5 text-navy hover:bg-muted"
-            >
-              <CalendarDays size={21} />
-            </Link>
-            {canManage ? (
-              <Link
-                href="/interventions/nouveau"
-                aria-label="Nouvelle intervention"
-                className="rounded-xl p-1.5 text-navy hover:bg-muted"
-              >
-                <Plus size={22} />
-              </Link>
-            ) : null}
-          </div>
+          ) : null
         }
       />
+
+      {/* Sous-nav du module Terrain */}
+      <div className="flex gap-2 overflow-x-auto px-4 pt-3">
+        {[
+          { href: "/interventions/planning", label: "Planning", icon: CalendarDays },
+          { href: "/stock", label: "Stock", icon: Boxes },
+          { href: "/contrats", label: "Contrats", icon: RefreshCw },
+        ].map((s) => {
+          const Icon = s.icon;
+          return (
+            <Link
+              key={s.href}
+              href={s.href}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-[12.5px] font-semibold text-navy hover:bg-muted"
+            >
+              <Icon size={15} /> {s.label}
+            </Link>
+          );
+        })}
+      </div>
 
       <div className="space-y-3 px-4 pt-4">
         {isLoading ? (
