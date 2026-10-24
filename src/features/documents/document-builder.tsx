@@ -41,10 +41,13 @@ import {
   useUpdateDocument,
 } from "@/hooks/use-documents";
 import { useSetMetier } from "@/hooks/use-metier";
+import { useOnline } from "@/hooks/use-online";
 import { track, trackOnce } from "@/lib/analytics";
 import { usePlanFeature, useUsage } from "@/hooks/use-usage";
 import type { Metier } from "@/lib/catalog-templates";
+import { enqueueDocument, isNetworkError } from "@/lib/outbox";
 import type {
+  CreateDocumentPayload,
   DocumentItem,
   DocumentRow,
   DocumentType,
@@ -69,8 +72,15 @@ function lineHasContent(line: Pick<DraftLine, "name" | "unit_price">): boolean {
   return line.name.trim() !== "" || line.unit_price > 0;
 }
 
+/** Client saisi sans réseau : créé dans la base avec le document. */
+interface PendingClient {
+  name: string;
+  phone: string | null;
+}
+
 interface SavedDraft {
   clientId: string | null;
+  pendingClient?: PendingClient | null;
   lines: DraftLine[];
   discount: string;
   advance: string;
@@ -113,6 +123,7 @@ export function DocumentBuilder({
   const catalogAccess = usePlanFeature("catalog");
   const setMetier = useSetMetier();
   const { data: usage } = useUsage();
+  const online = useOnline();
 
   const isEdit = Boolean(editDoc);
   // Valeurs de départ : le document modifié, sinon celui que l'on duplique.
@@ -124,6 +135,7 @@ export function DocumentBuilder({
   const [clientId, setClientId] = useState<string | null>(
     seedDoc?.client_id ?? null,
   );
+  const [pendingClient, setPendingClient] = useState<PendingClient | null>(null);
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
@@ -208,6 +220,7 @@ export function DocumentBuilder({
       const savedLines = (saved.lines ?? []).filter(lineHasContent);
       if (savedLines.length > 0 || saved.title || saved.description) {
         setClientId(saved.clientId ?? null);
+        setPendingClient(saved.pendingClient ?? null);
         if (savedLines.length > 0) {
           setLines(savedLines.map((l) => ({ ...l, uid: uidCounter++ })));
         }
@@ -228,6 +241,7 @@ export function DocumentBuilder({
     if (isEdit) return;
     const payload: SavedDraft = {
       clientId,
+      pendingClient,
       lines,
       discount,
       advance,
@@ -244,7 +258,7 @@ export function DocumentBuilder({
     } catch {
       // quota storage plein : sans gravité
     }
-  }, [isEdit, type, clientId, lines, discount, advance, title, description, note, conditions]);
+  }, [isEdit, type, clientId, pendingClient, lines, discount, advance, title, description, note, conditions]);
 
   const clearDraft = () => {
     try {
@@ -374,27 +388,47 @@ export function DocumentBuilder({
     setLines((prev) => prev.filter((l) => l.uid !== uid));
   };
 
+  const resetNewClientForm = () => {
+    setShowNewClient(false);
+    setNewClientName("");
+    setNewClientPhone("");
+  };
+
+  // Sans réseau, le client reste sur l'appareil avec le brouillon : il sera
+  // créé dans la base juste avant le document, à la synchronisation.
+  const keepClientOffline = (client: PendingClient) => {
+    setPendingClient(client);
+    setClientId(null);
+    resetNewClientForm();
+    toast.success(t.toast_client_offline);
+  };
+
   const addInlineClient = () => {
     if (!newClientName.trim()) {
       toast.error(t.toast_need_name);
       return;
     }
+    const values = {
+      name: newClientName.trim(),
+      phone: newClientPhone.trim() || null,
+    };
+    if (!online && !isEdit) {
+      keepClientOffline(values);
+      return;
+    }
     saveClient.mutate(
-      {
-        values: {
-          name: newClientName.trim(),
-          phone: newClientPhone.trim() || null,
-        },
-      },
+      { values },
       {
         onSuccess: (client) => {
           setClientId(client.id);
-          setShowNewClient(false);
-          setNewClientName("");
-          setNewClientPhone("");
+          setPendingClient(null);
+          resetNewClientForm();
           toast.success(t.toast_client_saved);
         },
-        onError: () => toast.error(t.toast_save_error),
+        onError: (error) => {
+          if (!isEdit && isNetworkError(error)) keepClientOffline(values);
+          else toast.error(t.toast_save_error);
+        },
       },
     );
   };
@@ -415,7 +449,30 @@ export function DocumentBuilder({
         ? t.toast_proforma_created
         : t.toast_devis_created;
 
-  const submit = () => {
+  /**
+   * Hors connexion : le document part dans la boîte d'envoi de l'appareil
+   * (numéroté à l'envoi). Le brouillon n'est effacé qu'une fois le document
+   * bien rangé — un stockage plein ne doit rien faire perdre.
+   */
+  const saveOffline = (payload: CreateDocumentPayload) => {
+    try {
+      enqueueDocument({
+        companyId: company.id,
+        payload,
+        newClient: pendingClient ?? undefined,
+        total: totals.total,
+      });
+    } catch {
+      toast.error(t.toast_save_offline_error);
+      return;
+    }
+    // La mesure « document_generated » part à l'envoi, depuis OfflineSync.
+    clearDraft();
+    toast.success(t.toast_saved_offline);
+    router.push("/documents");
+  };
+
+  const submit = async () => {
     const items = buildItems();
     if (items.length === 0) {
       toast.error(t.toast_need_items);
@@ -433,6 +490,12 @@ export function DocumentBuilder({
     };
 
     if (isEdit && editDoc) {
+      // Une modification touche un document déjà numéroté, peut-être déjà
+      // envoyé au client : elle attend le réseau plutôt qu'une file locale.
+      if (!online) {
+        toast.error(t.toast_offline_edit);
+        return;
+      }
       updateDocument.mutate(
         { id: editDoc.id, payload: base },
         {
@@ -440,45 +503,69 @@ export function DocumentBuilder({
             toast.success(t.toast_updated);
             router.push(`/documents/${doc.id}`);
           },
-          onError: () => toast.error(t.toast_create_error),
+          onError: (error) =>
+            toast.error(
+              isNetworkError(error) ? t.toast_offline_edit : t.toast_create_error,
+            ),
         },
       );
       return;
     }
 
-    createDocument.mutate(
-      { type, status: "brouillon", ...base },
-      {
-        onSuccess: (doc) => {
-          clearDraft();
-          track("document_generated", {
-            type,
-            lines: items.length,
-            duplicate: Boolean(source),
-            draft_restored: draftRestored,
-            duration_ms: Date.now() - openedAtRef.current,
-          });
-          toast.success(createdToast());
-          router.push(`/documents/${doc.id}?created=1`);
-        },
-        onError: (error) => {
-          if (isQuotaError(error)) {
-            toast.error(
-              usage?.quota_lifetime ? t.toast_limit_lifetime : t.toast_limit,
-            );
-            router.push(FREE_LAUNCH ? "/offres" : "/paiement/document");
-            return;
-          }
-          // Le code d'erreur de la base (SUSPENDED, FORBIDDEN…) aide le support
-          // à diagnostiquer sans accès au compte du client.
-          const code = error instanceof Error ? error.message.slice(0, 80) : "";
-          toast.error(code ? `${t.toast_create_error} (${code})` : t.toast_create_error);
-        },
-      },
-    );
+    // Nom et téléphone recopiés : la carte « en attente » les affiche sans la
+    // liste des clients, et la base s'en sert si le client n'existe plus à
+    // l'envoi. Création seulement — à l'édition, une chaîne vide effacerait
+    // le nom d'un document sans fiche client.
+    const selectedClient = (clients ?? []).find((c) => c.id === clientId);
+    const payload: CreateDocumentPayload = {
+      type,
+      status: "brouillon",
+      ...base,
+      client_name: selectedClient?.name ?? pendingClient?.name ?? "",
+      client_phone: selectedClient?.phone ?? pendingClient?.phone ?? "",
+    };
+    // Client saisi hors connexion : il doit exister avant le document, c'est
+    // la synchronisation de la boîte d'envoi qui crée les deux dans l'ordre.
+    if (!online || pendingClient) {
+      saveOffline(payload);
+      return;
+    }
+
+    try {
+      const doc = await createDocument.mutateAsync(payload);
+      clearDraft();
+      track("document_generated", {
+        type,
+        lines: items.length,
+        duplicate: Boolean(source),
+        draft_restored: draftRestored,
+        duration_ms: Date.now() - openedAtRef.current,
+      });
+      toast.success(createdToast());
+      router.push(`/documents/${doc.id}?created=1`);
+    } catch (error) {
+      // Réseau annoncé mais absent (Wi-Fi sans internet, coupure pendant
+      // l'envoi) : même chemin que hors connexion.
+      if (isNetworkError(error)) {
+        saveOffline(payload);
+        return;
+      }
+      if (isQuotaError(error)) {
+        toast.error(
+          usage?.quota_lifetime ? t.toast_limit_lifetime : t.toast_limit,
+        );
+        router.push(FREE_LAUNCH ? "/offres" : "/paiement/document");
+        return;
+      }
+      // Le code d'erreur de la base (SUSPENDED, FORBIDDEN…) aide le support
+      // à diagnostiquer sans accès au compte du client.
+      const code = error instanceof Error ? error.message.slice(0, 80) : "";
+      toast.error(code ? `${t.toast_create_error} (${code})` : t.toast_create_error);
+    }
   };
 
-  const pending = createDocument.isPending || updateDocument.isPending;
+  const pending =
+    createDocument.isPending || updateDocument.isPending || saveClient.isPending;
 
   const headerTitle = isEdit
     ? t.edit_document
@@ -490,11 +577,13 @@ export function DocumentBuilder({
 
   const primaryLabel = isEdit
     ? t.save
-    : type === "facture"
-      ? t.q_generate_f
-      : type === "proforma"
-        ? t.q_generate_p
-        : t.q_generate;
+    : !online
+      ? t.q_save_offline
+      : type === "facture"
+        ? t.q_generate_f
+        : type === "proforma"
+          ? t.q_generate_p
+          : t.q_generate;
 
   const emptyItemsLabel =
     type === "facture"
@@ -569,15 +658,26 @@ export function DocumentBuilder({
             </Card>
           ) : (
             <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              {pendingClient && (
+                <button
+                  type="button"
+                  onClick={() => setPendingClient(null)}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border-[1.5px] border-primary bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground"
+                >
+                  <Check size={13} />
+                  {pendingClient.name}
+                </button>
+              )}
               {(clients ?? []).map((client) => (
                 <button
                   key={client.id}
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    setPendingClient(null);
                     setClientId((current) =>
                       current === client.id ? null : client.id,
-                    )
-                  }
+                    );
+                  }}
                   className={cn(
                     "flex shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-3.5 py-2 text-[13px] font-semibold transition-colors",
                     clientId === client.id
@@ -589,7 +689,7 @@ export function DocumentBuilder({
                   {client.name}
                 </button>
               ))}
-              {(clients ?? []).length === 0 && (
+              {(clients ?? []).length === 0 && !pendingClient && (
                 <p className="text-[13px] text-muted-foreground/70">{t.q_no_clients}</p>
               )}
             </div>
@@ -977,7 +1077,7 @@ export function DocumentBuilder({
             variant="accent"
             size="lg"
             className="w-full"
-            onClick={submit}
+            onClick={() => void submit()}
             disabled={pending}
           >
             {pending ? t.generating : primaryLabel}

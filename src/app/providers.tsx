@@ -36,6 +36,10 @@ export function Providers({
             refetchOnWindowFocus: false,
             retry: 1,
           },
+          // Hors ligne, React Query met les mutations en pause par défaut :
+          // le bouton restait sur « Génération… » sans fin. On les laisse
+          // échouer, et chaque écran décide (boîte d'envoi, message clair).
+          mutations: { networkMode: "always" },
         },
       }),
   );

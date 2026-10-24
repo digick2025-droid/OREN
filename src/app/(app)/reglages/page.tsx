@@ -10,7 +10,7 @@ import { PushToggle } from "@/components/push-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
-import { clearOfflineData } from "@/lib/offline";
+import { clearOfflineData, confirmSignOut } from "@/lib/offline";
 import { desactiverPush } from "@/lib/push";
 import { createClient } from "@/lib/supabase/client";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -25,6 +25,7 @@ export default function ReglagesPage() {
   const supabase = createClient();
 
   const signOut = async () => {
+    if (!confirmSignOut(t.signout_pending_confirm)) return;
     // Avant signOut : la suppression de l'abonnement push passe par la RLS,
     // elle a besoin de la session. Après, l'appareil continuerait de recevoir
     // les relances du compte qu'on vient de quitter.

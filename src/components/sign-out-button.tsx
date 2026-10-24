@@ -3,15 +3,18 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { clearOfflineData } from "@/lib/offline";
+import { useI18n } from "@/features/i18n/language-context";
+import { clearOfflineData, confirmSignOut } from "@/lib/offline";
 import { desactiverPush } from "@/lib/push";
 import { createClient } from "@/lib/supabase/client";
 
 export function SignOutButton() {
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
 
   const signOut = async () => {
+    if (!confirmSignOut(t.signout_pending_confirm)) return;
     // Avant signOut : le désabonnement push a besoin de la session (RLS).
     await desactiverPush();
     await supabase.auth.signOut();

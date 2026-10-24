@@ -3,25 +3,31 @@
 import Link from "next/link";
 import { FileSignature, FileText, Plus, UserPlus } from "lucide-react";
 import { DocumentCard } from "@/components/document-card";
+import { PendingDocumentCard } from "@/components/pending-document-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCompany } from "@/features/company/company-context";
 import { useI18n } from "@/features/i18n/language-context";
 import { FREE_LAUNCH } from "@/lib/billing";
 import { useDocuments } from "@/hooks/use-documents";
+import { useOutbox } from "@/hooks/use-outbox";
 import { usePlanFeature, useUsage } from "@/hooks/use-usage";
 
 export default function AccueilPage() {
   const company = useCompany();
   const { t } = useI18n();
   const { data: documents } = useDocuments();
+  const outbox = useOutbox();
   const { data: usage } = useUsage();
   const proformaAccess = usePlanFeature("proforma");
 
-  const recent = (documents ?? []).slice(0, 3);
+  // Les documents créés hors connexion d'abord : ce sont les plus récents.
+  const pendingRecent = outbox.slice(0, 3);
+  const recent = (documents ?? []).slice(0, 3 - pendingRecent.length);
   // Compte sans aucun document : un seul chemin, le premier devis. Les
   // raccourcis facture / proforma / client viendront quand ils auront un sens.
-  const firstRun = documents !== undefined && documents.length === 0;
+  const firstRun =
+    documents !== undefined && documents.length === 0 && outbox.length === 0;
 
   if (firstRun) {
     const steps = [t.first_step1, t.first_step2, t.first_step3];
@@ -156,7 +162,10 @@ export default function AccueilPage() {
       </div>
 
       <div className="mt-3 space-y-3">
-        {recent.length === 0 ? (
+        {pendingRecent.map((entry) => (
+          <PendingDocumentCard key={entry.localId} entry={entry} />
+        ))}
+        {recent.length === 0 && pendingRecent.length === 0 ? (
           <Card className="whitespace-pre-line p-6 text-center text-[14px] text-muted-foreground/70">
             {t.home_empty}
           </Card>
