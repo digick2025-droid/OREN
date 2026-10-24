@@ -16,7 +16,9 @@
  *  2. On précharge un par un, jamais avec addAll : addAll est atomique, une
  *     seule URL en échec vidait tout le préchargement — en silence.
  */
-const CACHE = "oren-v3";
+/* À incrémenter à chaque changement du manifest ou des icônes : ils sont
+ * servis cache-first, l'ancienne version resterait sinon sur les appareils. */
+const CACHE = "oren-v4";
 /* Au-delà, la page en cache (si elle existe) est servie sans attendre le réseau. */
 const NAVIGATION_TIMEOUT_MS = 4000;
 /* Une page préchargée depuis moins longtemps n'est pas retéléchargée : le

@@ -5,6 +5,7 @@ import { LANG_COOKIE, parseLang } from "@/lib/i18n/config";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme/config";
 import { getSiteUrl } from "@/lib/site-url";
 import { InstallPrompt } from "@/components/install-prompt";
+import { LaunchSplash, LAUNCH_SPLASH_SCRIPT } from "@/components/launch-splash";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { Providers } from "./providers";
@@ -116,8 +117,10 @@ export default async function RootLayout({
     <html lang={lang} className={theme === "dark" ? "dark" : undefined} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: LAUNCH_SPLASH_SCRIPT }} />
       </head>
       <body className={`${inter.variable} font-sans`}>
+        <LaunchSplash />
         <Providers initialLang={lang} initialTheme={theme}>
           <OfflineBanner />
           {children}

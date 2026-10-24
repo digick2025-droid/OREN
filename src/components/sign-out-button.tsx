@@ -19,7 +19,7 @@ export function SignOutButton() {
     await desactiverPush();
     await supabase.auth.signOut();
     await clearOfflineData();
-    router.push("/");
+    router.push("/connexion");
     router.refresh();
   };
 
