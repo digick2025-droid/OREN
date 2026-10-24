@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarClock, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
+import { TerrainTabs } from "@/components/terrain-tabs";
 import { Card } from "@/components/ui/card";
 import { useClients } from "@/hooks/use-clients";
 import { useInterventions } from "@/hooks/use-interventions";
@@ -137,7 +138,8 @@ export default function PlanningPage() {
 
   return (
     <div className="pb-10">
-      <ScreenHeader title="Planning" backHref="/interventions" />
+      <ScreenHeader title="Planning" backHref="/terrain" />
+      <TerrainTabs />
 
       <div className="px-4 pt-4">
         {/* Navigation semaine */}

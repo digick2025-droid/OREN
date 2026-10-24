@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CalendarClock, Plus, RefreshCw } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
+import { TerrainTabs } from "@/components/terrain-tabs";
 import { Card } from "@/components/ui/card";
 import { useClients } from "@/hooks/use-clients";
 import { useContracts } from "@/hooks/use-contracts";
@@ -36,7 +37,7 @@ export default function ContractsPage() {
     <div className="pb-10">
       <ScreenHeader
         title="Contrats"
-        backHref="/interventions"
+        backHref="/terrain"
         action={
           canManage ? (
             <Link
@@ -49,6 +50,7 @@ export default function ContractsPage() {
           ) : null
         }
       />
+      <TerrainTabs />
 
       <div className="space-y-3 px-4 pt-4">
         {isLoading ? (

@@ -1,22 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Boxes,
-  CalendarClock,
-  CalendarDays,
-  Plus,
-  RefreshCw,
-  User,
-  Wallet,
-} from "lucide-react";
+import { CalendarClock, Plus, User } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
+import { TerrainTabs } from "@/components/terrain-tabs";
 import { Card } from "@/components/ui/card";
 import { useClients } from "@/hooks/use-clients";
 import { useInterventions } from "@/hooks/use-interventions";
 import { useTeamMembers } from "@/hooks/use-team";
 import { useCurrentRole } from "@/features/company/company-context";
-import { canManageInterventions, canSeeTreasury } from "@/lib/roles";
+import { canManageInterventions } from "@/lib/roles";
 import {
   INTERVENTION_STATUS_CLASSES,
   INTERVENTION_STATUS_LABELS,
@@ -37,9 +30,7 @@ export default function InterventionsPage() {
   const { data: interventions, isLoading } = useInterventions();
   const { data: members } = useTeamMembers();
   const { data: clients } = useClients();
-  const role = useCurrentRole();
-  const canManage = canManageInterventions(role);
-  const showTreasury = canSeeTreasury(role);
+  const canManage = canManageInterventions(useCurrentRole());
 
   const memberName = (userId: string | null) => {
     if (!userId) return null;
@@ -68,28 +59,7 @@ export default function InterventionsPage() {
         }
       />
 
-      {/* Sous-nav du module Terrain */}
-      <div className="flex gap-2 overflow-x-auto px-4 pt-3">
-        {[
-          { href: "/interventions/planning", label: "Planning", icon: CalendarDays },
-          { href: "/stock", label: "Stock", icon: Boxes },
-          { href: "/contrats", label: "Contrats", icon: RefreshCw },
-          ...(showTreasury
-            ? [{ href: "/tresorerie", label: "Trésorerie", icon: Wallet }]
-            : []),
-        ].map((s) => {
-          const Icon = s.icon;
-          return (
-            <Link
-              key={s.href}
-              href={s.href}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-[12.5px] font-semibold text-navy hover:bg-muted"
-            >
-              <Icon size={15} /> {s.label}
-            </Link>
-          );
-        })}
-      </div>
+      <TerrainTabs />
 
       <div className="space-y-3 px-4 pt-4">
         {isLoading ? (

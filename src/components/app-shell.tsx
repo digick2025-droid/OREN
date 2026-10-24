@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // OREN ENTREPRISE : accès au module terrain (gaté offre/preview/admin).
   if (enterpriseAccess) {
     items.splice(1, 0, {
-      href: "/interventions",
+      href: "/terrain",
       label: "Terrain",
       icon: Wrench,
     });

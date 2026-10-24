@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Minus, Package, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
+import { TerrainTabs } from "@/components/terrain-tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -91,7 +92,7 @@ export default function StockPage() {
     <div className="pb-10">
       <ScreenHeader
         title="Stock"
-        backHref="/interventions"
+        backHref="/terrain"
         action={
           canManage ? (
             <button
@@ -105,6 +106,7 @@ export default function StockPage() {
           ) : null
         }
       />
+      <TerrainTabs />
 
       <div className="space-y-3 px-4 pt-4">
         {canManage && open ? (

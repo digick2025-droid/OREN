@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
+import { TerrainTabs } from "@/components/terrain-tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,7 +61,7 @@ export default function TreasuryPage() {
   if (!canSee) {
     return (
       <div>
-        <ScreenHeader title="Trésorerie" backHref="/interventions" />
+        <ScreenHeader title="Trésorerie" backHref="/terrain" />
         <p className="px-4 pt-6 text-[13.5px] text-muted-foreground">
           Accès réservé au gérant et au comptable.
         </p>
@@ -144,7 +145,7 @@ export default function TreasuryPage() {
     <div className="pb-10">
       <ScreenHeader
         title="Trésorerie"
-        backHref="/interventions"
+        backHref="/terrain"
         action={
           <button
             type="button"
@@ -156,6 +157,7 @@ export default function TreasuryPage() {
           </button>
         }
       />
+      <TerrainTabs />
 
       <div className="px-4 pt-4">
         {/* Mois */}
